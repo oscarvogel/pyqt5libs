@@ -1,4 +1,3 @@
-
 # coding=utf-8
 from PyQt5 import QtCore
 from PyQt5.QtGui import QFont
@@ -13,8 +12,8 @@ class Etiqueta(QLabel):
         font = QFont()
         if 'tamanio' in kwargs:
             font.setPointSizeF(kwargs['tamanio'])
-        # else:
-        #     font.setPointSizeF(12)
+        else:
+            font.setPointSizeF(12)
 
         if 'alineacion' in kwargs:
             if kwargs['alineacion'].upper() == 'DERECHA':
@@ -33,9 +32,3 @@ class EtiquetaTitulo(Etiqueta):
         self.setStyleSheet("* {color: qlineargradient(spread:pad, x1:0 y1:0, x2:1 y2:0, stop:0 rgba(0, 0, 0, 255), "
                             "stop:1 rgba(255, 255, 255, 255));"
                             "background: qlineargradient( x1:0 y1:0, x2:1 y2:0, stop:0 blue, stop:1 cyan);}")
-
-class EtiquetaRoja(Etiqueta):
-
-    def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
-        self.setStyleSheet("color: red;")

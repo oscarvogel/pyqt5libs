@@ -3,9 +3,7 @@ from PyQt5 import QtCore
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QLineEdit
 
-from libs import Ventanas
 from libs.EntradaTexto import EntradaTexto
-from libs.utiles import inicializar_y_capturar_excepciones
 from vistas.Busqueda import UiBusqueda
 
 
@@ -44,20 +42,16 @@ class Validaciones(EntradaTexto):
     #cursor que guarda los valores obtenidos por el outfocus
     cursor = None
 
-    #indica si lanza excepcion
-    LanzarExcepciones = True
-
     def __init__(self, parent=None, *args, **kwargs):
         EntradaTexto.__init__(self, parent, *args, **kwargs)
         font = QFont()
-        # font.setPointSizeF(12)
+        font.setPointSizeF(12)
         self.setFont(font)
         if self.largo != 0:
             self.setMaxLength(self.largo)
         self.setMaximumWidth(50)
 
-    @inicializar_y_capturar_excepciones
-    def keyPressEvent(self, event, *args, **kwargs):
+    def keyPressEvent(self, event):
         self.lastKey = event.key()
         if event.key() == QtCore.Qt.Key_F2:
             ventana = UiBusqueda()
@@ -77,13 +71,12 @@ class Validaciones(EntradaTexto):
         elif event.key() == QtCore.Qt.Key_Enter or \
                         event.key() == QtCore.Qt.Key_Return or\
                         event.key() == QtCore.Qt.Key_Tab:
+            self.valida()
             if self.proximoWidget:
                 self.proximoWidget.setFocus()
-        # self.valida()
         QLineEdit.keyPressEvent(self, event)
 
-    @inicializar_y_capturar_excepciones
-    def focusOutEvent(self, QFocusEvent, *args, **kwargs):
+    def focusOutEvent(self, QFocusEvent):
         if self.lastKey != QtCore.Qt.Key_F2:
             self.valida()
         QLineEdit.focusOutEvent(self, QFocusEvent)
@@ -93,24 +86,15 @@ class Validaciones(EntradaTexto):
             return
         if self.largo != 0:
             self.setText(str(self.text()).zfill(self.largo))
-        if not self.text().isnumeric():
-            Ventanas.showAlert("Sistema", "Campo permite unicamente numeros")
-            self.setText('')
-            return
         #data = SQL().BuscaUno(self.tabla, self.campoRetorno, self.text())
-        data = self.modelo.select().where(self.campoRetorno == self.text())
-
-        if self.condiciones:
-            for c in self.condiciones:
-                data = data.where(c)
-        data = data.dicts()
+        data = self.modelo.select().where(self.campoRetorno == self.text()).dicts()
         if data:
             self.valido = True
             self.setStyleSheet("background-color: Dodgerblue")
             self.cursor = data
             if self.widgetNombre:
                 for d in data:
-                    self.widgetNombre.setText(d[self.campoNombre.name].strip())
+                    self.widgetNombre.setText(d[self.campoNombre.column_name].strip())
         else:
             self.valido = False
             self.setStyleSheet("background-color: yellow")

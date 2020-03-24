@@ -1,29 +1,17 @@
-# coding=utf-8
-
-# This program is free software; you can redistribute it and/or modify
-# it under the terms of the GNU General Public License as published by the
-# Free Software Foundation; either version 3, or (at your option) any later
-# version.
-#
-# This program is distributed in the hope that it will be useful, but
-# WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTIBILITY
-# or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
-# for more details.
-
 import datetime
 
 from PyQt5 import QtCore
-from PyQt5.QtCore import pyqtSlot, pyqtSignal
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QDoubleSpinBox, QHBoxLayout
 
 from libs.Etiquetas import Etiqueta
-from libs.utiles import InicioMes, FinMes, FechaMysql
+from libs.Utiles import InicioMes, FinMes
 
 
 class Spinner(QDoubleSpinBox):
 
     proximoWidget = None
+    tamanio = 12
 
     def __init__(self, parent=None, *args, **kwargs):
         QDoubleSpinBox.__init__(self, parent)
@@ -31,7 +19,7 @@ class Spinner(QDoubleSpinBox):
         font = QFont()
         if 'tamanio' in kwargs:
             self.tamanio = kwargs['tamanio']
-            font.setPointSizeF(self.tamanio)
+        font.setPointSizeF(self.tamanio)
         self.setFont(font)
         self.setMaximum(9999999999)
 
@@ -61,16 +49,9 @@ class Spinner(QDoubleSpinBox):
         self.setStyleSheet("background-color: Dodgerblue")
         QDoubleSpinBox.focusOutEvent(self, *args, **kwargs)
 
-    def setText(self, p_str):
-        if isinstance(p_str, str):
-            p_str = float(p_str or 0)
-        self.setValue(p_str)
-
-    def text(self):
-        return str(self.value())
-
-    def valor(self):
-        return self.value()
+    def setText(self, p_val):
+        p_val = float(p_val or 0)
+        self.setValue(p_val)
 
 class Periodo(QHBoxLayout):
 
@@ -78,9 +59,6 @@ class Periodo(QHBoxLayout):
     dInicio = None #date que indica el primer dia del mes
     dFin = None #date que indica el ultimo dia del mes
     textoEtiqueta = ''
-    proximoWidget = None #proximo widget al que va cuando da enter
-
-    actualiza_periodo = pyqtSignal()
 
     def __init__(self, parent=None, *args, **kwargs):
 
@@ -110,27 +88,10 @@ class Periodo(QHBoxLayout):
         self.lineEditAnio.setMinimum(2000.)
         self.lineEditAnio.setMaximum(2050.)
         self.lineEditAnio.setValue(datetime.date.today().year)
-        self.lineEditAnio.proximoWidget = self.proximoWidget
-        self.ActualizaPeriodo()
 
     def ActualizaPeriodo(self):
-        self.cPeriodo = str(round(self.lineEditAnio.value())) + str(round(self.lineEditMes.value())).zfill(2)
+        self.cPeriodo = self.lineEditAnio.text() + str(self.lineEditMes.text()).zfill(2)
         if self.lineEditMes.value() >= 1 and self.lineEditMes.value() <= 12:
             self.dInicio = InicioMes(datetime.date(int(self.lineEditAnio.value()),
                                                int(self.lineEditMes.value()), 1))
         self.dFin = FinMes(self.dInicio)
-        self.actualiza_periodo.emit()
-
-    def setText(self, p_str):
-        if not p_str:
-            p_str = FechaMysql()[:6]
-        self.cPeriodo = p_str
-        self.lineEditMes.setValue(float(p_str[4:]))
-        self.lineEditAnio.setValue(float(p_str[:4]))
-
-    def setStyleSheet(self, p_str):
-        self.lineEditMes.setStyleSheet(p_str)
-        self.lineEditAnio.setStyleSheet(p_str)
-
-    def valor(self):
-        return self.cPeriodo

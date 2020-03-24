@@ -4,14 +4,14 @@ import datetime
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import QDateEdit, QStyledItemDelegate, QItemDelegate
+from PyQt5.QtWidgets import QDateEdit
 from PyQt5.uic.properties import QtGui
 
 
 class Fecha(QDateEdit):
 
     proximoWidget = None
-    tamanio = 10
+    tamanio = 12
 
     def __init__(self, *args, **kwargs):
         QDateEdit.__init__(self, *args)
@@ -19,6 +19,7 @@ class Fecha(QDateEdit):
         #self.cw = QNCalendarWidget(n=1, columns=1)
         #self.setCalendarWidget(self.cw)
 
+        self.setDisplayFormat('dd/MM/yyyy')
         if 'enabled' in kwargs:
             self.setEnabled(kwargs['enabled'])
         if 'tamanio' in kwargs:
@@ -26,10 +27,7 @@ class Fecha(QDateEdit):
         font = QFont()
         font.setPointSizeF(self.tamanio)
         self.setFont(font)
-        if 'fecha' in kwargs:
-            self.setFecha(kwargs['fecha'])
-        else:
-            self.setFecha()
+
 
     def setFecha(self, fecha=datetime.datetime.today(), format=None):
         if format:
@@ -56,53 +54,4 @@ class Fecha(QDateEdit):
         fecha = str(self.text())
         fecha = datetime.datetime.strptime(fecha, "%d/%m/%Y").date().strftime('%Y%m%d')
         return fecha
-
-    def setText(self, fecha=datetime.datetime.today()):
-        if isinstance(fecha, (str)):
-            fecha = datetime.datetime.today()
-        self.setFecha(fecha)
-
-    def getPeriodo(self):
-        periodo = self.getFechaSql()[:6]
-        return periodo
-
-    def toPyDate(self):
-        return self.date().toPyDate()
-
-    def valor(self):
-        return self.date().toPyDate()
-
-class FechaDelegate(QItemDelegate):
-
-    def __init__(self):
-        super().__init__()
-
-    def createEditor(self,parent, option, index):
-        editor = Fecha(parent, fecha=datetime.datetime.today())
-
-        return editor
-
-    # def paint(self, QPainter, QStyleOptionViewItem, QModelIndex):
-    #     value = QModelIndex.data(Qt.DisplayRole)
-    #     print("valor de paint {}".format(value))
-    #
-    #     # QItemDelegate.paint(self, QPainter, QStyleOptionViewItem, QModelIndex)
-    #     super(FechaDelegate, self).paint(QPainter, QStyleOptionViewItem, QModelIndex)
-    # #
-    # def setEditorData(self, fecha, index):
-    #     value = index.model().data(index, Qt.EditRole)
-    #     if isinstance(value, QtCore.QDate):
-    #         value = value.toPyDate()
-    #         fecha.setFecha(value)
-    #     # qdate = QtCore.QDate().fromString(value, "dd/mm/yyyy")
-    #     print("valor editor data {}".format(value))
-    #     # fecha.setFecha(qdate)
-    #
-    # def setModelData(self, fecha, model, index):
-    #     value = fecha.date()
-    #
-    #     model.setData(index, value, Qt.EditRole)
-    #
-    # def updateEditorGeometry(self, editor, option, index):
-    #     editor.setGeometry(option.rect)
 
