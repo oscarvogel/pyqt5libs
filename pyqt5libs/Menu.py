@@ -1,10 +1,10 @@
 # -*- coding: utf-8 -*-
 import functools
-import logging
 
+from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction
 
-from libs.utiles import LeerConf
+from libs.utiles import LeerConf, imagen
 from modelos.Accesos import Acceso
 from modelos.Formula import Formula
 from modelos.Usuarios import Usuario
@@ -24,7 +24,6 @@ class GeneraMenu(object):
         self.datos_menu = Formula().select()
         if LeerConf("DEBUG"):
             print("Id Usuario {}".format(LeerConf("idUsuario")))
-            logging.debug("Id Usuario {}".format(LeerConf("idUsuario")))
 
         if Usuario().IsAdmin(LeerConf('idUsuario')):
             self.datos_menu = self.datos_menu.where(Formula.sis_id == self.nIdSistema)
@@ -48,8 +47,8 @@ class GeneraMenu(object):
             if h.tfo_id == 5: #separador de menu
                 fileMenu.addSeparator()
             else:
-                # data = Acceso().select().where(Acceso.usu_id == LeerConf('idUsuario'),
-                #                                 Acceso.for_id == h.for_id)
+                data = Acceso().select().where(Acceso.usu_id == LeerConf('idUsuario'),
+                                                Acceso.for_id == h.for_id)
                 if Acceso().AccesoUsuario(usu_id=LeerConf('idUsuario'), for_id=h.for_id): #si tiene autorizacion entra
                     subhijo = Formula.select()\
                         .where(Formula.for_pare==h.for_id)
@@ -57,7 +56,10 @@ class GeneraMenu(object):
                         fileSub = fileMenu.addMenu(h.for_nomb.strip())
                         self.CargaHijos(h, fileSub)
                     else:
-                        menuAct = QAction(h.for_nomb.strip(), self.ventana)
+                        if h.for_imag:
+                            menuAct = QAction(QIcon(imagen(h.for_imag)), h.for_nomb.strip(), self.ventana)
+                        else:
+                            menuAct = QAction(h.for_nomb.strip(), self.ventana)
                         menuAct.setStatusTip(h.for_nomb)
                         if h.tfo_id == 2:
                             #pass

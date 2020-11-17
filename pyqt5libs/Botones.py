@@ -1,9 +1,9 @@
 # coding=utf-8
-from PyQt5.QtCore import QSize, Qt
+from PyQt5.QtCore import QSize
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QPushButton
 
-from libs.Utiles import LeerIni, openFileNameDialog, GuardarArchivo
+from libs.utiles import LeerIni, imagen
 
 
 class Boton(QPushButton):
@@ -50,7 +50,7 @@ class BotonAceptar(Boton):
 
     def __init__(self, *args, **kwargs):
         kwargs['texto'] = kwargs['textoBoton'] if 'textoBoton' in kwargs else '&Aceptar'
-        kwargs['imagen'] = LeerIni("iniciosistema") + 'imagenes/aceptar.bmp'
+        kwargs['imagen'] = LeerIni("iniciosistema") + 'imagenes/iconfinder_unit-completed_60215.png'
         kwargs['tamanio'] = QSize(32,32)
         Boton.__init__(self, *args, **kwargs)
 
@@ -58,33 +58,7 @@ class BotonCerrarFormulario(Boton):
 
     def __init__(self, *args, **kwargs):
         kwargs['texto'] = kwargs['textoBoton'] if 'textoBoton' in kwargs else '&Cerrar'
-        kwargs['imagen'] = LeerIni("iniciosistema") + 'imagenes/close.png'
+        kwargs['imagen'] = imagen('close.png')
         kwargs['tamanio'] = QSize(32,32)
         Boton.__init__(self, *args, **kwargs)
         self.setDefault(False)
-
-class BotonArchivo(Boton):
-
-    widgetArchivo = None
-    files = None
-    guardar = False
-    directorio = ""
-    nombre_archivo = ""
-
-    def __init__(self, *args, **kwargs):
-        kwargs['texto'] = kwargs['textoBoton'] if 'textoBoton' in kwargs else '...'
-        if 'archivos' in kwargs:
-            self.files = kwargs['archivos']
-
-        super().__init__(*args, **kwargs)
-
-    def mousePressEvent(self, event):
-        if event.button() == Qt.LeftButton:
-            if not self.guardar:
-                self.archivo = openFileNameDialog(files=self.files)
-            else:
-                self.archivo = GuardarArchivo(caption="Guardar archivo", directory=self.directorio,
-                                                             filter=self.files,
-                                                             filename=self.nombre_archivo)
-            if self.widgetArchivo and self.archivo:
-                self.widgetArchivo.setText(self.archivo)

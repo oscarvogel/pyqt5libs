@@ -1,10 +1,13 @@
 # -*- coding: utf-8 -*-
+import os
+
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QDialog, QDesktopWidget, QHBoxLayout
 
 from libs.EntradaTexto import EntradaTexto
 from libs.Etiquetas import Etiqueta
-from libs.Utiles import icono_sistema
+from libs.utiles import icono_sistema, ubicacion_sistema
+from modelos.ParametrosSistema import ParamSist
 
 
 class Formulario(QDialog):
@@ -19,8 +22,13 @@ class Formulario(QDialog):
         self.LanzarExcepciones = False
         self.setWindowIcon(icono_sistema())
         self.setWindowModality(Qt.ApplicationModal)
+        self._want_to_close = False
+        # self.setWindowFlags(self.windowFlags() | Qt.FramelessWindowHint)
+        # self.setAttribute(Qt.WA_TranslucentBackground, True)
+        self.EstablecerTema()
 
     def Cerrar(self):
+        self._want_to_close = True
         self.close()
 
     def exec_(self):
@@ -90,3 +98,22 @@ class Formulario(QDialog):
 
     def ConectarWidgets(self):
         pass
+
+    # def closeEvent(self, evnt):
+    #     if self._want_to_close:
+    #         super(Formulario, self).closeEvent(evnt)
+    #     else:
+    #         evnt.ignore()
+    #         #self.setWindowState(QtCore.Qt.WindowMinimized)
+
+    def keyPressEvent(self, QKeyEvent):
+        QKeyEvent.ignore()
+
+    def EstablecerTema(self):
+        tema = f'{ubicacion_sistema()}{ParamSist.ObtenerParametro("TEMA")}'
+        if not os.path.isfile(tema):
+            tema = f'{ubicacion_sistema()}temas/default.css'
+
+        style = open(tema)
+        style = style.read()
+        self.setStyleSheet(style)

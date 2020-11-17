@@ -51,6 +51,9 @@ class Excel:
     def ObtieneArchivo(self, archivo:str='excel/archivo.xlsx') -> str:
         self.archivo = saveFileDialog(filename=archivo, files="Archivos de Excel (*.xlsx)")
 
+        # if self.archivo and not self.archivo.upper().endswith("XLSX"):
+        #     self.archivo += ".XLSX"
+
         if self.archivo:
             self.libro = xlsxwriter.Workbook(self.archivo)
             self.hoja = self.libro.add_worksheet()
@@ -237,14 +240,39 @@ class Excel:
     def CombinaFilaColumna(self, desdefila=0, hastafila=0, desdecol=0, hastacol=0):
         self.hoja.merge_range(desdefila, desdecol, hastafila, hastacol, '')
 
+    def Exporta(self, datos, cabeceras, titulo="", archivo=""):
+
+        archivo = archivo.replace('.', '').replace('/', '')
+        if not archivo.startswith("excel"):
+            archivo = "excel/" + archivo
+
+        cArchivo = self.ObtieneArchivo(archivo)
+        if not cArchivo:
+            return
+
+        desde = "A"
+        hasta = chr(65 + len(datos[0]))
+        self.Titulo(titulo, desdecol=desde, hastacol=hasta, combina=True)
+
+        self.EstableceEncabezado(encabezados=cabeceras)
+
+        for row in datos:
+            self.EscribeFila(row)
+
+        self.Cerrar()
+
+
 @contextlib.contextmanager
 def load_xl_file(xlfilepath):
     ''' Open an existing Excel file using a context manager
         `xlfilepath`: path to an existing Excel file '''
+
     xl = win32.DispatchEx("Excel.Application")
     wb = xl.Workbooks.Open(xlfilepath)
     try:
         yield wb
+    except:
+        pass
     finally:
         wb.Close(SaveChanges=True)
         xl.Quit()
@@ -257,8 +285,8 @@ def xlautofit(xlfilepath,skip_first_col=False):
         so to avoid requiring the caller to remember this, we increment
 
         returns full path (including dir) to file '''
-    if os.path.splitext(xlfilepath)[1] not in ('.xls','.xlsx'):
-        raise
+    if os.path.splitext(xlfilepath)[1].upper() not in ('.XLS', '.XLSX'):
+        raise Exception('Archivo con extension no valida: {}'.format(xlfilepath))
 
     autofitbegcol = 1
     if skip_first_col:

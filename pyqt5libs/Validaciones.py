@@ -1,9 +1,12 @@
 # coding=utf-8
 from PyQt5 import QtCore
 from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import QLineEdit
+from PyQt5.QtWidgets import QLineEdit, QHBoxLayout
 
+from libs import Ventanas
 from libs.EntradaTexto import EntradaTexto
+from libs.Etiquetas import Etiqueta, EtiquetaRoja
+from libs.utiles import inicializar_y_capturar_excepciones
 from vistas.Busqueda import UiBusqueda
 
 
@@ -42,19 +45,29 @@ class Validaciones(EntradaTexto):
     #cursor que guarda los valores obtenidos por el outfocus
     cursor = None
 
+    #clase para la busqueda
+    clasebusqueda = None
+
+    #indica si muestra la excepciones cuando hay un error
+    LanzarExcepciones = True
+
     def __init__(self, parent=None, *args, **kwargs):
         EntradaTexto.__init__(self, parent, *args, **kwargs)
         font = QFont()
-        font.setPointSizeF(12)
+        # font.setPointSizeF(12)
         self.setFont(font)
         if self.largo != 0:
             self.setMaxLength(self.largo)
         self.setMaximumWidth(50)
 
-    def keyPressEvent(self, event):
+    @inicializar_y_capturar_excepciones
+    def keyPressEvent(self, event, *args, **kwargs):
         self.lastKey = event.key()
         if event.key() == QtCore.Qt.Key_F2:
-            ventana = UiBusqueda()
+            if self.clasebusqueda:
+                ventana = self.clasebusqueda()
+            else:
+                ventana = UiBusqueda()
             ventana.modelo = self.modelo
             ventana.cOrden = self.cOrden
             ventana.campos = self.campos
@@ -71,12 +84,13 @@ class Validaciones(EntradaTexto):
         elif event.key() == QtCore.Qt.Key_Enter or \
                         event.key() == QtCore.Qt.Key_Return or\
                         event.key() == QtCore.Qt.Key_Tab:
-            self.valida()
             if self.proximoWidget:
                 self.proximoWidget.setFocus()
+        self.valida()
         QLineEdit.keyPressEvent(self, event)
 
-    def focusOutEvent(self, QFocusEvent):
+    @inicializar_y_capturar_excepciones
+    def focusOutEvent(self, QFocusEvent, *args, **kwargs):
         if self.lastKey != QtCore.Qt.Key_F2:
             self.valida()
         QLineEdit.focusOutEvent(self, QFocusEvent)
@@ -86,8 +100,20 @@ class Validaciones(EntradaTexto):
             return
         if self.largo != 0:
             self.setText(str(self.text()).zfill(self.largo))
+        if not self.text().isnumeric():
+            Ventanas.showAlert("Sistema", "Campo permite unicamente numeros")
+            self.setText('')
+            return
         #data = SQL().BuscaUno(self.tabla, self.campoRetorno, self.text())
-        data = self.modelo.select().where(self.campoRetorno == self.text()).dicts()
+        data = self.modelo.select().where(self.campoRetorno == self.text())
+
+        if self.condiciones:
+            if isinstance(self.condiciones, list):
+                for c in self.condiciones:
+                    data = data.where(c)
+            else:
+                data = data.where(self.condiciones)
+        data = data.dicts()
         if data:
             self.valido = True
             self.setStyleSheet("background-color: Dodgerblue")
@@ -100,3 +126,43 @@ class Validaciones(EntradaTexto):
             self.setStyleSheet("background-color: yellow")
             #Ventanas.showAlert("Error", "Codigo no encontrado en el sistema")
 
+class ValidaConNombre(QHBoxLayout):
+
+    textoEtiqueta = 'Nombre'
+    modelo = None
+    campoNombre = None
+    campoRetorno = None
+    camposTabla = []
+    largo = 0
+    maxwidth = 50
+    solo_numeros = True
+    condiciones = None
+
+    def __init__(self, parent=None, *args, **kwargs):
+        super().__init__(parent)
+
+        if 'texto' in kwargs:
+            self.textoEtiqueta = kwargs['texto']
+
+        self.labelNombre = Etiqueta(parent, texto=self.textoEtiqueta)
+        self.labelNombre.setObjectName("labelNombre")
+        self.addWidget(self.labelNombre)
+
+        self.lineEditCodigo = Validaciones(parent)
+        self.lineEditCodigo.setObjectName("lineEditNombre")
+        self.lineEditCodigo.modelo = self.modelo
+        self.lineEditCodigo.campoNombre = self.campoNombre
+        self.lineEditCodigo.campoRetorno = self.campoRetorno
+        self.lineEditCodigo.cOrden = self.campoNombre
+        self.lineEditCodigo.camposTabla = self.camposTabla
+        self.lineEditCodigo.campos = self.lineEditCodigo.camposTabla
+        self.lineEditCodigo.largo = self.largo
+        self.lineEditCodigo.condiciones = self.condiciones
+        self.lineEditCodigo.solo_numeros = self.solo_numeros
+        self.lineEditCodigo.setMaximumWidth(self.maxwidth)
+        self.addWidget(self.lineEditCodigo)
+
+        self.labelDescripcion = EtiquetaRoja(parent, texto="")
+        self.labelDescripcion.setObjectName("labelDescripcion")
+        self.addWidget(self.labelDescripcion)
+        self.lineEditCodigo.widgetNombre = self.labelDescripcion

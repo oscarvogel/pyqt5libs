@@ -2,7 +2,7 @@
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QCheckBox
 
-from libs.Utiles import LeerIni
+from libs.utiles import LeerIni
 
 
 class CheckBox(QCheckBox):
@@ -11,10 +11,13 @@ class CheckBox(QCheckBox):
         #QCheckBox.__init__(parent)
         QCheckBox.__init__(self, *args)
         font = QFont()
-        font.setPointSizeF(12)
+        font.setPointSizeF(10)
         self.setFont(font)
         if 'texto' in kwargs:
             self.setText(kwargs['texto'])
+
+        if 'checked' in kwargs:
+            self.setChecked(kwargs['checked'])
 
     def text(self):
         if LeerIni('base') == 'mysql':

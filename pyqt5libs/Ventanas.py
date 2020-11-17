@@ -3,15 +3,11 @@ import sys
 
 from PyQt5.QtWidgets import QMessageBox, QApplication, QWidget, QPushButton
 
-from libs.Utiles import icono_sistema
-
 
 def showAlert(titulo, mensaje):
 
     msg = QMessageBox()
     msg.setIcon(QMessageBox.Information)
-    # msg.setIcon(icono_sistema())
-    msg.setWindowIcon(icono_sistema())
     msg.setText(mensaje)
     msg.setWindowTitle(titulo)
     msg.setStandardButtons(QMessageBox.Ok)
@@ -25,7 +21,6 @@ def showConfirmation(titulo, mensaje):
     msg.setIcon(QMessageBox.Question)
     msg.setText(mensaje)
     msg.setWindowTitle(titulo)
-    msg.setWindowIcon(icono_sistema())
     msg.setStandardButtons(QMessageBox.Ok | QMessageBox.Cancel)
     retval = msg.exec_()
 

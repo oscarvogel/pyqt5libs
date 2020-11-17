@@ -1,5 +1,4 @@
 # coding=utf-8
-import logging
 from collections import deque
 
 from PyQt5 import QtGui
@@ -64,7 +63,6 @@ class ArbolView(QTreeView):
                 itemnombre, itemid,
             ])
             seen[dbid] = parent.child(parent.rowCount() - 1)
-            # logging.debug("Procesando {}".format(itemnombre))
 
     def ObtenerItemSeleccionado(self, col=0):
         resultado = self.model.itemData(

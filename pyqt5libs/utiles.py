@@ -11,36 +11,39 @@
 # for more details.
 
 #Utilidades varias necesarias en el sistema
-import argparse
 import calendar
 import datetime
 import decimal
 import hashlib
 import logging
 import os
+import random
+import socket
+import subprocess
 import sys
 import tempfile
-import time
 import traceback
+import platform
 from configparser import ConfigParser
 from email.mime.text import MIMEText
 from functools import wraps
 from logging.handlers import RotatingFileHandler
-from random import choice
 from smtplib import SMTP
 
-import win32print
 from PyQt5.QtCore import QSettings
 from PyQt5.QtWidgets import QFileDialog, QInputDialog, QLineEdit
 from os.path import join
+from sys import argv
 
 from PyQt5 import QtGui
 
-# if platform.system() == 'Windows':
-import win32api
+try:
+    import win32api
+except:
+    pass
 
 from libs import Constantes, Ventanas
-from vistas.select_printer import Ui_FormPrinter
+from pyafipws.pyemail import PyEmail
 
 __author__ = "Jose Oscar Vogel <oscar@ferreteriaavenida.com.ar>"
 __copyright__ = "Copyright (C) 2019 Steffen Hnos SRL"
@@ -52,26 +55,19 @@ __version__ = "0.1"
 #tendria que ver como hacerlo en Linux
 def AbrirArchivo(cArchivo=None):
     if cArchivo:
-        win32api.ShellExecute(0, "open", cArchivo, None, ".", 0)
+        if platform.system() == 'Darwin':  # macOS
+            subprocess.call(('open', cArchivo))
+        elif platform.system() == 'Windows':  # Windows
+            os.startfile(cArchivo)
+        else:  # linux variants
+            subprocess.call(('xdg-open', cArchivo))
 
 #leo el archivo de configuracion del sistema
 #recibe la clave y el key a leer en caso de que tenga mas de una seccion el archivo
-def LeerIni(clave=None, key=None, carpeta=''):
-    analizador = argparse.ArgumentParser(description='Sistema.')
-    analizador.add_argument("-i", "--inicio", default=os.getcwd(), help="Carpeta de Inicio de sistema.")
-    analizador.add_argument("-a", "--archivo", default="fasa.ini", help="Archivo de Configuracion de sistema.")
-    argumento = analizador.parse_args()
+def LeerIni(clave=None, key=None):
     retorno = ''
     Config = ConfigParser()
-    archivoini = argumento.archivo
-    carpeta = argumento.inicio
-    if carpeta:
-        Config.read(join(carpeta, archivoini))
-        # logging.debug("Archivo utilizado {}".format(join(carpeta, archivoini)))
-    else:
-        Config.read(archivoini)
-        # logging.debug("Archivo utilizado {}".format(archivoini))
-
+    Config.read("sistema.ini")
     try:
         if not key:
             key = 'param'
@@ -79,15 +75,14 @@ def LeerIni(clave=None, key=None, carpeta=''):
     except:
         #Ventanas.showAlert("Sistema", "No existe la seccion {}".format(clave))
         pass
-    # print("archivo {} clave {} key {} carpeta {} valor {}".format(archivoini, clave, key, carpeta, retorno))
     return retorno
 
 def GrabarIni(clave=None, key=None, valor=''):
     if not clave or not key:
         return
     Config = ConfigParser()
-    Config.read('fasa.ini')
-    cfgfile = open("fasa.ini",'wb')
+    Config.read('sistema.ini')
+    cfgfile = open("sistema.ini",'w')
     if not Config.has_section(key):
         Config.add_section(key)
     Config.set(key, clave, valor)
@@ -95,11 +90,8 @@ def GrabarIni(clave=None, key=None, valor=''):
     cfgfile.close()
 
 def ubicacion_sistema():
-    # cUbicacion = LeerIni("iniciosistema") or os.path.dirname(argv[0])
-    cUbicacion = LeerIni("InicioSistema")
-    if not cUbicacion:
-        cUbicacion = LeerConf("InicioSistema") or ""
-    logging.debug("Ubicacion del sistema {}".format(cUbicacion))
+    cUbicacion = LeerIni("iniciosistema") or os.path.dirname(argv[0])
+
     return cUbicacion
 
 def imagen(archivo):
@@ -111,8 +103,7 @@ def imagen(archivo):
 
 def icono_sistema():
 
-    cIcono = QtGui.QIcon(imagen(LeerIni("icono")))
-    logging.info("Icono del sistema {}".format(imagen(LeerIni("icono"))))
+    cIcono = QtGui.QIcon(imagen(LeerIni("logo")))
     return cIcono
 
 def validar_cuit(cuit):
@@ -140,9 +131,12 @@ def validar_cuit(cuit):
 
 def FechaMysql(fecha=None):
 
-    if not fecha:
-        fecha = datetime.datetime.today()
-    retorno = fecha.strftime('%Y%m%d')
+    if isinstance(fecha, str):
+        retorno = fecha
+    else:
+        if not fecha:
+            fecha = datetime.datetime.today()
+        retorno = fecha.strftime('%Y%m%d')
 
     return retorno
 
@@ -213,9 +207,11 @@ def inicializar_y_capturar_excepciones(func):
         try:
             # inicializo (limpio variables)
             self.Traceback = self.Excepcion = ""
+            self.HuboError = False
             return func(self, *args, **kwargs)
         except Exception as e:
             ex = traceback.format_exception( sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2])
+            self.HuboError = True
             self.Traceback = ''.join(ex)
             self.Excepcion = traceback.format_exception_only( sys.exc_info()[0], sys.exc_info()[1])[0]
             logging.debug(self.Traceback)
@@ -223,20 +219,17 @@ def inicializar_y_capturar_excepciones(func):
             # file.write(self.Traceback)
             # file.close()
             Ventanas.showAlert("Error", "Se ha producido un error \n{}".format(self.Excepcion))
-            # pyemail = PyEmail()
-            if LeerIni("debug") == "N":
-                try:
-                    remitente = 'info@ferreteriaavenida.com.ar'
-                    destinatario = 'oscar@ferreteriaavenida.com.ar'
-                    mensaje = "{} {} Enviado desde mi Software de Gestion desarrollado por " \
-                              "http://www.ferreteriaavenida.com.ar".format(
-                        self.Traceback, self.Excepcion
-                    )
-                    motivo = "Se envia informe de errores de {}".format(LeerIni(clave='nombre_sistema'))
-                    envia_correo(from_address=remitente, to_address=destinatario,
-                                 message=mensaje, subject = motivo, password_email = Constantes.CLAVE_SMTP)
-                except:
-                    pass
+            try:
+                remitente = 'fe@servinlgsm.com.ar'
+                destinatario = 'fe@servinlgsm.com.ar'
+                mensaje = "{} {} Enviado desde mi Software de Gestion desarrollado por http://www.servinlgsm.com.ar".format(
+                    self.Traceback, self.Excepcion
+                )
+                motivo = "Se envia informe de errores de {}".format(LeerIni(clave='nombre_sistema'))
+                envia_correo(from_address=remitente, to_address=destinatario,
+                             message=mensaje, subject = motivo, password_email = Constantes.CLAVE_SMTP)
+            except:
+                pass
             if self.LanzarExcepciones:
                 raise
         finally:
@@ -273,18 +266,20 @@ def DeCodifica(dato):
 def saveFileDialog(form=None, files=None, title="Guardar", filename="excel/archivo.xlsx"):
     if not files:
         files = "Todos los archivos (*);;Archivos de texto (*.txt)"
-
-    #verifico que tenga un nombre de una carpeta incluido
-    if filename.find("/") != -1:
-
-        #si no existe la carpeta la creo
-        if not os.path.isdir(filename.split("/")[0]):
-            os.mkdir(filename.split("/")[0])
-
     options = QFileDialog.Options()
     fileName, _ = QFileDialog.getSaveFileName(form, title, filename,
                                               files, options=options)
     return fileName
+
+def openFileNameDialog(form=None, files=None, title='Abrir', filename=''):
+    options = QFileDialog.Options()
+    # options |= QFileDialog.DontUseNativeDialog
+    fileName, _ = QFileDialog.getOpenFileName(form, title, filename,
+                                              files, options=options)
+    if fileName:
+        return fileName
+    else:
+        return ''
 
 def InicioMes(dFecha=None):
     if not dFecha:
@@ -319,15 +314,14 @@ def initialize_logger(output_dir):
     # create debug file handler and set level to debug
     # handler = logging.FileHandler(os.path.join(output_dir, "all.log"), "a")
     # handler.setLevel(logging.DEBUG)
-    if LeerIni(clave="debug") == "S":
+    if LeerIni('debug') == 'S':
         logger = logging.getLogger()
         logger.setLevel(logging.DEBUG)
         handler = RotatingFileHandler(os.path.join(output_dir, "all.log"), maxBytes=2000)
         logger.addHandler(handler)
         formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s", datefmt='%m/%d/%Y %I:%M:%S %p')
         handler.setFormatter(formatter)
-
-    logger.addHandler(handler)
+        logger.addHandler(handler)
 
 def getText(vista, titulo='', etiqueta=''):
     text, okPressed = QInputDialog.getText(vista, titulo, etiqueta, QLineEdit.Normal, "")
@@ -335,6 +329,53 @@ def getText(vista, titulo='', etiqueta=''):
         return text
     else:
         return ''
+
+def GuardarArchivo(caption="Guardar archivo", directory="", filter="", filename=""):
+
+    cArchivo = QFileDialog.getSaveFileName(caption=caption,
+                                           directory=join(directory, filename),
+                                           filter=filter)
+    return cArchivo[0] if cArchivo else ''
+
+def Normaliza(valor):
+    valor = DeCodifica(valor)
+    return valor.replace('Ñ','N').replace('ñ','n').replace('º','')
+
+def HayInternet():
+    retorno = True
+    try:
+        socket.gethostbyname('google.com')
+        c = socket.create_connection(('google.com', 80), 1)
+        c.close()
+    except socket.gaierror:
+        print("DNS error")
+        retorno = False
+    except socket.error:
+        print("Connection error")
+        retorno = False
+
+    return retorno
+
+def envia_correo(from_address = '', to_address = '', message = '', subject = '', password_email = '', to_cc=''):
+    smtp_email = 'mail.servinlgsm.com.ar'
+    mime_message = MIMEText(message)
+    mime_message["From"] = from_address
+    mime_message["To"] = to_address
+    mime_message["Subject"] = subject
+    if to_cc:
+        mime_message["Cc"] = to_cc
+    smtp = SMTP(smtp_email, 587)
+    smtp.ehlo()
+
+    smtp.login(from_address, password_email)
+    smtp.sendmail(from_address, [to_address, to_cc], mime_message.as_string())
+    smtp.quit()
+
+def uniqueid():
+    seed = random.getrandbits(32)
+    while True:
+       yield seed
+       seed += 1
 
 #==============================================================================
 def getFileProperties(fname):
@@ -375,114 +416,3 @@ def getFileProperties(fname):
         pass
 
     return props
-
-
-def envia_correo(from_address = '', to_address = '', message = '', subject = '', password_email = '', to_cc=''):
-    smtp_email = 'mail.ferreteriaavenida.com.ar'
-    mime_message = MIMEText(message)
-    mime_message["From"] = from_address
-    mime_message["To"] = to_address
-    mime_message["Subject"] = subject
-    if to_cc:
-        mime_message["Cc"] = to_cc
-    smtp = SMTP(smtp_email, 587)
-    smtp.ehlo()
-
-    smtp.login(from_address, password_email)
-    smtp.sendmail(from_address, [to_address, to_cc], mime_message.as_string())
-    smtp.quit()
-
-"""
-Para los archivo de texto que se generan deben tener ceros a la izquierda sin coma ni punto decimal
-"""
-def NumeroTXT(valor=0, largo=12, decimales=2):
-
-    # return str(abs(round(valor, decimales))).replace(',','').replace('.','').zfill(largo)
-    return str((round(valor, decimales))).replace(',','').replace('.','').zfill(largo)
-
-def PeriodoAFecha(periodo:str = ''):
-
-    fecha = datetime.date(int(periodo[:4]), int(periodo[4:]), 1)
-
-    return fecha
-
-def GuardarArchivo(caption="Guardar archivo", directory="", filter="", filename=""):
-
-    #dialog = QFileDialog()
-    #dialog.selectFile(filename)
-    #dialog.setDirectory(directory)
-    #dialog.setAcceptMode(QFileDialog.AcceptSave)
-    #dialog.setFileMode(filter)
-    cArchivo = QFileDialog.getSaveFileName(caption=caption,
-                                           directory=join(directory, filename),
-                                           filter=filter)[0]
-    #dialog.exec_()
-    #cArchivo = dialog.selectedFiles()[0]
-    print(cArchivo)
-    return cArchivo if cArchivo else ''
-
-def Normaliza(valor):
-
-    return valor.replace('Ñ','N').replace('ñ','n').replace('º','')
-
-def RandomProcName(largo=10):
-    nombre = ''
-    letras = [chr(x) for x in range(65,91)]
-    for i in range(largo):
-        nombre += choice(letras)
-
-    return nombre
-
-
-class WinPrinters(object):
-    cDefault = ''
-    def __init__(self):
-        self.cDefault = win32print.GetDefaultPrinterW()
-
-    def SetPrinter(self, cPrinter=''):
-        try:
-            win32print.SetDefaultPrinterW(cPrinter)
-        except Exception as e:
-            # printer = QPrinter()
-            #
-            # dialog = QPrintDialog(printer)
-            # dialog.exec_()
-            _ventana = Ui_FormPrinter()
-            _ventana.exec_()
-            if _ventana.cPrinterSelected != '':
-                win32print.SetDefaultPrinterW(_ventana.cPrinterSelected)
-            else:
-                Ventanas.showAlert("Sistema", "No se encontro la impresora {} en la maquina y se imprimira en {}"
-                                   .format(cPrinter, win32print.GetDefaultPrinterW()))
-                win32print.SetDefaultPrinterW(win32print.GetDefaultPrinterW())
-
-    def GetDefaultPrinter(self):
-        return win32print.GetDefaultPrinterW()
-
-    def SendPDF(self, cPDFName, imprime=False):
-        if os.path.isfile(cPDFName):
-            try:
-                if LeerConf('usuario') == 'OSCAR':
-                    if not imprime:
-                        win32api.ShellExecute(0, "open", cPDFName, None, ".", 0)
-                    else:
-                        os.startfile(cPDFName, "print")
-                else:
-                    #win32api.ShellExecute(
-                    #    0,
-                    #    "print",
-                    #    cPDFName,
-                    #    '/d:"%s"' % win32print.GetDefaultPrinter(),
-                    #    ".",
-                    #    0
-                    #)
-                    os.startfile(cPDFName, "print")
-                #win32api.ShellExecute(0, "print", cPDFName, None, ".", 0)
-                time.sleep(5)
-                #os.system("taskill /im AcroRd32.exe /f")
-            except Exception as e:
-                win32api.ShellExecute(0, "open", cPDFName, None, ".", 0)
-                Ventanas.showAlert("Sistema", "Para poder imprimir es necesario "
-                                              "instalar un visualizador de PDF por defecto")
-        else:
-            Ventanas.showAlert("Sistema", "No existe el archivo para la impresion")
