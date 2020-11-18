@@ -3,7 +3,7 @@ from PyQt5.QtCore import QSize
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QPushButton
 
-from libs.utiles import LeerIni, imagen
+from .Utiles import LeerIni, imagen
 
 
 class Boton(QPushButton):
@@ -58,7 +58,7 @@ class BotonCerrarFormulario(Boton):
 
     def __init__(self, *args, **kwargs):
         kwargs['texto'] = kwargs['textoBoton'] if 'textoBoton' in kwargs else '&Cerrar'
-        kwargs['imagen'] = imagen('close.png')
+        kwargs['imagen'] = imagen('if_Log Out_27856.png')
         kwargs['tamanio'] = QSize(32,32)
         Boton.__init__(self, *args, **kwargs)
         self.setDefault(False)

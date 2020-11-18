@@ -4,10 +4,9 @@ import os
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QDialog, QDesktopWidget, QHBoxLayout
 
-from libs.EntradaTexto import EntradaTexto
-from libs.Etiquetas import Etiqueta
-from libs.utiles import icono_sistema, ubicacion_sistema
-from modelos.ParametrosSistema import ParamSist
+from .EntradaTexto import EntradaTexto
+from .Etiquetas import Etiqueta
+from .Utiles import icono_sistema, ubicacion_sistema
 
 
 class Formulario(QDialog):
@@ -110,9 +109,9 @@ class Formulario(QDialog):
         QKeyEvent.ignore()
 
     def EstablecerTema(self):
-        tema = f'{ubicacion_sistema()}{ParamSist.ObtenerParametro("TEMA")}'
+        tema = f'{ubicacion_sistema()}'
         if not os.path.isfile(tema):
-            tema = f'{ubicacion_sistema()}temas/default.css'
+            tema = f'{ubicacion_sistema()}temas/ubuntu.css'
 
         style = open(tema)
         style = style.read()

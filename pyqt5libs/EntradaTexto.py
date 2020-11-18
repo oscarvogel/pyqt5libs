@@ -6,10 +6,9 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QLineEdit, QHBoxLayout, QTextEdit, QItemDelegate, QCompleter
 
-from controladores.PadronAfip import PadronAfip
-from libs import Ventanas
-from libs.Etiquetas import Etiqueta
-from libs.utiles import validar_cuit, LeerIni
+from . import Ventanas
+from .Etiquetas import Etiqueta
+from .Utiles import validar_cuit, LeerIni
 
 
 class EntradaTexto(QLineEdit):
