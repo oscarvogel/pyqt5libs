@@ -49,6 +49,10 @@ class ComboSQL(QComboBox):
             else:
                 campo1 = r[self.campo1]
             self.addItem(campo1, valor)
+        self.postCargaDatos()
+
+    def postCargaDatos(self):
+        pass
 
     def GetDato(self):
         return self.currentData()
