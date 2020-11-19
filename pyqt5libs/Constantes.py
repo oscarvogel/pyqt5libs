@@ -1,7 +1,7 @@
 
 
-EMPRESA = "Ceramica Feli"
-SISTEMA = "Facturacion"
+EMPRESA = "Servin LGSM"
+SISTEMA = "Sistema"
 
 ACTIVO = True
 INACTIVO = False
@@ -30,11 +30,6 @@ FACTURA_C = '11'
 NOTA_CREDITO_A = '3'
 NOTA_CREDITO_B = '8'
 NOTA_CREDITO_C = '13'
-
-SERVER_SMTP = 'mail.servinlgsm.com.ar'
-PUERTO_SMTP = 587
-USUARIO_SMTP = 'fe@servinlgsm.com.ar'
-CLAVE_SMTP = '2oEs*pc4rB'
 
 TIPO_MOVIMIENTOS = {
     'I':'Ingreso', 'E':'Egreso'
