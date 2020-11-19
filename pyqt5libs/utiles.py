@@ -436,3 +436,5 @@ def goday(fecha=datetime.datetime.today(), format=None):
     else:
         fecharetorno = fecha
     return fecharetorno
+
+
