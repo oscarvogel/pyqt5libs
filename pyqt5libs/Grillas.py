@@ -13,7 +13,7 @@ from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QFileDialog, QTableV
 from . import Ventanas, Constantes
 from .EntradaTexto import CUITDelegate
 from .Fechas import FechaDelegate
-from .Utiles import EsVerdadero, AbrirArchivo, saveFileDialog, inicializar_y_capturar_excepciones
+from .utiles import EsVerdadero, AbrirArchivo, saveFileDialog, inicializar_y_capturar_excepciones
 
 class Grilla(QTableWidget):
 

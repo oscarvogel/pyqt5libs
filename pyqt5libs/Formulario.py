@@ -6,7 +6,7 @@ from PyQt5.QtWidgets import QDialog, QDesktopWidget, QHBoxLayout
 
 from .EntradaTexto import EntradaTexto
 from .Etiquetas import Etiqueta
-from .Utiles import icono_sistema, ubicacion_sistema
+from .utiles import icono_sistema, ubicacion_sistema
 
 
 class Formulario(QDialog):

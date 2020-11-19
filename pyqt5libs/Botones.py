@@ -3,7 +3,7 @@ from PyQt5.QtCore import QSize
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QPushButton
 
-from .Utiles import LeerIni, imagen
+from .utiles import LeerIni, imagen
 
 
 class Boton(QPushButton):

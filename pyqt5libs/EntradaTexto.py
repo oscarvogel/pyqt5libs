@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import QLineEdit, QHBoxLayout, QTextEdit, QItemDelegate, QC
 
 from . import Ventanas
 from .Etiquetas import Etiqueta
-from .Utiles import validar_cuit, LeerIni
+from .utiles import validar_cuit, LeerIni
 
 
 class EntradaTexto(QLineEdit):
