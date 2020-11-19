@@ -36,6 +36,7 @@ from os.path import join
 from sys import argv
 
 from PyQt5 import QtGui
+from dateutil.relativedelta import relativedelta
 
 try:
     import win32api
@@ -415,3 +416,23 @@ def getFileProperties(fname):
         pass
 
     return props
+
+def gomonth(fecha=datetime.datetime.today(), month=1):
+    fecharetorno = fecha + relativedelta(months=month)
+    return fecharetorno
+
+def goday(fecha=datetime.datetime.today(), format=None):
+    fecharetorno = None
+    if format:
+        if format == "Ymd":
+            fecha = datetime.date(year=int(fecha[:4]),
+                                  month=int(fecha[4:6]),
+                                  day=int(fecha[-2:]))
+    if isinstance(fecha, int):
+        if fecha > 0:
+            fecharetorno = datetime.date.today() + datetime.timedelta(days=fecha)
+        else:
+            fecharetorno = datetime.date.today() - datetime.timedelta(days=abs(fecha))
+    else:
+        fecharetorno = fecha
+    return fecharetorno

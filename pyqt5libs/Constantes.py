@@ -3,8 +3,8 @@
 EMPRESA = "Ceramica Feli"
 SISTEMA = "Facturacion"
 
-ACTIVO = b'\01'
-INACTIVO = b'\00'
+ACTIVO = True
+INACTIVO = False
 
 IDSISTEMA = 1
 
