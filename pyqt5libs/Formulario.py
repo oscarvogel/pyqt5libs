@@ -22,8 +22,8 @@ class Formulario(QDialog):
         self.setWindowIcon(icono_sistema())
         self.setWindowModality(Qt.ApplicationModal)
         self._want_to_close = False
-        # self.setWindowFlags(self.windowFlags() | Qt.FramelessWindowHint)
-        # self.setAttribute(Qt.WA_TranslucentBackground, True)
+        flags = Qt.WindowMinMaxButtonsHint | Qt.WindowCloseButtonHint
+        self.setWindowFlags(flags)
         self.EstablecerTema()
 
     def Cerrar(self):
