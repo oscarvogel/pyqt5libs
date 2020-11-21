@@ -80,42 +80,91 @@ class ComboSQL(QComboBox):
 class Combo(QComboBox):
 
     proximoWidget = None
+    data = None
+    numero_filas = 0
 
     def __init__(self, parent=None, *args, **kwargs):
-        super().__init__(parent)
+        QComboBox.__init__(self, parent)
         font = QFont()
         if 'tamanio' in kwargs:
             font.setPointSizeF(kwargs['tamanio'])
-        # else:
-        #     font.setPointSizeF(12)
+        else:
+            font.setPointSizeF(12)
+
+        if 'enabled' in kwargs:
+            self.setEnabled(kwargs['enabled'])
+
         self.setFont(font)
 
     def CargaDatos(self, data=None):
         if data:
             for r in data:
                 self.addItem(r)
+                self.numero_filas += 1
 
-    def keyPressEvent(self, QKeyEvent):
-        teclaEnter = [Qt.Key_Enter, Qt.Key_Return, Qt.Key_Tab]
-        if QKeyEvent.key() in teclaEnter:
-            if self.proximoWidget:
-                self.proximoWidget.setFocus()
-        super().keyPressEvent(QKeyEvent)
-
-    def CargaDatosValores(self, data=None):
+    def CargaDatosValores(self, data=None, checkeable=False, checked=False):
+        self.clear()
         if data:
             for k, v in data.items():
                 self.addItem(v, k)
+                if checkeable:
+                    item = self.model().item(self.count() - 1, 0)
+                    item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
+                    if checked:
+                        item.setCheckState(QtCore.Qt.Checked)
+                    else:
+                        item.setCheckState(QtCore.Qt.Unchecked)
+                self.numero_filas += 1
+
+    def itemChecked(self, index):
+        item = self.model().item(index, 0)
+        return item.checkState() == QtCore.Qt.Checked
+
+    # obtiene el dato de la fila
+    def getItem(self, fila):
+        try:
+            item = self.itemText(fila)
+            item = item.replace(',', '.')  # if item else 0
+        except:
+            item = ''
+
+        return item
+
+    #obtiene el indice de la fila
+    def getData(self, fila):
+        try:
+            item = self.itemData(fila)
+            item = item.replace(',', '.')  # if item else 0
+        except:
+            item = ''
+
+        return item
+
+    def getSelectedItems(self):
+        seleccionados = []
+        for row in range(self.rowCount()):
+            if self.itemChecked(row):
+                seleccionados.append(self.getData(row))
+
+        return seleccionados
 
     def text(self):
+        # return self.currentText()
         if self.currentData():
             return self.currentData()
         else:
             return self.currentText()
+        #return self.itemData(self.currentIndex(), Qt.DisplayRole)
 
     def setText(self, p_str):
-        #self.setCurrentIndex()
-        self.setCurrentText(p_str.strip())
+        index = self.findText(p_str)
+        self.setCurrentIndex(index)
+
+    def setIndex(self, p_str):
+        self.setCurrentIndex(self.findData(p_str))
+
+    def rowCount(self):
+        return self.numero_filas
 
 class ComboSINO(Combo):
 
