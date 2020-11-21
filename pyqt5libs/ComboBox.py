@@ -1,6 +1,7 @@
 # coding=utf-8
 import decimal
 
+from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QComboBox, QItemDelegate, QApplication, QStyle
@@ -21,13 +22,16 @@ class ComboSQL(QComboBox):
     proximoWidget = None
 
     def __init__(self, *args, **kwargs):
-        super().__init__(*args, **kwargs)
+        super().__init__()
         font = QFont()
         font.setPointSizeF(10)
         self.setFont(font)
-        self.CargaDatos()
+        if 'checkeable' in kwargs:
+            self.CargaDatos(checkeable=kwargs['checkeable'])
+        else:
+            self.CargaDatos()
 
-    def CargaDatos(self):
+    def CargaDatos(self, checkeable=False, checked=False):
         self.clear()
         if not self.modelo:
             return
@@ -48,8 +52,19 @@ class ComboSQL(QComboBox):
                 campo1 = str(r[self.campo1])
             else:
                 campo1 = r[self.campo1]
-            self.addItem(campo1, valor)
+            self.agregar_dato(campo1, valor, checkeable, checked)
         self.postCargaDatos()
+
+    def agregar_dato(self, detalle, valor, checkeable=False, checked=False):
+        self.addItem(detalle, valor)
+
+        if checkeable:
+            item = self.model().item(self.count() - 1, 0)
+            item.setFlags(QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEnabled)
+            if checked:
+                item.setCheckState(QtCore.Qt.Checked)
+            else:
+                item.setCheckState(QtCore.Qt.Unchecked)
 
     def postCargaDatos(self):
         pass
@@ -76,6 +91,34 @@ class ComboSQL(QComboBox):
             if self.proximoWidget:
                 self.proximoWidget.setFocus()
         super().keyPressEvent(QKeyEvent)
+
+    # obtiene el dato de la fila
+    def getItem(self, fila):
+        try:
+            item = self.itemText(fila)
+            item = item.replace(',', '.')  # if item else 0
+        except:
+            item = ''
+
+        return item
+
+    #obtiene el indice de la fila
+    def getData(self, fila):
+        try:
+            item = self.itemData(fila)
+            item = item.replace(',', '.')  # if item else 0
+        except:
+            item = ''
+
+        return item
+
+    def getSelectedItems(self):
+        seleccionados = []
+        for row in range(self.rowCount()):
+            if self.itemChecked(row):
+                seleccionados.append(self.getData(row))
+
+        return seleccionados
 
 class Combo(QComboBox):
 
