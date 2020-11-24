@@ -8,7 +8,6 @@ from PyQt5.QtWidgets import QComboBox, QItemDelegate, QApplication, QStyle
 
 
 class ComboSQL(QComboBox):
-
     lTodos = False
     cBaseDatos = ''
     cSentencia = ''
@@ -20,6 +19,7 @@ class ComboSQL(QComboBox):
     cOrden = None
     modelo = None
     proximoWidget = None
+    numero_filas = 0
 
     def __init__(self, *args, **kwargs):
         super().__init__()
@@ -56,6 +56,7 @@ class ComboSQL(QComboBox):
         self.postCargaDatos()
 
     def agregar_dato(self, detalle, valor, checkeable=False, checked=False):
+        self.numero_filas += 1
         self.addItem(detalle, valor)
 
         if checkeable:
@@ -65,6 +66,10 @@ class ComboSQL(QComboBox):
                 item.setCheckState(QtCore.Qt.Checked)
             else:
                 item.setCheckState(QtCore.Qt.Unchecked)
+
+    def itemChecked(self, index):
+        item = self.model().item(index, 0)
+        return item.checkState() == QtCore.Qt.Checked
 
     def postCargaDatos(self):
         pass
@@ -79,7 +84,7 @@ class ComboSQL(QComboBox):
             return self.currentText()
 
     def setText(self, p_str):
-        #self.setCurrentIndex()
+        # self.setCurrentIndex()
         self.setCurrentText(p_str)
 
     def setIndex(self, p_str):
@@ -102,7 +107,7 @@ class ComboSQL(QComboBox):
 
         return item
 
-    #obtiene el indice de la fila
+    # obtiene el indice de la fila
     def getData(self, fila):
         try:
             item = self.itemData(fila)
@@ -120,8 +125,10 @@ class ComboSQL(QComboBox):
 
         return seleccionados
 
-class Combo(QComboBox):
+    def rowCount(self):
+        return self.numero_filas
 
+class Combo(QComboBox):
     proximoWidget = None
     data = None
     numero_filas = 0
@@ -173,7 +180,7 @@ class Combo(QComboBox):
 
         return item
 
-    #obtiene el indice de la fila
+    # obtiene el indice de la fila
     def getData(self, fila):
         try:
             item = self.itemData(fila)
@@ -197,7 +204,7 @@ class Combo(QComboBox):
             return self.currentData()
         else:
             return self.currentText()
-        #return self.itemData(self.currentIndex(), Qt.DisplayRole)
+        # return self.itemData(self.currentIndex(), Qt.DisplayRole)
 
     def setText(self, p_str):
         index = self.findText(p_str)
@@ -209,18 +216,20 @@ class Combo(QComboBox):
     def rowCount(self):
         return self.numero_filas
 
+
 class ComboSINO(Combo):
 
     def __init__(self, parent=None, *args, **kwargs):
         super().__init__(parent)
-        self.CargaDatosValores(data={'S':'SI','N':'NO'})
+        self.CargaDatosValores(data={'S': 'SI', 'N': 'NO'})
 
 
 class FormaPago(Combo):
 
     def __init__(self, parent=None, *args, **kwargs):
         Combo.__init__(self, parent, *args, **kwargs)
-        self.CargaDatosValores(data={'S':'Contado','N':'Cuenta corriente'})
+        self.CargaDatosValores(data={'S': 'Contado', 'N': 'Cuenta corriente'})
+
 
 class ComboBoxDelegate(QItemDelegate):
     def __init__(self, parent=None):
@@ -266,6 +275,7 @@ class ComboTablas(Combo):
             'CENTROS DE COSTOS',
             'RETENCION PROVEEDOR'
         ])
+
 
 class cboFormaCalculo(Combo):
 
