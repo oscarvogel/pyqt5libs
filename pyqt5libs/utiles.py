@@ -437,3 +437,16 @@ def goday(fecha=datetime.datetime.today(), format=None):
         fecharetorno = fecha
     return fecharetorno
 
+def periodo_anterior(periodo=''):
+    fecha = datetime.datetime(int(periodo[:4]), int(periodo[4:]), 1, 0, 0, 0)
+    retorno = FechaMysql(gomonth(fecha, -1))[:6]
+
+    return retorno
+
+
+def periodo_siguiente(periodo=''):
+    fecha = datetime.datetime(int(periodo[:4]), int(periodo[4:]), 1, 0, 0, 0)
+    retorno = FechaMysql(gomonth(fecha, 1))[:6]
+
+    return retorno
+
