@@ -157,8 +157,8 @@ class ABM(VistaBase):
                 for c in self.condicion:
                     data = data.where(c)
 
-            if self.lineEditBusqueda.text():
-                data = self.ArmaBusqueda(data)
+        if self.lineEditBusqueda.text():
+            data = self.ArmaBusqueda(data)
 
         data = data.limit(self.limite)
         for d in data:
