@@ -34,6 +34,7 @@ class ComboSQL(QComboBox):
 
     def CargaDatos(self, checkeable=False, checked=False):
         self.clear()
+        self.numero_filas = 0
         if not self.modelo:
             return
 
@@ -75,8 +76,12 @@ class ComboSQL(QComboBox):
                 item.setCheckState(QtCore.Qt.Unchecked)
 
     def itemChecked(self, index):
-        item = self.model().item(index, 0)
-        return item.checkState() == QtCore.Qt.Checked
+        try:
+            item = self.model().item(index, 0)
+            checked = item.checkState() == QtCore.Qt.Checked
+        except:
+            checked = False
+        return checked
 
     def postCargaDatos(self):
         pass
