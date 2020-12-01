@@ -47,7 +47,7 @@ class ComboSQL(QComboBox):
         indice_defecto = 0
         indice = 0
         for r in data:
-            if isinstance(r[self.campovalor], (decimal.Decimal,)):
+            if isinstance(r[self.campovalor], (decimal.Decimal, int, float)):
                 valor = str(r[self.campovalor])
             else:
                 valor = r[self.campovalor]
