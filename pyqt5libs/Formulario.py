@@ -12,7 +12,7 @@ from .utiles import icono_sistema, ubicacion_sistema
 class Formulario(QDialog):
 
     lblStatusBar = None
-
+    centraform = True
     controles = {}
 
     def __init__(self, parent=None):
@@ -31,7 +31,8 @@ class Formulario(QDialog):
         self.close()
 
     def exec_(self):
-        self.Center()
+        if self.centraform:
+            self.Center()
         QDialog.exec_(self)
 
     def Center(self):
@@ -49,6 +50,7 @@ class Formulario(QDialog):
     def resizeEvent(self, QResizeEvent):
         self.Center()
         QDialog.resizeEvent(self, QResizeEvent)
+        print("Ancho {} Alto {}".format(self.width(), self.height()))
 
     def addStatusBar(self, layout=None):
         if layout:

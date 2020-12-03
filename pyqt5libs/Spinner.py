@@ -16,8 +16,8 @@ from PyQt5 import QtCore
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QDoubleSpinBox, QHBoxLayout
 
-from libs.Etiquetas import Etiqueta
-from libs.utiles import InicioMes, FinMes
+from .Etiquetas import Etiqueta
+from .utiles import InicioMes, FinMes
 
 
 class Spinner(QDoubleSpinBox):

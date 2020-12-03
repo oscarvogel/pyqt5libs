@@ -11,6 +11,7 @@ class ArbolView(QTreeView):
 
     model = None #modelo del arbol
     nombre = 'short_name' #nombre para el indice de datos
+    valor = 'valor' #nombre si tiene un valor
     id = 'dbID' #nombre para el indice del ID
     parent_id = 'parentID' #nombre para el campo del parent
     level = 'level' #nombre para el campo del nivel del arbol
@@ -49,6 +50,10 @@ class ArbolView(QTreeView):
                 parent = seen[pid]
             dbid = value[self.id]
             itemnombre = QtGui.QStandardItem(value[self.nombre])
+            try:
+                itemValor = QtGui.QStandardItem(value[self.valor])
+            except:
+                itemValor = ''
             itemid = QtGui.QStandardItem(str(dbid))
             itemnombre.setEditable(False)
             if concheck:
@@ -59,9 +64,14 @@ class ArbolView(QTreeView):
                 itemnombre.setFlags(itemnombre.flags() | Qt.ItemIsUserCheckable)
 
             itemid.setEditable(False)
-            parent.appendRow([
-                itemnombre, itemid,
-            ])
+            if itemValor:
+                parent.appendRow([
+                    itemnombre, itemValor, itemid,
+                ])
+            else:
+                parent.appendRow([
+                    itemnombre, itemid,
+                ])
             seen[dbid] = parent.child(parent.rowCount() - 1)
 
     def ObtenerItemSeleccionado(self, col=0):
