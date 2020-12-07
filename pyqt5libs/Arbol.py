@@ -78,7 +78,6 @@ class ArbolView(QTreeView):
         resultado = self.model.itemData(
             self.selectedIndexes()[col]
         )[0]
-        print(resultado)
         return resultado
 
     def recorrer(self, model=None, parent=QModelIndex()):
