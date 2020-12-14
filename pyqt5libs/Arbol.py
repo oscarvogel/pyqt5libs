@@ -75,10 +75,12 @@ class ArbolView(QTreeView):
             seen[dbid] = parent.child(parent.rowCount() - 1)
 
     def ObtenerItemSeleccionado(self, col=0):
-        resultado = self.model.itemData(
-            self.selectedIndexes()[col]
-        )[0]
-        print(resultado)
+        try:
+            resultado = self.model.itemData(
+                self.selectedIndexes()[col]
+            )[0]
+        except:
+            resultado = ''
         return resultado
 
     def recorrer(self, model=None, parent=QModelIndex()):
