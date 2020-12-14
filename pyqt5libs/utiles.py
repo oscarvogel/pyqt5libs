@@ -421,7 +421,7 @@ def gomonth(fecha=datetime.datetime.today(), month=1):
     fecharetorno = fecha + relativedelta(months=month)
     return fecharetorno
 
-def goday(fecha=datetime.datetime.today(), format=None):
+def goday(fecha=datetime.datetime.today(), format=None, days=0):
     fecharetorno = None
     if format:
         if format == "Ymd":
@@ -433,6 +433,8 @@ def goday(fecha=datetime.datetime.today(), format=None):
             fecharetorno = datetime.date.today() + datetime.timedelta(days=fecha)
         else:
             fecharetorno = datetime.date.today() - datetime.timedelta(days=abs(fecha))
+    elif days != 0:
+        fecharetorno = datetime.date.today() + datetime.timedelta(days=days)
     else:
         fecharetorno = fecha
     return fecharetorno
