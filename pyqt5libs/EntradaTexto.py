@@ -92,6 +92,9 @@ class EntradaTexto(QLineEdit):
     def value(self):
         return float(self.text() or 0)
 
+    def valor(self):
+        return self.text()
+
 class Factura(QHBoxLayout):
 
     numero = ''
