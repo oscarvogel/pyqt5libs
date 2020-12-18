@@ -11,7 +11,7 @@ from ..Botones import Boton
 from ..Checkbox import CheckBox
 from ..EntradaTexto import EntradaTexto
 from ..Etiquetas import Etiqueta
-from ..Fechas import Fecha
+from ..Fechas import Fecha, FechaLine
 from ..Grillas import Grilla
 from ..Spinner import Spinner
 from ..utiles import inicializar_y_capturar_excepciones, EsVerdadero, imagen
@@ -316,6 +316,9 @@ class ABM(VistaBase):
             if isinstance(nombre, str):
                 texto = nombre.capitalize()
             else:
+                if not 'control' in kwargs:
+                    if nombre.field_type in ['DATE']:
+                        kwargs['control'] = FechaLine()
                 texto = nombre.verbose_name if nombre.verbose_name else nombre.name.capitalize()
 
         if not isinstance(nombre, str): #si no es un campo texto intento convertir de un campo de pewee

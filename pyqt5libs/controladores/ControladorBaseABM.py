@@ -49,7 +49,7 @@ class ControladorBaseABM(ControladorBase):
             dato = self.model()
 
         for control in self.view.controles:
-            dato.__data__[control] = self.view.controles[control].text()
+            dato.__data__[control] = self.view.controles[control].valor()
         dato.save(force_insert=self.view.tipo == 'A')
         self.view.btnAceptarClicked()
 
