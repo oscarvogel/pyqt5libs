@@ -7,9 +7,9 @@ from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QDateEdit, QStyledItemDelegate, QItemDelegate, QHBoxLayout
 from PyQt5.uic.properties import QtGui
 
-from . import Ventanas
-from .EntradaTexto import EntradaTexto
-from .Etiquetas import Etiqueta
+from libs import Ventanas
+from libs.EntradaTexto import EntradaTexto
+from libs.Etiquetas import Etiqueta
 
 
 class Fecha(QDateEdit):
@@ -71,6 +71,9 @@ class Fecha(QDateEdit):
         periodo = self.getFechaSql()[:6]
         return periodo
 
+    def valor(self):
+        return self.toPyDate()
+
 class FechaDelegate(QItemDelegate):
 
     def __init__(self):
@@ -80,30 +83,6 @@ class FechaDelegate(QItemDelegate):
         editor = Fecha(parent, fecha=datetime.datetime.today())
 
         return editor
-
-    # def paint(self, QPainter, QStyleOptionViewItem, QModelIndex):
-    #     value = QModelIndex.data(Qt.DisplayRole)
-    #     print("valor de paint {}".format(value))
-    #
-    #     # QItemDelegate.paint(self, QPainter, QStyleOptionViewItem, QModelIndex)
-    #     super(FechaDelegate, self).paint(QPainter, QStyleOptionViewItem, QModelIndex)
-    # #
-    # def setEditorData(self, fecha, index):
-    #     value = index.model().data(index, Qt.EditRole)
-    #     if isinstance(value, QtCore.QDate):
-    #         value = value.toPyDate()
-    #         fecha.setFecha(value)
-    #     # qdate = QtCore.QDate().fromString(value, "dd/mm/yyyy")
-    #     print("valor editor data {}".format(value))
-    #     # fecha.setFecha(qdate)
-    #
-    # def setModelData(self, fecha, model, index):
-    #     value = fecha.date()
-    #
-    #     model.setData(index, value, Qt.EditRole)
-    #
-    # def updateEditorGeometry(self, editor, option, index):
-    #     editor.setGeometry(option.rect)
 
 class RangoFechas(QHBoxLayout):
 
@@ -144,8 +123,8 @@ class FechaLine(EntradaTexto):
         self.setFont(font)
         if 'fecha' in kwargs:
             self.setFecha(kwargs['fecha'])
-        else:
-            self.setFecha()
+        # else:
+        #     self.setFecha()
 
         # reg_ex_str = "^(?:(?:31(\/|-|\.)(?:0?[13578]|1[02]))\1|(?:(?:29|30)(\/|-|\.)(?:0?[13-9]|1[0-2])\2))(?:(?:1[6-9]|[2-9]\d)?\d{2})$|^(?:29(\/|-|\.)0?2\3(?:(?:(?:1[6-9]|[2-9]\d)?(?:0[48]|[2468][048]|[13579][26])|(?:(?:16|[2468][048]|[3579][26])00))))$|^(?:0?[1-9]|1\d|2[0-8])(\/|-|\.)(?:(?:0?[1-9])|(?:1[0-2]))\4(?:(?:1[6-9]|[2-9]\d)?\d{2})$"
         # reg_ex = QtCore.QRegExp(reg_ex_str)
@@ -168,7 +147,7 @@ class FechaLine(EntradaTexto):
                 self.setDate(datetime.date.today() + datetime.timedelta(days=fecha))
             else:
                 self.setDate(datetime.date.today() - datetime.timedelta(days=abs(fecha)))
-        elif not fecha: #quiere decir que viene None de la tabla en mysql es 0000-00-00
+        elif not fecha or isinstance(fecha, str): #quiere decir que viene None de la tabla en mysql es 0000-00-00
             self.nulldate = True
             # self.setSpecialValueText("0000-00-00")
             self.fecha = "0000-00-00"
@@ -197,15 +176,6 @@ class FechaLine(EntradaTexto):
         # fecha = datetime.datetime.strptime(fecha, "%d/%m/%Y").date().strftime('%Y%m%d')
         fecha = self.fecha.strftime("%Y%m%d")
         return fecha
-
-    # def setText(self, fecha=datetime.datetime.today()):
-    #     if isinstance(fecha, (str)): #quiere decir que viene 0000-00-00 de mysql
-    #         # fecha = datetime.datetime.today()
-    #         self.setFecha(self.minimumDate())
-    #         self.nulldate = True
-    #     else:
-    #         self.nulldate = False
-    #         self.setFecha(fecha)
 
     def getPeriodo(self):
         periodo = self.getFechaSql()[:6]
