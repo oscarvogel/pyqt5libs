@@ -140,6 +140,9 @@ class ComboSQL(QComboBox):
     def rowCount(self):
         return self.numero_filas
 
+    def valor(self):
+        return self.text()
+
 class Combo(QComboBox):
     proximoWidget = None
     data = None
