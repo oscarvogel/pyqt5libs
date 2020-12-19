@@ -13,11 +13,12 @@
 import datetime
 
 from PyQt5 import QtCore
+from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QDoubleSpinBox, QHBoxLayout
 
 from .Etiquetas import Etiqueta
-from .utiles import InicioMes, FinMes
+from .utiles import InicioMes, FinMes, FechaMysql, MesIdentificador
 
 
 class Spinner(QDoubleSpinBox):
@@ -79,6 +80,9 @@ class Periodo(QHBoxLayout):
     dFin = None #date que indica el ultimo dia del mes
     textoEtiqueta = ''
     proximoWidget = None #proximo widget al que va cuando da enter
+    periodo_descripcion = '' #describe el periodo con nombre del mes
+    enabled = True
+    actualiza_periodo = pyqtSignal()
 
     def __init__(self, parent=None, *args, **kwargs):
 
@@ -89,11 +93,11 @@ class Periodo(QHBoxLayout):
             self.labelPeriodo.setObjectName("labelPeriodo")
             self.addWidget(self.labelPeriodo)
 
-        self.lineEditMes = Spinner(parent)
+        self.lineEditMes = Spinner(decimales=0)
         self.lineEditMes.setDecimals(0)
         self.lineEditMes.setObjectName("lineEditMes")
         self.addWidget(self.lineEditMes)
-        self.lineEditAnio = Spinner(parent)
+        self.lineEditAnio = Spinner(decimales=0)
         self.lineEditAnio.setDecimals(0)
         self.lineEditAnio.setObjectName("lineEditAnio")
         self.addWidget(self.lineEditAnio)
@@ -111,9 +115,26 @@ class Periodo(QHBoxLayout):
         self.lineEditAnio.proximoWidget = self.proximoWidget
 
     def ActualizaPeriodo(self):
-        self.cPeriodo = self.lineEditAnio.text() + str(self.lineEditMes.text()).zfill(2)
+        self.cPeriodo = str(round(self.lineEditAnio.value())) + str(round(self.lineEditMes.value())).zfill(2)
         if self.lineEditMes.value() >= 1 and self.lineEditMes.value() <= 12:
             self.dInicio = InicioMes(datetime.date(int(self.lineEditAnio.value()),
                                                int(self.lineEditMes.value()), 1))
         self.dFin = FinMes(self.dInicio)
+        if self.lineEditMes.value() != 0:
+            self.periodo_descripcion = MesIdentificador(periodo=self.cPeriodo)
+        self.actualiza_periodo.emit()
+
+    def setText(self, p_str):
+        if not p_str:
+            p_str = FechaMysql()[:6]
+        self.cPeriodo = p_str
+        self.lineEditMes.setValue(float(p_str[4:]))
+        self.lineEditAnio.setValue(float(p_str[:4]))
+
+    def setStyleSheet(self, p_str):
+        self.lineEditMes.setStyleSheet(p_str)
+        self.lineEditAnio.setStyleSheet(p_str)
+
+    def valor(self):
+        return self.cPeriodo
 

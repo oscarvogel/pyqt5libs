@@ -452,3 +452,31 @@ def periodo_siguiente(periodo=''):
 
     return retorno
 
+def MesIdentificador(dFecha=datetime.datetime.now().date(), formato='largo', periodo=None):
+    if periodo:
+        dFecha = PeriodoAFecha(periodo)
+    MESES = [
+        'Enero',
+        'Febrero',
+        'Marzo',
+        'Abril',
+        'Mayo',
+        'Junio',
+        'Julio',
+        'Agosto',
+        'Septiembre',
+        'Octubre',
+        'Noviembre',
+        'Diciembre',
+    ]
+    retorno = ''
+    if formato == 'largo':
+        retorno = '{}/{}'.format(MESES[dFecha.month - 1], dFecha.year)
+    elif formato == 'corto':
+        retorno = '{}/{}'.format(MESES[dFecha.month - 1][:3], dFecha.year)
+    return retorno
+
+def PeriodoAFecha(periodo: str = ''):
+    fecha = datetime.date(int(periodo[:4]), int(periodo[4:]), 1)
+
+    return fecha
