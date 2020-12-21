@@ -170,6 +170,9 @@ class TextEdit(QTextEdit):
     def text(self):
         return self.toPlainText()
 
+    def valor(self):
+        return self.text()
+
 class CUIT(EntradaTexto):
 
     denominacion = ""

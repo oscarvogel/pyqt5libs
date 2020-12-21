@@ -30,3 +30,6 @@ class CheckBox(QCheckBox):
                 return True
             else:
                 return False
+
+    def valor(self):
+        return self.text()
