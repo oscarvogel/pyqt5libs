@@ -8,7 +8,7 @@ from PyQt5.QtWidgets import QLineEdit, QHBoxLayout, QTextEdit, QItemDelegate, QC
 
 from . import Ventanas
 from .Etiquetas import Etiqueta
-from .utiles import validar_cuit, LeerIni
+from .utiles import validar_cuit, LeerIni, FechaMysql, MesIdentificador, PeriodoAFecha
 
 
 class EntradaTexto(QLineEdit):
@@ -25,6 +25,10 @@ class EntradaTexto(QLineEdit):
 
     #para campos numericos que debo rellenar con ceros adelante
     relleno = 0
+
+    #emit signal
+    keyPressed = QtCore.pyqtSignal(int) #presiona tecla manda la tecla prsionad
+    when = QtCore.pyqtSignal() #cuando recibe el foco emite una señal
 
     def __init__(self, parent=None, *args, **kwargs):
 
@@ -65,6 +69,7 @@ class EntradaTexto(QLineEdit):
             if self.proximoWidget:
                 self.proximoWidget.setFocus()
         QLineEdit.keyPressEvent(self, event)
+        self.keyPressed.emit(event.key())
 
     def focusOutEvent(self, QFocusEvent):
         if self.relleno > 0:
@@ -81,6 +86,7 @@ class EntradaTexto(QLineEdit):
         QLineEdit.focusOutEvent(self, QFocusEvent)
 
     def focusInEvent(self, QFocusEvent):
+        self.when.emit()
         self.selectAll()
         QLineEdit.focusInEvent(self, QFocusEvent)
 
@@ -265,3 +271,27 @@ class AutoCompleter(EntradaTexto):
 
     def getSelected(self):
         return self.lastSelected
+
+class HoraDelegate(QItemDelegate):
+
+    def __init__(self):
+        super().__init__()
+
+    def createEditor(self,parent, option, index):
+        editor = EntradaTexto(parent)
+        editor.setInputMask("99:99:99")
+
+        return editor
+
+class IdentificadorSueldo(EntradaTexto):
+
+    periodo = ''
+
+    def focusInEvent(self, QFocusEvent):
+        super().focusInEvent(QFocusEvent)
+
+        if not self.periodo:
+            self.periodo = FechaMysql()[:6]
+
+        if not self.text():
+            self.setText(MesIdentificador(dFecha=PeriodoAFecha(self.periodo)))

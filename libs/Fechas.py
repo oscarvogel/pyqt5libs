@@ -7,9 +7,9 @@ from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QDateEdit, QStyledItemDelegate, QItemDelegate, QHBoxLayout
 from PyQt5.uic.properties import QtGui
 
-from libs import Ventanas
-from libs.EntradaTexto import EntradaTexto
-from libs.Etiquetas import Etiqueta
+from . import Ventanas
+from .EntradaTexto import EntradaTexto
+from .Etiquetas import Etiqueta
 
 
 class Fecha(QDateEdit):

@@ -1,5 +1,6 @@
 # -*- coding: utf-8 -*-
 import os
+from os.path import join
 
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QDialog, QDesktopWidget, QHBoxLayout
@@ -111,9 +112,9 @@ class Formulario(QDialog):
         QKeyEvent.ignore()
 
     def EstablecerTema(self):
-        tema = f'{ubicacion_sistema()}'
+        tema = join(f'{ubicacion_sistema()}', 'pyqt5libs', 'libs', 'temas', 'ubuntu.css')
         if not os.path.isfile(tema):
-            tema = f'{ubicacion_sistema()}temas/ubuntu.css'
+            tema = join('temas/ubuntu.css')
 
         style = open(tema)
         style = style.read()
