@@ -112,7 +112,7 @@ class Formulario(QDialog):
         QKeyEvent.ignore()
 
     def EstablecerTema(self):
-        tema = join(f'{ubicacion_sistema()}', 'pyqt5libs', 'libs', 'temas', 'ubuntu.css')
+        tema = join(f'{ubicacion_sistema()}', 'pyqt5libs', '../libs', 'temas', 'ubuntu.css')
         if not os.path.isfile(tema):
             tema = join('temas/ubuntu.css')
 

@@ -33,6 +33,8 @@ from functools import wraps
 from logging.handlers import RotatingFileHandler
 from smtplib import SMTP
 
+from ..libs.vistas.select_printer import Ui_FormPrinter
+
 try:
     import win32print
 except:
@@ -41,7 +43,7 @@ from PyQt5.QtCore import QSettings
 from PyQt5.QtWidgets import QFileDialog, QInputDialog, QLineEdit
 from os.path import join
 from sys import argv
-from pyqt5libs.libs.vistas.select_printer import Ui_FormPrinter
+
 from PyQt5 import QtGui
 from dateutil.relativedelta import relativedelta
 
@@ -74,7 +76,7 @@ def AbrirArchivo(cArchivo=None):
 def LeerIni(clave=None, key=None, carpeta=''):
     analizador = argparse.ArgumentParser(description='Sistema.')
     analizador.add_argument("-i", "--inicio", default=os.getcwd(), help="Carpeta de Inicio de sistema.")
-    analizador.add_argument("-a", "--archivo", default="fasa.ini", help="Archivo de Configuracion de sistema.")
+    analizador.add_argument("-a", "--archivo", default="sistema.ini", help="Archivo de Configuracion de sistema.")
     argumento = analizador.parse_args()
     retorno = ''
     Config = ConfigParser()

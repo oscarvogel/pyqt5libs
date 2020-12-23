@@ -6,15 +6,15 @@ from PyQt5.QtCore import QSize
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QVBoxLayout, QTabWidget, QWidget, QGridLayout, QHBoxLayout, QLineEdit, QCheckBox, QComboBox
 
-from .. import Ventanas
-from ..Botones import Boton
-from ..Checkbox import CheckBox
-from ..EntradaTexto import EntradaTexto
-from ..Etiquetas import Etiqueta
-from ..Fechas import Fecha, FechaLine
-from ..Grillas import Grilla
-from ..Spinner import Spinner
-from ..utiles import inicializar_y_capturar_excepciones, EsVerdadero, imagen
+from libs.pyqt5libs import Ventanas
+from libs.pyqt5libs.Botones import Boton
+from libs.pyqt5libs.Checkbox import CheckBox
+from libs.pyqt5libs.EntradaTexto import EntradaTexto
+from libs.pyqt5libs.Etiquetas import Etiqueta
+from libs.pyqt5libs.Fechas import Fecha, FechaLine
+from libs.pyqt5libs.Grillas import Grilla
+from libs.pyqt5libs.Spinner import Spinner
+from libs.pyqt5libs.utiles import inicializar_y_capturar_excepciones, EsVerdadero, imagen
 from vistas.VistaBase import VistaBase
 
 

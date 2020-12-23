@@ -10,8 +10,8 @@
 # for more details.
 
 #Vista base del cual derivan todos las vistas del sistema
-from ..Formulario import Formulario
-from ..utiles import icono_sistema
+from libs.pyqt5libs.Formulario import Formulario
+from libs.pyqt5libs.utiles import icono_sistema
 
 __author__ = "Jose Oscar Vogel <oscarvogel@gmail.com>"
 __copyright__ = "Copyright (C) 2018 Jose Oscar Vogel"
