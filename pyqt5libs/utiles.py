@@ -33,7 +33,10 @@ from functools import wraps
 from logging.handlers import RotatingFileHandler
 from smtplib import SMTP
 
-import win32print
+try:
+    import win32print
+except:
+    pass
 from PyQt5.QtCore import QSettings
 from PyQt5.QtWidgets import QFileDialog, QInputDialog, QLineEdit
 from os.path import join
