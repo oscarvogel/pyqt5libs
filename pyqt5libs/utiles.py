@@ -47,7 +47,7 @@ try:
 except:
     pass
 
-from . import Constantes, Ventanas
+from libs.pyqt5libs import Constantes, Ventanas
 
 __author__ = "Jose Oscar Vogel <oscar@ferreteriaavenida.com.ar>"
 __copyright__ = "Copyright (C) 2019 Steffen Hnos SRL"

@@ -8,12 +8,10 @@ import xlsxwriter
 from PyQt5 import QtCore
 from PyQt5.QtCore import QAbstractTableModel, Qt, QVariant
 from PyQt5.QtGui import QFont, QColor
-from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QFileDialog, QTableView
+from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QTableView
 
-from . import Ventanas, Constantes
-from .EntradaTexto import CUITDelegate
-from .Fechas import FechaDelegate
-from .utiles import EsVerdadero, AbrirArchivo, saveFileDialog, inicializar_y_capturar_excepciones
+from .utiles import EsVerdadero, AbrirArchivo, saveFileDialog
+
 
 class Grilla(QTableWidget):
 

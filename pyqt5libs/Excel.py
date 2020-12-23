@@ -6,7 +6,7 @@ from datetime import date
 import xlsxwriter
 from xlsxwriter.utility import xl_rowcol_to_cell
 from xlsxwriter.worksheet import (
-    Worksheet, cell_number_tuple, cell_string_tuple)
+    cell_number_tuple, cell_string_tuple)
 try:
     import win32com.client as win32
     WIN32 = True
