@@ -3,10 +3,10 @@ from PyQt5 import QtCore
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QLineEdit, QHBoxLayout
 
-from libs import Ventanas
-from libs.EntradaTexto import EntradaTexto
-from libs.Etiquetas import Etiqueta, EtiquetaRoja
-from libs.utiles import inicializar_y_capturar_excepciones
+from . import Ventanas
+from .EntradaTexto import EntradaTexto
+from .Etiquetas import Etiqueta, EtiquetaRoja
+from .utiles import inicializar_y_capturar_excepciones
 from vistas.Busqueda import UiBusqueda
 
 
@@ -166,3 +166,43 @@ class ValidaConNombre(QHBoxLayout):
         self.labelDescripcion.setObjectName("labelDescripcion")
         self.addWidget(self.labelDescripcion)
         self.lineEditCodigo.widgetNombre = self.labelDescripcion
+
+class ValidaConTexto(QHBoxLayout):
+
+    textoEtiqueta = 'Codigo'
+    modelo = None #modelo sobre el que se realiza la validacion
+    nombre = None #nombre de la busqueda
+    codigo = None #campo de retorno de la validacion
+    orden = None #orden de busqueda, si no se especifica se utiliza el nombre
+    condiciones = None #condiciones de filtrado para la busqueda y la validacion,
+                        #puede ser una lista de condiciones
+    campos = [] #lista con los campos a mostrar si se hace la busqueda con F2
+    largo = 0 #indica cuantos caracteres se deja introducir
+    ancho = 50 #maximo ancho del control para el codigo
+
+    def __init__(self, parent=None, *args, **kwargs):
+        super().__init__(parent)
+
+        if 'texto' in kwargs:
+            self.textoEtiqueta = kwargs['texto']
+
+        self.labelNombre = Etiqueta(parent, texto=self.textoEtiqueta)
+        self.labelNombre.setObjectName("labelNombre")
+        self.addWidget(self.labelNombre)
+
+        self.lineEditCodigo = Validaciones(parent)
+        self.lineEditCodigo.setObjectName("lineEditNombre")
+        self.lineEditCodigo.modelo = self.modelo
+        self.lineEditCodigo.campoNombre = self.nombre
+        self.lineEditCodigo.campoRetorno = self.codigo
+        self.lineEditCodigo.cOrden = self.orden if self.orden else self.nombre
+        self.lineEditCodigo.condiciones = self.condiciones
+        self.lineEditCodigo.campos = self.campos
+        self.lineEditCodigo.largo = self.largo
+        self.lineEditCodigo.setMaximumWidth(self.ancho)
+        self.addWidget(self.lineEditCodigo)
+
+        self.textNombre = Etiqueta()
+        self.lineEditCodigo.widgetNombre = self.textNombre
+        self.addWidget(self.textNombre)
+

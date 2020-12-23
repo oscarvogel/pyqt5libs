@@ -301,3 +301,16 @@ class cboFormaCalculo(Combo):
             'H': 'Horas',
             'F': 'Fechas',
         })
+
+class cboDebeHaber(Combo):
+
+    def __init__(self, parent=None, *args, **kwargs):
+        Combo.__init__(self, parent, *args, **kwargs)
+        self.CargaDatosValores(data={'D':'Debe','H':'Haber'})
+
+
+class ComboSAC(Combo):
+
+    def __init__(self, parent=None, *args, **kwargs):
+        Combo.__init__(self, parent, *args, **kwargs)
+        self.CargaDatosValores(data={'J':'Junio','D':'Diciembre'})

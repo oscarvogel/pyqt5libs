@@ -2,7 +2,7 @@
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QCheckBox
 
-from libs.pyqt5libs.utiles import LeerIni
+from .utiles import LeerIni
 
 
 class CheckBox(QCheckBox):

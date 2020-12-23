@@ -11,10 +11,12 @@
 # for more details.
 
 #Utilidades varias necesarias en el sistema
+import argparse
 import calendar
 import datetime
 import decimal
 import hashlib
+import locale
 import logging
 import os
 import random
@@ -22,6 +24,7 @@ import socket
 import subprocess
 import sys
 import tempfile
+import time
 import traceback
 import platform
 from configparser import ConfigParser
@@ -30,11 +33,12 @@ from functools import wraps
 from logging.handlers import RotatingFileHandler
 from smtplib import SMTP
 
+import win32print
 from PyQt5.QtCore import QSettings
 from PyQt5.QtWidgets import QFileDialog, QInputDialog, QLineEdit
 from os.path import join
 from sys import argv
-
+from pyqt5libs.libs.vistas.select_printer import Ui_FormPrinter
 from PyQt5 import QtGui
 from dateutil.relativedelta import relativedelta
 
@@ -43,7 +47,7 @@ try:
 except:
     pass
 
-from libs.pyqt5libs import Constantes, Ventanas
+from . import Constantes, Ventanas
 
 __author__ = "Jose Oscar Vogel <oscar@ferreteriaavenida.com.ar>"
 __copyright__ = "Copyright (C) 2019 Steffen Hnos SRL"
@@ -62,19 +66,33 @@ def AbrirArchivo(cArchivo=None):
         else:  # linux variants
             subprocess.call(('xdg-open', cArchivo))
 
-#leo el archivo de configuracion del sistema
-#recibe la clave y el key a leer en caso de que tenga mas de una seccion el archivo
-def LeerIni(clave=None, key=None):
+# leo el archivo de configuracion del sistema
+# recibe la clave y el key a leer en caso de que tenga mas de una seccion el archivo
+def LeerIni(clave=None, key=None, carpeta=''):
+    analizador = argparse.ArgumentParser(description='Sistema.')
+    analizador.add_argument("-i", "--inicio", default=os.getcwd(), help="Carpeta de Inicio de sistema.")
+    analizador.add_argument("-a", "--archivo", default="fasa.ini", help="Archivo de Configuracion de sistema.")
+    argumento = analizador.parse_args()
     retorno = ''
     Config = ConfigParser()
-    Config.read("sistema.ini")
+    archivoini = argumento.archivo
+    carpeta = argumento.inicio
+    # Config.read("fasa.ini")
+    if carpeta:
+        Config.read(join(carpeta, archivoini))
+        # logging.debug("Archivo utilizado {}".format(join(carpeta, archivoini)))
+    else:
+        Config.read(archivoini)
+        # logging.debug("Archivo utilizado {}".format(archivoini))
+
     try:
         if not key:
             key = 'param'
         retorno = Config.get(key, clave)
     except:
-        #Ventanas.showAlert("Sistema", "No existe la seccion {}".format(clave))
+        # Ventanas.showAlert("Sistema", "No existe la seccion {}".format(clave))
         pass
+    # print("archivo {} clave {} key {} carpeta {} valor {}".format(archivoini, clave, key, carpeta, retorno))
     return retorno
 
 def GrabarIni(clave=None, key=None, valor=''):
@@ -480,3 +498,72 @@ def PeriodoAFecha(periodo: str = ''):
     fecha = datetime.date(int(periodo[:4]), int(periodo[4:]), 1)
 
     return fecha
+
+
+class WinPrinters(object):
+    cDefault = ''
+
+    def __init__(self):
+        self.cDefault = win32print.GetDefaultPrinterW()
+
+    def SetPrinter(self, cPrinter=''):
+        try:
+            win32print.SetDefaultPrinterW(cPrinter)
+        except Exception as e:
+            # printer = QPrinter()
+            #
+            # dialog = QPrintDialog(printer)
+            # dialog.exec_()
+            _ventana = Ui_FormPrinter()
+            _ventana.exec_()
+            if _ventana.cPrinterSelected != '':
+                win32print.SetDefaultPrinterW(_ventana.cPrinterSelected)
+            else:
+                Ventanas.showAlert("Sistema", "No se encontro la impresora {} en la maquina y se imprimira en {}"
+                                   .format(cPrinter, win32print.GetDefaultPrinterW()))
+                win32print.SetDefaultPrinterW(win32print.GetDefaultPrinterW())
+
+    def GetDefaultPrinter(self):
+        return win32print.GetDefaultPrinterW()
+
+    def SendPDF(self, cPDFName, imprime=False):
+        if os.path.isfile(cPDFName):
+            try:
+                if LeerConf('usuario') == 'OSCAR':
+                    if not imprime:
+                        win32api.ShellExecute(0, "open", cPDFName, None, ".", 0)
+                    else:
+                        os.startfile(cPDFName, "print")
+                else:
+                    # win32api.ShellExecute(
+                    #    0,
+                    #    "print",
+                    #    cPDFName,
+                    #    '/d:"%s"' % win32print.GetDefaultPrinter(),
+                    #    ".",
+                    #    0
+                    # )
+                    os.startfile(cPDFName, "print")
+                # win32api.ShellExecute(0, "print", cPDFName, None, ".", 0)
+                time.sleep(5)
+                # os.system("taskill /im AcroRd32.exe /f")
+            except Exception as e:
+                win32api.ShellExecute(0, "open", cPDFName, None, ".", 0)
+                Ventanas.showAlert("Sistema", "Para poder imprimir es necesario "
+                                              "instalar un visualizador de PDF por defecto")
+        else:
+            Ventanas.showAlert("Sistema", "No existe el archivo para la impresion")
+
+"""
+Para los archivo de texto que se generan deben tener ceros a la izquierda sin coma ni punto decimal
+"""
+def NumeroTXT(valor=0, largo=12, decimales=2):
+    # return str(abs(round(valor, decimales))).replace(',','').replace('.','').zfill(largo)
+    return str((round(valor * 10 ** decimales))).replace(',', '').replace('.', '').zfill(largo)
+
+
+def DiaSemana(fecha=datetime.datetime.now().date()):
+    locale.setlocale(locale.LC_ALL, "es")
+    retorno = fecha.strftime('%A')
+
+    return retorno

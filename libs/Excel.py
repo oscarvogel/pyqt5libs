@@ -13,8 +13,8 @@ try:
 except ImportError:
     WIN32 = False
 
-from libs import Ventanas
-from libs.utiles import saveFileDialog, AbrirArchivo, FormatoFecha
+from . import Ventanas
+from .utiles import saveFileDialog, AbrirArchivo, FormatoFecha
 
 
 class Excel:
