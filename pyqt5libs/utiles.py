@@ -468,7 +468,6 @@ def periodo_anterior(periodo=''):
 
     return retorno
 
-
 def periodo_siguiente(periodo=''):
     fecha = datetime.datetime(int(periodo[:4]), int(periodo[4:]), 1, 0, 0, 0)
     retorno = FechaMysql(gomonth(fecha, 1))[:6]
