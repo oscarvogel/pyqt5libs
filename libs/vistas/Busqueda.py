@@ -28,6 +28,7 @@ class UiBusqueda(Formulario):
     colBusqueda = 0 #la columno que establece la busqueda
     campoRetornoDetalle = '' #campo que retorna el detalle
     condiciones = '' #condiciones de filtrado
+    data = ''  # datos a mostrar
 
     def __init__(self):
         Formulario.__init__(self)
@@ -95,13 +96,16 @@ class UiBusqueda(Formulario):
                      .format(row, column, self.tableView.currentItem().text(), item))
 
     def CargaDatos(self):
-        if not self.modelo:
-            Ventanas.showAlert(LeerIni('nombre_sistema'), "No se ha establecido el modelo para la busqueda")
-            return
 
         textoBusqueda = self.lineEdit.text()
 
-        rows = self.modelo.select().dicts()
+        if not self.data:
+            if not self.modelo:
+                Ventanas.showAlert(LeerIni('nombre_sistema'), "No se ha establecido el modelo para la busqueda")
+                return
+            rows = self.modelo.select().dicts()
+        else:
+            rows = self.data
 
         if self.condiciones:
             if isinstance(self.condiciones, list):
