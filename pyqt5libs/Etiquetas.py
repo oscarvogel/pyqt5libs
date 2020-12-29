@@ -3,8 +3,8 @@
 import os
 
 from PyQt5 import QtCore, QtGui
-from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtGui import QFont, QPixmap, Qt
+from PyQt5.QtCore import pyqtSignal, Qt
+from PyQt5.QtGui import QFont, QPixmap
 from PyQt5.QtWidgets import QLabel
 
 from libs.pyqt5libs.utiles import openFileNameDialog, getFileName
