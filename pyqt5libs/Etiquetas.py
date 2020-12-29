@@ -1,8 +1,13 @@
 
 # coding=utf-8
-from PyQt5 import QtCore
-from PyQt5.QtGui import QFont
+import os
+
+from PyQt5 import QtCore, QtGui
+from PyQt5.QtCore import pyqtSignal
+from PyQt5.QtGui import QFont, QPixmap, Qt
 from PyQt5.QtWidgets import QLabel
+
+from libs.pyqt5libs.utiles import openFileNameDialog, getFileName
 
 
 class Etiqueta(QLabel):
