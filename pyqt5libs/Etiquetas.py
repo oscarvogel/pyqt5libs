@@ -53,6 +53,7 @@ class Imagen(QLabel):
     path_image = ''
     alto = 150
     ancho = 150
+    mysql = True #indica si graba la imagen en la base de datos
 
     def __init__(self):
         super().__init__()
@@ -77,7 +78,10 @@ class Imagen(QLabel):
         self.clicked.emit()
 
     def valor(self):
-        return self.blob_data
+        if self.mysql:
+            return self.blob_data
+        else:
+            return self.path_image
 
     def setText(self, blob_data: str) -> None:
         # data1 = base64.b64decode(blob_data)
