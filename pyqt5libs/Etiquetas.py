@@ -85,10 +85,13 @@ class Imagen(QLabel):
 
     def setText(self, blob_data: str) -> None:
         # data1 = base64.b64decode(blob_data)
-        nombre_imagen = f'{getFileName(filename="marca")}'
-        imagen = open(nombre_imagen, 'wb')
-        imagen.write(blob_data)
-        imagen.close()
-        self.path_image = nombre_imagen
-        self.blob_data = blob_data
-        self.EstablecerImagen(imagen=nombre_imagen)
+        if self.mysql:
+            nombre_imagen = f'{getFileName(filename="marca")}'
+            imagen = open(nombre_imagen, 'wb')
+            imagen.write(blob_data)
+            imagen.close()
+            self.path_image = nombre_imagen
+            self.blob_data = blob_data
+            self.EstablecerImagen(imagen=nombre_imagen)
+        else:
+            self.EstablecerImagen(blob_data)
