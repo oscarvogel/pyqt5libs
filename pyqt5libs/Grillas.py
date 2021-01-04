@@ -10,7 +10,7 @@ from PyQt5.QtCore import QAbstractTableModel, Qt, QVariant
 from PyQt5.QtGui import QFont, QColor
 from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QTableView
 
-from .utiles import EsVerdadero, AbrirArchivo, saveFileDialog
+from .utiles import EsVerdadero, AbrirArchivo, saveFileDialog, inicializar_y_capturar_excepciones
 
 
 class Grilla(QTableWidget):

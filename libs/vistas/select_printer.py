@@ -1,12 +1,8 @@
 # -*- coding: utf-8 -*-
-<<<<<<< HEAD
-import win32print
-=======
 try:
     import win32print
 except:
     pass
->>>>>>> origin/master
 from PyQt5 import QtCore, QtGui, QtWidgets
 from PyQt5.QtCore import QSize
 from PyQt5.QtGui import QIcon
