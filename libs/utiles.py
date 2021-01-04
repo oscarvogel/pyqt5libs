@@ -341,8 +341,8 @@ def initialize_logger(output_dir):
         handler.setFormatter(formatter)
         logger.addHandler(handler)
 
-def getText(vista, titulo='', etiqueta=''):
-    text, okPressed = QInputDialog.getText(vista, titulo, etiqueta, QLineEdit.Normal, "")
+def getText(vista, titulo='', etiqueta='', valor=''):
+    text, okPressed = QInputDialog.getText(vista, titulo, etiqueta, QLineEdit.Normal, valor)
     if okPressed and text != '':
         return text
     else:
@@ -567,3 +567,19 @@ def DiaSemana(fecha=datetime.datetime.now().date()):
     retorno = fecha.strftime('%A')
 
     return retorno
+
+def DiasVacaciones(fecha_ingreso, anio=0):
+
+    anios_emple = Anios(fecha_ingreso, datetime.date(anio, 12, 31)) + 1
+    if anios_emple <= 5:
+        ndias = 14
+    elif anios_emple <= 10:
+        ndias = 21
+    elif anios_emple <= 20:
+        ndias = 28
+    else:
+        ndias = 35
+    return ndias
+
+def Anios(inicio, fin):
+    return relativedelta(fin, inicio).years

@@ -14,7 +14,7 @@ import datetime
 
 from PyQt5 import QtCore
 from PyQt5.QtCore import pyqtSignal
-from PyQt5.QtGui import QFont
+from PyQt5.QtGui import QFont, QColor
 from PyQt5.QtWidgets import QDoubleSpinBox, QHBoxLayout
 
 from .Etiquetas import Etiqueta
@@ -71,6 +71,26 @@ class Spinner(QDoubleSpinBox):
 
     def valor(self):
         return self.value()
+
+    def setColor(self, *args, **kwargs):
+        if 'backgroundcolor' in kwargs:
+            if isinstance(kwargs['backgroundcolor'], QColor):
+                color = kwargs['backgroundcolor']
+                self.setStyleSheet('background-color: rgb({},{},{})'.format(
+                    color.red(), color.green(), color.blue()
+                ))
+
+        if 'color' in kwargs:
+            if isinstance(kwargs['color'], QColor):
+                color = kwargs['color']
+                self.setStyleSheet('color: rgb({},{},{});{}'.format(
+                    color.red(), color.green(), color.blue(), self.styleSheet()
+                ))
+        if 'restaura' in kwargs:
+            self.setStyleSheet("")
+
+        if 'estilo' in kwargs:
+            self.setStyleSheet(kwargs['estilo'])
 
 
 class Periodo(QHBoxLayout):

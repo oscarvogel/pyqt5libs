@@ -254,6 +254,18 @@ class Grilla(QTableWidget):
         # return item.replace(',','.') if item else 0
         return item
 
+    @inicializar_y_capturar_excepciones
+    def ObtenerItemFecha(self, fila, col):
+        if isinstance(col, int):
+            numCol = col
+        else:
+            numCol = self.cabeceras.index(col)
+
+        item = self.item(fila, numCol).text()
+        item = datetime.datetime.strptime(item, '%d/%m/%Y')
+
+        return item
+
     def CargaDatos(self, avance=None):
         self.blockSignals(True)
         self.setRowCount(0)

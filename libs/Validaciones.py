@@ -86,7 +86,7 @@ class Validaciones(EntradaTexto):
                         event.key() == QtCore.Qt.Key_Tab:
             if self.proximoWidget:
                 self.proximoWidget.setFocus()
-        self.valida()
+            self.valida()
         QLineEdit.keyPressEvent(self, event)
 
     @inicializar_y_capturar_excepciones
