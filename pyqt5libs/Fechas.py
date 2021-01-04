@@ -1,11 +1,9 @@
 # coding=utf-8
 import datetime
 
-from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
 from PyQt5.QtGui import QFont
-from PyQt5.QtWidgets import QDateEdit, QStyledItemDelegate, QItemDelegate, QHBoxLayout
-from PyQt5.uic.properties import QtGui
+from PyQt5.QtWidgets import QDateEdit,QItemDelegate, QHBoxLayout
 
 from . import Ventanas
 from .EntradaTexto import EntradaTexto

@@ -7,6 +7,7 @@ from PyQt5.QtWidgets import QDialog, QDesktopWidget, QHBoxLayout
 
 from .EntradaTexto import EntradaTexto
 from .Etiquetas import Etiqueta
+from .Fechas import FechaLine
 from .utiles import icono_sistema, ubicacion_sistema
 
 
@@ -63,6 +64,8 @@ class Formulario(QDialog):
             self.lblStatusBar.setText(text)
 
     def ArmaEntrada(self, nombre="", boxlayout=None, texto='', *args, **kwargs):
+        if not nombre:
+            return
         if not boxlayout:
             boxlayout = QHBoxLayout()
             lAgrega = True
@@ -70,7 +73,17 @@ class Formulario(QDialog):
             lAgrega = False
 
         if not texto:
-            texto = nombre.capitalize()
+            if isinstance(nombre, str):
+                texto = nombre.capitalize()
+            else:
+                if not 'control' in kwargs:
+                    if nombre.field_type in ['DATE']:
+                        kwargs['control'] = FechaLine()
+                texto = nombre.verbose_name if nombre.verbose_name else nombre.name.capitalize()
+
+
+        if not isinstance(nombre, str): #si no es un campo texto intento convertir de un campo de pewee
+            nombre = nombre.name
 
         labelNombre = Etiqueta(texto=texto)
         labelNombre.setObjectName("labelNombre")
@@ -84,7 +97,11 @@ class Formulario(QDialog):
         if 'relleno' in kwargs:
             lineEditNombre.relleno = kwargs['relleno']
 
+        if 'inputmask' in kwargs:
+            lineEditNombre.setInputMask(kwargs['inputmask'])
+
         lineEditNombre.setObjectName(nombre)
+        #print(type(lineEditNombre))
         boxlayout.addWidget(lineEditNombre)
         if 'enabled' in kwargs:
             lineEditNombre.setEnabled(kwargs['enabled'])
@@ -112,7 +129,7 @@ class Formulario(QDialog):
         QKeyEvent.ignore()
 
     def EstablecerTema(self):
-        tema = join(f'{ubicacion_sistema()}', 'pyqt5libs', 'libs', 'temas', 'ubuntu.css')
+        tema = join(f'{ubicacion_sistema()}', 'pyqt5libs', '../libs', 'temas', 'ubuntu.css')
         if not os.path.isfile(tema):
             tema = join('temas/ubuntu.css')
 

@@ -1,5 +1,6 @@
 # coding=utf-8
 from PyQt5 import QtCore
+from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QLineEdit, QHBoxLayout
 
@@ -50,6 +51,9 @@ class Validaciones(EntradaTexto):
 
     #indica si muestra la excepciones cuando hay un error
     LanzarExcepciones = True
+
+    #emite una señal cuando se realizo la validacion
+    postvalida = pyqtSignal()
 
     def __init__(self, parent=None, *args, **kwargs):
         EntradaTexto.__init__(self, parent, *args, **kwargs)
@@ -125,6 +129,7 @@ class Validaciones(EntradaTexto):
             self.valido = False
             self.setStyleSheet("background-color: yellow")
             #Ventanas.showAlert("Error", "Codigo no encontrado en el sistema")
+        self.postvalida.emit()
 
 class ValidaConNombre(QHBoxLayout):
 

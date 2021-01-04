@@ -10,8 +10,6 @@
 # for more details.
 
 #Vista base del cual derivan todos las vistas del sistema
-from PyQt5.QtWidgets import QVBoxLayout
-
 from ..Formulario import Formulario
 from ..utiles import icono_sistema
 
@@ -30,7 +28,7 @@ class VistaBase(Formulario):
         self.setWindowIcon(icono_sistema())
 
     def initUi(self):
-        self.layoutPpal = QVBoxLayout(self)
+        pass
 
     def cerrarformulario(self):
         self.close()

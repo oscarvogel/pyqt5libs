@@ -33,12 +33,17 @@ from functools import wraps
 from logging.handlers import RotatingFileHandler
 from smtplib import SMTP
 
-import win32print
+from ..libs.vistas.select_printer import Ui_FormPrinter
+
+try:
+    import win32print
+except:
+    pass
 from PyQt5.QtCore import QSettings
 from PyQt5.QtWidgets import QFileDialog, QInputDialog, QLineEdit
 from os.path import join
 from sys import argv
-from pyqt5libs.libs.vistas.select_printer import Ui_FormPrinter
+
 from PyQt5 import QtGui
 from dateutil.relativedelta import relativedelta
 
@@ -47,7 +52,7 @@ try:
 except:
     pass
 
-from . import Constantes, Ventanas
+from libs.pyqt5libs import Constantes, Ventanas
 
 __author__ = "Jose Oscar Vogel <oscar@ferreteriaavenida.com.ar>"
 __copyright__ = "Copyright (C) 2019 Steffen Hnos SRL"
@@ -71,7 +76,7 @@ def AbrirArchivo(cArchivo=None):
 def LeerIni(clave=None, key=None, carpeta=''):
     analizador = argparse.ArgumentParser(description='Sistema.')
     analizador.add_argument("-i", "--inicio", default=os.getcwd(), help="Carpeta de Inicio de sistema.")
-    analizador.add_argument("-a", "--archivo", default="fasa.ini", help="Archivo de Configuracion de sistema.")
+    analizador.add_argument("-a", "--archivo", default="sistema.ini", help="Archivo de Configuracion de sistema.")
     argumento = analizador.parse_args()
     retorno = ''
     Config = ConfigParser()
@@ -462,7 +467,6 @@ def periodo_anterior(periodo=''):
     retorno = FechaMysql(gomonth(fecha, -1))[:6]
 
     return retorno
-
 
 def periodo_siguiente(periodo=''):
     fecha = datetime.datetime(int(periodo[:4]), int(periodo[4:]), 1, 0, 0, 0)
