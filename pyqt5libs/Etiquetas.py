@@ -7,7 +7,7 @@ from PyQt5.QtCore import pyqtSignal, Qt
 from PyQt5.QtGui import QFont, QPixmap
 from PyQt5.QtWidgets import QLabel
 
-from libs.pyqt5libs.utiles import openFileNameDialog, getFileName
+from .utiles import openFileNameDialog, getFileName
 
 
 class Etiqueta(QLabel):

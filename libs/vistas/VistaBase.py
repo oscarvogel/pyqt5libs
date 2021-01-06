@@ -17,8 +17,8 @@ __copyright__ = "Copyright (C) 2021 Jose Oscar Vogel"
 __license__ = "GPL 3.0"
 __version__ = "0.1"
 
-from libs.pyqt5libs.Formulario import Formulario
-from libs.pyqt5libs.utiles import icono_sistema
+from pyqt5libs.pyqt5libs.Formulario import Formulario
+from pyqt5libs.pyqt5libs.utiles import icono_sistema
 
 
 class VistaBase(Formulario):
