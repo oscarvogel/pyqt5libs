@@ -4,6 +4,7 @@ import os
 from datetime import date
 
 import xlsxwriter
+from openpyxl import load_workbook
 from xlsxwriter.utility import xl_rowcol_to_cell
 from xlsxwriter.worksheet import (
     cell_number_tuple, cell_string_tuple)
@@ -260,6 +261,33 @@ class Excel:
             self.EscribeFila(row)
 
         self.Cerrar()
+
+    def AbrirArchivo(self, c_archivo='', solo_datos=True):
+        if not c_archivo.upper().endswith(('XLS', 'XLSX')):
+            c_archivo += '.xlsx'
+
+        if not os.path.isfile(c_archivo):
+            Ventanas.showAlert("Sistema", f"Verifique el archivo pasado {c_archivo} no existe")
+        self.wb = load_workbook(c_archivo, data_only=solo_datos)
+        self.archivo = c_archivo
+
+
+    def LeerCelda(self, fila, columna):
+        if not self.VerificaAperturaArchivo():
+            return False
+
+        ws = self.wb.active
+        celda = ws[self.NombreFilaColumna(fila, columna)]
+
+        return celda.value if celda else ''
+
+    def VerificaAperturaArchivo(self):
+        if not self.wb:
+            Ventanas.showAlert("Sistema", "No se encuentra un Archivo abierto")
+            self.archivo_abierto = False
+        else:
+            self.archivo_abierto = True
+        return self.archivo_abierto
 
 
 @contextlib.contextmanager
