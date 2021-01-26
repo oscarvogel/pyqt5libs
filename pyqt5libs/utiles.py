@@ -127,6 +127,8 @@ def imagen(archivo):
 def icono_sistema():
 
     cIcono = QtGui.QIcon(imagen(LeerIni("logo")))
+    if not cIcono:
+        cIcono = QtGui.QIcon(imagen(LeerIni("icono")))
     return cIcono
 
 def validar_cuit(cuit):
