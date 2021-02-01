@@ -27,6 +27,8 @@ class ComboSQL(QComboBox):
         font = QFont()
         font.setPointSizeF(10)
         self.setFont(font)
+        if 'orden' in kwargs:
+            self.cOrden = kwargs['orden']
         if 'checkeable' in kwargs:
             self.CargaDatos(checkeable=kwargs['checkeable'])
         else:
