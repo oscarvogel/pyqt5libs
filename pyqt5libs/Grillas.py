@@ -120,8 +120,13 @@ class Grilla(QTableWidget):
                 elif isinstance(x, (int, float, decimal.Decimal)):
                     item = QTableWidgetItem(str(x))
                     item.setTextAlignment(Qt.AlignRight)
+                # en caso de que sea formato de fecha
                 elif isinstance(x, (datetime.date)):
                     fecha = x.strftime('%d/%m/%Y')
+                    item = QTableWidgetItem(fecha)
+                #en caso de que sea formato de hora
+                elif isinstance(x, (datetime.time)):
+                    fecha = x.strftime('%H:%M:%S')
                     item = QTableWidgetItem(fecha)
                 elif isinstance(x, (bytes)):
                     if EsVerdadero(x):

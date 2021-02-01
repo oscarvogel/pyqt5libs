@@ -184,7 +184,7 @@ class FechaLine(EntradaTexto):
         return self.fecha.date()
 
     def valor(self):
-        return self.fecha
+        return self.fecha or "00000000"
 
     # def text(self):
     #     return self.valor()

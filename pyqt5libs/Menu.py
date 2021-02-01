@@ -4,10 +4,11 @@ import functools
 from PyQt5.QtGui import QIcon
 from PyQt5.QtWidgets import QAction
 
-from .utiles import LeerConf, imagen
 from modelos.Accesos import Acceso
 from modelos.Formula import Formula
 from modelos.Usuarios import Usuario
+from .utiles import LeerConf, imagen
+
 
 
 class GeneraMenu(object):

@@ -52,7 +52,7 @@ try:
 except:
     pass
 
-from libs.pyqt5libs import Constantes, Ventanas
+from . import Constantes, Ventanas
 
 __author__ = "Jose Oscar Vogel <oscar@ferreteriaavenida.com.ar>"
 __copyright__ = "Copyright (C) 2019 Steffen Hnos SRL"
@@ -127,6 +127,8 @@ def imagen(archivo):
 def icono_sistema():
 
     cIcono = QtGui.QIcon(imagen(LeerIni("logo")))
+    if not cIcono:
+        cIcono = QtGui.QIcon(imagen(LeerIni("icono")))
     return cIcono
 
 def validar_cuit(cuit):
