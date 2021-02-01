@@ -42,7 +42,12 @@ class ComboSQL(QComboBox):
 
         data = self.modelo.select().dicts()
         if self.condicion:
-            data = data.where(self.condicion)
+            #si tiene mas de una condicion de filtrado los une
+            if isinstance(self.condicion, (list,)):
+                for c in self.condicion:
+                    data = data.where(c)
+            else:
+                data = data.where(self.condicion)
 
         if self.cOrden:
             data = data.order_by(self.cOrden)
