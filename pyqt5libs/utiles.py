@@ -15,7 +15,6 @@ import argparse
 import calendar
 import datetime
 import decimal
-import hashlib
 import locale
 import logging
 import os
@@ -174,20 +173,6 @@ def HoraMysql(hora=None):
 
     return retorno
 
-def check_password(hashed_password, user_password):
-    password, salt = hashed_password.split(':')
-    return hashlib.sha256(salt.encode() + user_password.encode()).hexdigest()
-
-# def encriptar(password):
-#     key = Fernet.generate_key()
-#     cipher_suite = Fernet(key)
-#     cipher_text = cipher_suite.encrypt(password)
-#     return cipher_text, key
-#
-# def desencriptar(encrypted_data, key):
-#     cipher_suite = Fernet(key)
-#     plain_text = cipher_suite.decrypt(encrypted_data)
-#     return plain_text
 
 def GrabaConf(clave=None, valor=None, sistema=None):
     if not sistema:
