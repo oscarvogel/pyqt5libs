@@ -8,7 +8,7 @@ from . import Ventanas
 from .EntradaTexto import EntradaTexto
 from .Etiquetas import Etiqueta, EtiquetaRoja
 from .utiles import inicializar_y_capturar_excepciones
-from vistas.Busqueda import UiBusqueda
+from ..libs.vistas.Busqueda import UiBusqueda
 
 
 class Validaciones(EntradaTexto):

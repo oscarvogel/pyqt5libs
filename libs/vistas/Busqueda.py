@@ -6,11 +6,11 @@ import logging
 from PyQt5 import QtCore
 from PyQt5.QtWidgets import QVBoxLayout, QTableWidget, QHBoxLayout, QTableWidgetItem
 
-from libs.pyqt5libs import Ventanas
-from libs.pyqt5libs.Botones import BotonAceptar, BotonCerrarFormulario
-from libs.pyqt5libs.EntradaTexto import EntradaTexto
-from libs.pyqt5libs.Formulario import Formulario
-from libs.pyqt5libs.utiles import LeerIni, FormatoFecha
+from pyqt5libs.pyqt5libs import Ventanas
+from pyqt5libs.pyqt5libs.Botones import BotonAceptar, BotonCerrarFormulario
+from pyqt5libs.pyqt5libs.EntradaTexto import EntradaTexto
+from pyqt5libs.pyqt5libs.Formulario import Formulario
+from pyqt5libs.pyqt5libs.utiles import LeerIni, FormatoFecha
 
 
 class UiBusqueda(Formulario):
