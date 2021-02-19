@@ -181,14 +181,23 @@ class Grilla(QTableWidget):
                 numCol = x
             self.hideColumn(numCol)
 
-    def ModificaItem(self, valor, fila, col, backgroundColor=None):
+    def ModificaItem(self, valor, fila, col, backgroundColor=None, readonly=False):
         """
 
         :param fila: la fila que se quiere modificar
         :param valor: valor a modificar
         :type col: entero en caso de indicar un numero de columna y string si quiero el nombre
         """
-        if isinstance(valor, (int, float, decimal.Decimal)):
+        if isinstance(col, str):
+            col = self.cabeceras.index(col)
+
+        if isinstance(valor, (bool)):
+            item = QTableWidgetItem(valor)
+            if valor:
+                item.setCheckState(QtCore.Qt.Checked)
+            else:
+                item.setCheckState(QtCore.Qt.Unchecked)
+        elif isinstance(valor, (int, float, decimal.Decimal)):
             item = QTableWidgetItem(str(valor))
         elif isinstance(valor, (datetime.date)):
             fecha = valor.strftime('%d/%m/%Y')
@@ -200,19 +209,29 @@ class Grilla(QTableWidget):
             numCol = self.cabeceras.index(col)
         else:
             numCol = col
-
-        if numCol in self.columnasHabilitadas:
-            item.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable)
+        flags = QtCore.Qt.ItemIsSelectable
+        if readonly:
+            flags = QtCore.Qt.ItemIsSelectable
+        elif col in self.columnasHabilitadas:
+            if isinstance(valor, (bool)):
+                flags |= QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled
+            else:
+                flags |= QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable
         else:
-            # item.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
-            item.setFlags(QtCore.Qt.ItemIsSelectable)
+            if self.enabled and not readonly:
+                flags |= QtCore.Qt.ItemIsEnabled
+
+        item.setFlags(flags)
 
         if col in self.backgroundColorCol:
             item.setBackground(self.backgroundColorCol[col])
+        else:
+            #si no indico un color coloco el color que tiene el item
+            if self.itemAt(fila, col):
+                item.setBackground(self.itemAt(fila, col).background().color())
 
         self.setItem(fila, numCol, item)
         self.resizeColumnsToContents()
-        #self.dataChanged()
 
     def ObtenerItem(self, fila, col):
 
