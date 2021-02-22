@@ -225,10 +225,11 @@ def inicializar_y_capturar_excepciones(func):
             self.Traceback = ''.join(ex)
             self.Excepcion = traceback.format_exception_only( sys.exc_info()[0], sys.exc_info()[1])[0]
             logging.debug(self.Traceback)
-            # file = open("errors.log")
-            # file.write(self.Traceback)
-            # file.close()
+            file = open("errors.log", "a")
+            file.write(self.Traceback)
+            file.close()
             Ventanas.showAlert("Error", "Se ha producido un error \n{}".format(self.Excepcion))
+            print(self.Traceback)
             try:
                 remitente = 'fe@servinlgsm.com.ar'
                 destinatario = 'fe@servinlgsm.com.ar'
@@ -444,7 +445,10 @@ def goday(fecha=datetime.datetime.today(), format=None, days=0):
         else:
             fecharetorno = datetime.date.today() - datetime.timedelta(days=abs(fecha))
     elif days != 0:
-        fecharetorno = datetime.date.today() + datetime.timedelta(days=days)
+        if days > 0:
+            fecharetorno = fecha + datetime.timedelta(days=days)
+        else:
+            fecharetorno = fecha - datetime.timedelta(days=days)
     else:
         fecharetorno = fecha
     return fecharetorno
