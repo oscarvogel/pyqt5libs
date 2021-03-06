@@ -16,9 +16,9 @@ __version__ = "0.1"
 
 #Controlador base del cual derivan todos los abm del sistema
 from controladores.ControladorBase import ControladorBase
-from libs.pyqt5libs import Ventanas
-from libs.pyqt5libs.utiles import inicializar_y_capturar_excepciones
-from libs.libs.vistas import ABM
+from pyqt5libs.pyqt5libs import Ventanas
+from pyqt5libs.pyqt5libs.utiles import inicializar_y_capturar_excepciones
+from pyqt5libs.libs.vistas.ABM import ABM
 
 
 class ControladorBaseABM(ControladorBase):

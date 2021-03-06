@@ -256,7 +256,8 @@ def getFileName(filename='pdf', base=False):
 
 
 def FormatoFecha(fecha=datetime.datetime.today(), formato='largo'):
-
+    # Establecer la configuración que tenga el entorno del usuario
+    locale.setlocale(locale.LC_ALL, '')
     retorno = ''
     if isinstance(fecha, (str)):
         retorno = fecha

@@ -55,6 +55,8 @@ class Validaciones(EntradaTexto):
     #emite una señal cuando se realizo la validacion
     postvalida = pyqtSignal()
 
+    solo_numeros = True
+
     def __init__(self, parent=None, *args, **kwargs):
         EntradaTexto.__init__(self, parent, *args, **kwargs)
         font = QFont()
@@ -104,10 +106,11 @@ class Validaciones(EntradaTexto):
             return
         if self.largo != 0:
             self.setText(str(self.text()).zfill(self.largo))
-        if not self.text().isnumeric():
-            Ventanas.showAlert("Sistema", "Campo permite unicamente numeros")
-            self.setText('')
-            return
+        if self.solo_numeros:
+            if not self.text().isnumeric():
+                Ventanas.showAlert("Sistema", "Campo permite unicamente numeros")
+                self.setText('')
+                return
         #data = SQL().BuscaUno(self.tabla, self.campoRetorno, self.text())
         data = self.modelo.select().where(self.campoRetorno == self.text())
 
