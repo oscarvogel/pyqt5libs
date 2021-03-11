@@ -376,7 +376,10 @@ class Grilla(QTableWidget):
                 item = ['' for x in self.cabeceras]
                 self.AgregaItem(item)
                 # self.Activar(row=row + 1, col=0)
-
+        elif event.key() == Qt.Key_C and self.ctrl:
+            self.copySelection()
+        elif event.key() == Qt.Key_V and self.ctrl:
+            self.pasteSelection()
         self.keyPressed.emit(event.key(), self.shift, self.ctrl)
 
     def SumaTodo(self, col=None):
@@ -408,6 +411,38 @@ class Grilla(QTableWidget):
         items = ['' for x in self.cabeceras]
         self.AgregaItem(items)
 
+    def copySelection(self):
+        selection = self.selectedIndexes()
+        if selection:
+            rows = sorted(index.row() for index in selection)
+            columns = sorted(index.column() for index in selection)
+            rowcount = rows[-1] - rows[0] + 1
+            colcount = columns[-1] - columns[0] + 1
+            table = [[''] * colcount for _ in range(rowcount)]
+            for index in selection:
+                row = index.row() - rows[0]
+                column = index.column() - columns[0]
+                table[row][column] = index.data()
+            self.copy_data = table
+        return
+
+    def pasteSelection(self):
+        selection = self.selectedIndexes()
+        if selection:
+            model = self.model()
+            rows = sorted(index.row() for index in selection)
+            columns = sorted(index.column() for index in selection)
+            if len(rows) == 1 and len(columns) == 1:
+                fila = rows[0]
+                columna = columns[0]
+                self.setCurrentCell(0, 0)
+                for f in self.copy_data:
+                    for c in f:
+                        self.ModificaItem(valor=c, fila=fila, col=columna)
+                        columna += 1
+                        self.setCurrentCell(fila, columna)
+                    fila += 1
+        return
 
 class MiTableModel(QAbstractTableModel):
     #columnas habilitadas
