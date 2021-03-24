@@ -60,9 +60,16 @@ class ComboSQL(QComboBox):
             else:
                 valor = r[self.campovalor]
             if isinstance(r[self.campo1], (decimal.Decimal,)):
-                campo1 = str(r[self.campo1])
+                campo1 = str(r[self.campo1]).strip()
             else:
-                campo1 = r[self.campo1]
+                campo1 = r[self.campo1].strip()
+            if self.campo2:
+                campo1 += '-'
+                if isinstance(r[self.campo2], (decimal.Decimal,)):
+                    campo2 = str(r[self.campo2]).strip()
+                else:
+                    campo2 = r[self.campo2]
+                campo1 += campo2
             self.agregar_dato(campo1, valor, checkeable, checked)
             if campo1.strip() == self.valor_defecto or valor.strip() == self.valor_defecto:
                 indice_defecto = indice
