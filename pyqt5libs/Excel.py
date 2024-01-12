@@ -8,8 +8,10 @@ from openpyxl import load_workbook
 from xlsxwriter.utility import xl_rowcol_to_cell
 from xlsxwriter.worksheet import (
     cell_number_tuple, cell_string_tuple)
+
 try:
     import win32com.client as win32
+
     WIN32 = True
 except ImportError:
     WIN32 = False
@@ -19,18 +21,20 @@ from .utiles import saveFileDialog, AbrirArchivo, FormatoFecha
 
 
 class Excel:
-
-    archivo = '' #nombre de archivo
+    archivo = ''  # nombre de archivo
     libro = None
     hoja = None
     cabeceras = {}
 
     formato = None
     formatos = {
-        'moneda':{'num_format':'$#,##0.00'},
-        'negrita':{'bold':True},
-        'centradoh':{'align':'center'},
+        'moneda': {'num_format': '$#,##0.00'},
+        'negrita': {'bold': True},
+        'centradoh': {'align': 'center'},
+        'porcentaje': {'num_format': '0.00%'},
+        'numero': {'num_format': '#,##0.00'}
     }
+    max_row = 0  # ultima fila de un archivo
 
     def ArmaCabeceras(self, cabeceras, fila=0, formato=None):
         if formato:
@@ -38,9 +42,9 @@ class Excel:
         else:
             formato_celda = self.libro.add_format({
                 'bold': True,
-                'border':2,
-                'align':'center',
-                'bg_color':'yellow'
+                'border': 2,
+                'align': 'center',
+                'bg_color': 'yellow'
             })
         if not self.archivo:
             return
@@ -49,7 +53,7 @@ class Excel:
 
         self.cabeceras = cabeceras
 
-    def ObtieneArchivo(self, archivo:str='excel/archivo.xlsx') -> str:
+    def ObtieneArchivo(self, archivo: str = 'excel/archivo.xlsx') -> str:
         self.archivo = saveFileDialog(filename=archivo, files="Archivos de Excel (*.xlsx)")
 
         # if self.archivo and not self.archivo.upper().endswith("XLSX"):
@@ -61,8 +65,8 @@ class Excel:
 
         return self.archivo
 
-    def Titulo(self, titulo:str = '', desdecol:str = 'A', hastacol:str = 'A',
-               fila:int = 0, combina:bool = True, **kwargs) -> None:
+    def Titulo(self, titulo: str = '', desdecol: str = 'A', hastacol: str = 'A',
+               fila: int = 0, combina: bool = True, **kwargs) -> None:
         # Create a format to use in the merged range.
         merge_format = self.libro.add_format({
             'bold': 1,
@@ -79,7 +83,15 @@ class Excel:
         else:
             self.hoja.write('{}{}'.format(fila, desdecol))
 
-    def Cerrar(self, abre=True):
+    def AgregarTabla(self, table='', header=[]):
+        if table:
+            self.hoja.add_table(table, {'columns': header})
+
+    def Cerrar(self, abre=True, autofilter='', table='', header=[]):
+        if autofilter:
+            self.hoja.autofilter(autofilter)
+        if table:
+            self.hoja.add_table(table, {'columns': header})
         try:
             if not WIN32:
                 for v in self.cabeceras.values():
@@ -92,6 +104,7 @@ class Excel:
             Ventanas.showAlert("Sistema", "No se puede escribir el archivo {} esta abierto. Intente cerrarlo".format(
                 self.archivo
             ))
+
         if abre:
             AbrirArchivo(self.archivo)
 
@@ -172,7 +185,7 @@ class Excel:
             return
         self.hoja.set_column(first_col=column, last_col=column, width=maxwidth)
 
-    def EscribeFilaColumna(self, fila:int = 0, columna:int = 0, valor = None, formato = None, combina=None):
+    def EscribeFilaColumna(self, fila: int = 0, columna=0, valor=None, formato=None, combina=None):
         if formato:
             if isinstance(formato, dict):
                 formato_celda = self.libro.add_format(formato)
@@ -181,12 +194,18 @@ class Excel:
             if combina:
                 self.hoja.merge_range(fila, columna, combina[0], combina[1], valor, formato_celda)
             else:
-                self.hoja.write(fila, columna, valor, formato_celda)
+                if isinstance(columna, str):
+                    self.hoja.write(f'{columna}{fila}', valor, formato_celda)
+                else:
+                    self.hoja.write(fila, columna, valor, formato_celda)
         else:
             if combina:
                 self.hoja.merge_range(fila, columna, combina[0], combina[1], valor)
             else:
-                self.hoja.write(fila, columna, valor)
+                if isinstance(columna, str):
+                    self.hoja.write(f'{columna}{fila}', valor)
+                else:
+                    self.hoja.write(fila, columna, valor)
 
     def AgregaFormato(self):
         self.formato = None
@@ -199,18 +218,18 @@ class Excel:
     def FormatoNegrita(self, negrita=True):
         self.formato.set_bold(negrita)
 
-    def EstableceEncabezado(self, encabezados:dict, imagen='', alineacionimagen='L'):
+    def EstableceEncabezado(self, encabezados: dict, imagen='', alineacionimagen='L'):
         alineacionesimagenes = {
-            'L':'image_left',
-            'C':'image_center',
-            'R':'image_right'
+            'L': 'image_left',
+            'C': 'image_center',
+            'R': 'image_right'
         }
         texto = ''
         for k, v in encabezados.items():
             texto += f'&{v}{k}'
         if imagen:
             texto += f'&{alineacionimagen}&[Picture]'
-            opciones = {alineacionesimagenes[alineacionimagen]:imagen}
+            opciones = {alineacionesimagenes[alineacionimagen]: imagen}
             self.hoja.set_header(texto, opciones)
         else:
             self.hoja.set_header(texto)
@@ -229,8 +248,8 @@ class Excel:
         :return:
         """
         papeles = {
-            'A4':9,
-            'Oficio':5,
+            'A4': 9,
+            'Oficio': 5,
         }
         self.hoja.set_paper(papeles.get(papel) or 0)
         self.hoja.fit_to_pages(ancho, alto)
@@ -262,22 +281,27 @@ class Excel:
 
         self.Cerrar()
 
-    def AbrirArchivo(self, c_archivo='', solo_datos=True):
+    def AbrirArchivo(self, c_archivo='', solo_datos=True, hoja=''):
         if not c_archivo.upper().endswith(('XLS', 'XLSX')):
             c_archivo += '.xlsx'
 
         if not os.path.isfile(c_archivo):
             Ventanas.showAlert("Sistema", f"Verifique el archivo pasado {c_archivo} no existe")
         self.wb = load_workbook(c_archivo, data_only=solo_datos)
+        if self.hoja:
+            self.hoja = self.wb[hoja]
         self.archivo = c_archivo
+        self.max_row = self.wb.active.max_row
 
-
-    def LeerCelda(self, fila, columna):
+    def LeerCelda(self, fila, columna=0):
         if not self.VerificaAperturaArchivo():
             return False
 
         ws = self.wb.active
-        celda = ws[self.NombreFilaColumna(fila, columna)]
+        if isinstance(fila, str):
+            celda = ws[fila]
+        else:
+            celda = ws[self.NombreFilaColumna(fila, columna)]
 
         return celda.value if celda else ''
 
@@ -288,6 +312,9 @@ class Excel:
         else:
             self.archivo_abierto = True
         return self.archivo_abierto
+
+    def NumeroColumna(self, col_str):
+        return ord(col_str) - 65
 
 
 @contextlib.contextmanager
@@ -304,9 +331,10 @@ def load_xl_file(xlfilepath):
     finally:
         wb.Close(SaveChanges=True)
         xl.Quit()
-        xl = None # this actually ends the process
+        xl = None  # this actually ends the process
 
-def xlautofit(xlfilepath,skip_first_col=False):
+
+def xlautofit(xlfilepath, skip_first_col=False):
     ''' relies on win32com.client to autofit columns on data sheets
 
         remember that this is using COM so sheet numbers start at 1 (not 0),

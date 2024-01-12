@@ -72,6 +72,13 @@ class Grilla(QTableWidget):
     #controla la tecla enter para pasar al siguiente campo
     controlaenter = False
 
+    #items nuevo para cuando se agrega una fila
+    items_nuevos = []
+
+    LanzarExcepciones = True
+
+    formatos = {}
+
     def __init__(self, *args, **kwargs):
 
         QTableWidget.__init__(self, *args)
@@ -111,31 +118,37 @@ class Grilla(QTableWidget):
             self.setRowCount(cantFilas)
             for x in items:
                 flags = QtCore.Qt.ItemIsSelectable
-                if isinstance(x, (bool)):
+                if isinstance(x, bool):
                     item = QTableWidgetItem(x)
                     if x:
                         item.setCheckState(QtCore.Qt.Checked)
                     else:
                         item.setCheckState(QtCore.Qt.Unchecked)
+                    self.formatos[col] = 'Bool'
                 elif isinstance(x, (int, float, decimal.Decimal)):
                     item = QTableWidgetItem(str(x))
                     item.setTextAlignment(Qt.AlignRight)
+                    self.formatos[col] = 'Decimal'
                 # en caso de que sea formato de fecha
                 elif isinstance(x, (datetime.date)):
                     fecha = x.strftime('%d/%m/%Y')
                     item = QTableWidgetItem(fecha)
+                    self.formatos[col] = 'Date'
                 #en caso de que sea formato de hora
                 elif isinstance(x, (datetime.time)):
                     fecha = x.strftime('%H:%M:%S')
                     item = QTableWidgetItem(fecha)
+                    self.formatos[col] = 'Time'
                 elif isinstance(x, (bytes)):
                     if EsVerdadero(x):
                         item = 'Si'
                     else:
                         item = 'No'
                     item = QTableWidgetItem(QTableWidgetItem(x))
+                    self.formatos[col] = 'Bytes'
                 else:
                     item = QTableWidgetItem(QTableWidgetItem(x))
+                    self.formatos[col] = 'String'
 
                 if readonly:
                     flags = QtCore.Qt.ItemIsSelectable
@@ -191,7 +204,7 @@ class Grilla(QTableWidget):
         if isinstance(col, str):
             col = self.cabeceras.index(col)
 
-        if isinstance(valor, (bool)):
+        if isinstance(valor, bool):
             item = QTableWidgetItem(valor)
             if valor:
                 item.setCheckState(QtCore.Qt.Checked)
@@ -263,7 +276,7 @@ class Grilla(QTableWidget):
 
         try:
             item = self.item(fila, numCol)
-            if item.checkState() == QtCore.Qt.Checked:
+            if item.checkState() == QtCore.Qt.ItemIsUserCheckable:
                 item = True
             else:
                 item = item.text()
@@ -283,8 +296,11 @@ class Grilla(QTableWidget):
         else:
             numCol = self.cabeceras.index(col)
 
-        item = self.item(fila, numCol).text()
-        item = datetime.datetime.strptime(item, '%d/%m/%Y')
+        try:
+            item = self.item(fila, numCol).text()
+            item = datetime.datetime.strptime(item, '%d/%m/%Y')
+        except:
+            item = ''
 
         return item
 
@@ -310,7 +326,7 @@ class Grilla(QTableWidget):
             valor = self.ObtenerItem(fila=fila, col=col)
             self.ModificaItem(valor=valor, fila=fila, col=col)
 
-    def ExportaExcel(self, columnas=None, archivo=""):
+    def ExportaExcel(self, columnas=None, archivo="", titulo=""):
         if not columnas:
             columnas = self.cabeceras
 
@@ -329,6 +345,10 @@ class Grilla(QTableWidget):
 
         fila = 0
         col = 0
+        if titulo:
+            worksheet.write(fila, col, titulo)
+            fila += 2
+
         for c in columnas:
             worksheet.write(fila, col, c)
             col += 1
@@ -337,13 +357,21 @@ class Grilla(QTableWidget):
         for row in range(self.rowCount()):
             col = 0
             for c in columnas:
-                dato = self.ObtenerItem(fila=row, col=c).strip()
+                dato = self.ObtenerItem(fila=row, col=c)
+                if isinstance(dato, bool):
+                    dato = 'SI' if dato else 'NO'
+                else:
+                    dato = dato.strip()
                 try:
                     dato = float(dato)
                 except:
                     if dato.isdigit():
                         dato = int(dato)
-                worksheet.write(fila, col, dato)
+                if self.formatos[col] == 'Date':
+                    # formato = workbook.add_format({'num_format': 'dd/mm/yy'})
+                    worksheet.write_datetime(fila, col, datetime.datetime.strptime(dato, '%d/%m/%Y').date())
+                else:
+                    worksheet.write(fila, col, dato)
                 col += 1
             fila += 1
 
@@ -364,7 +392,10 @@ class Grilla(QTableWidget):
         if event.key() in [Qt.Key_Return, Qt.Key_Enter] and self.controlaenter:
             if col + 1 == self.columnCount() and row + 1 == self.rowCount():
                 if self.permiteagregar:
-                    item = ['' for x in self.cabeceras]
+                    if self.items_nuevos:
+                        item = self.items_nuevos
+                    else:
+                        item = ['' for x in self.cabeceras]
                     self.AgregaItem(item)
                     self.Activar(row=self.rowCount(), col=0)
             elif col == self.columnCount():
@@ -373,7 +404,10 @@ class Grilla(QTableWidget):
                 self.Activar(col=col + 1)
         elif event.key() == Qt.Key_Down and row + 1 == self.rowCount():
             if self.permiteagregar:
-                item = ['' for x in self.cabeceras]
+                if self.items_nuevos:
+                    item = self.items_nuevos
+                else:
+                    item = ['' for x in self.cabeceras]
                 self.AgregaItem(item)
                 # self.Activar(row=row + 1, col=0)
         elif event.key() == Qt.Key_C and self.ctrl:

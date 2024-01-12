@@ -255,7 +255,7 @@ def getFileName(filename='pdf', base=False):
     return tf.name
 
 
-def FormatoFecha(fecha=datetime.datetime.today(), formato='largo'):
+def FormatoFecha(fecha: object = datetime.datetime.today(), formato: object = 'largo') -> object:
     # Establecer la configuración que tenga el entorno del usuario
     locale.setlocale(locale.LC_ALL, '')
     retorno = ''
@@ -276,18 +276,30 @@ def DeCodifica(dato):
 
 
 def saveFileDialog(form=None, files=None, title="Guardar", filename="excel/archivo.xlsx"):
+    ult_carpeta = LeerConf("ult_carpeta", "sistema" )
+    if ult_carpeta:
+        filename = os.path.join(ult_carpeta, filename)
     if not files:
         files = "Todos los archivos (*);;Archivos de texto (*.txt)"
     options = QFileDialog.Options()
     fileName, _ = QFileDialog.getSaveFileName(form, title, filename,
                                               files, options=options)
+    GrabaConf(clave="ult_carpeta",
+              valor=os.path.dirname(os.path.abspath(fileName)),
+              sistema="sistema")
     return fileName
 
 def openFileNameDialog(form=None, files=None, title='Abrir', filename=''):
+    ult_carpeta = LeerConf("ult_carpeta", "sistema" )
+    if ult_carpeta:
+        filename = os.path.join(ult_carpeta, filename)
     options = QFileDialog.Options()
     # options |= QFileDialog.DontUseNativeDialog
     fileName, _ = QFileDialog.getOpenFileName(form, title, filename,
                                               files, options=options)
+    ult_carpeta = GrabaConf(clave="ult_carpeta",
+                            valor=os.path.dirname(os.path.abspath(fileName)),
+                            sistema="sistema")
     if fileName:
         return fileName
     else:
@@ -369,7 +381,7 @@ def HayInternet():
     return retorno
 
 def envia_correo(from_address = '', to_address = '', message = '', subject = '', password_email = '', to_cc=''):
-    smtp_email = 'mail.servinlgsm.com.ar'
+    smtp_email = 'mail.forestalgaruhape.com.ar'
     mime_message = MIMEText(message)
     mime_message["From"] = from_address
     mime_message["To"] = to_address
@@ -579,3 +591,14 @@ def DiasVacaciones(fecha_ingreso, anio=0):
 
 def Anios(inicio, fin):
     return relativedelta(fin, inicio).years
+
+def dias_habiles(fecha_inicial, fecha_final):
+    dias_habiles = 0
+
+    while fecha_inicial <= fecha_final:
+        dia_semana = fecha_inicial.weekday()
+        if dia_semana < 5:
+            dias_habiles += 1
+        fecha_inicial += datetime.timedelta(days=1)
+
+    return dias_habiles

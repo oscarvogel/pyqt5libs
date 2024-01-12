@@ -100,6 +100,7 @@ class RangoFechas(QHBoxLayout):
         self.addWidget(self.desde_fecha)
         self.addWidget(lblHastaFecha)
         self.addWidget(self.hasta_fecha)
+        self.desde_fecha.proximoWidget = self.hasta_fecha
 
 class FechaLine(EntradaTexto):
 

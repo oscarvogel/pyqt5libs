@@ -56,7 +56,7 @@ class ComboSQL(QComboBox):
         indice = 0
         for r in data:
             if isinstance(r[self.campovalor], (decimal.Decimal, int, float)):
-                valor = str(r[self.campovalor])
+                valor = str(r[self.campovalor]).strip()
             else:
                 valor = r[self.campovalor]
             if isinstance(r[self.campo1], (decimal.Decimal,)):
@@ -111,6 +111,8 @@ class ComboSQL(QComboBox):
 
     def setText(self, p_str):
         # self.setCurrentIndex()
+        if isinstance(p_str, (int,)):
+            p_str = str(p_str)
         self.setCurrentText(p_str)
 
     def setIndex(self, p_str):
@@ -168,7 +170,7 @@ class Combo(QComboBox):
         if 'tamanio' in kwargs:
             font.setPointSizeF(kwargs['tamanio'])
         else:
-            font.setPointSizeF(12)
+            font.setPointSizeF(10)
 
         if 'enabled' in kwargs:
             self.setEnabled(kwargs['enabled'])
@@ -244,6 +246,9 @@ class Combo(QComboBox):
 
     def rowCount(self):
         return self.numero_filas
+
+    def valor(self):
+        return self.text()
 
 
 class ComboSINO(Combo):

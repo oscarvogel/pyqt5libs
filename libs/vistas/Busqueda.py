@@ -4,13 +4,15 @@ import decimal
 import logging
 
 from PyQt5 import QtCore
+from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QVBoxLayout, QTableWidget, QHBoxLayout, QTableWidgetItem
 
+from pyqt5libs.libs.vistas.VistaBase import VistaBase
 from pyqt5libs.pyqt5libs import Ventanas
 from pyqt5libs.pyqt5libs.Botones import BotonAceptar, BotonCerrarFormulario
 from pyqt5libs.pyqt5libs.EntradaTexto import EntradaTexto
 from pyqt5libs.pyqt5libs.Formulario import Formulario
-from pyqt5libs.pyqt5libs.utiles import LeerIni, FormatoFecha
+from pyqt5libs.pyqt5libs.utiles import LeerIni, FormatoFecha, imagen
 
 
 class UiBusqueda(Formulario):
@@ -39,6 +41,8 @@ class UiBusqueda(Formulario):
         Dialog.setObjectName("Dialog")
         Dialog.resize(829, 556)
         Dialog.setWindowTitle("Busqueda de datos en {}".format(self.modelo._meta.name if self.modelo else ""))
+        self.setWindowModality(Qt.ApplicationModal)
+
         self.verticalLayout = QVBoxLayout(Dialog)
         self.verticalLayout.setObjectName("verticalLayout")
         self.lineEdit = EntradaTexto(Dialog, tooltip='Ingresa tu busqueda',
@@ -48,17 +52,14 @@ class UiBusqueda(Formulario):
         self.tableView = QTableWidget(Dialog)
         self.tableView.setObjectName("tableView")
         self.tableView.setSortingEnabled(True)
-        # self.setSortingEnabled(True)
-        # font = QFont()
-        # font.setPointSize(12)
-        # self.tableView.setFont(font)
+
         self.verticalLayout.addWidget(self.tableView)
         self.horizontalLayout = QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
-        self.btnAceptar = BotonAceptar(textoBoton="&Seleccionar")
+        self.btnAceptar = BotonAceptar(textoBoton="&Seleccionar", imagen=imagen("cargar.png"))
         self.btnAceptar.setObjectName("btnAceptar")
         self.horizontalLayout.addWidget(self.btnAceptar)
-        self.btnCancelar = BotonCerrarFormulario()
+        self.btnCancelar = BotonCerrarFormulario(imagen=imagen("exit_door_logout_out_icon.png"))
         self.btnCancelar.setObjectName("btnCancelar")
         self.horizontalLayout.addWidget(self.btnCancelar)
         self.verticalLayout.addLayout(self.horizontalLayout)
@@ -162,3 +163,24 @@ class UiBusqueda(Formulario):
         else:
             rows = rows.where(self.campoBusqueda.contains(self.lineEdit.text()))
         return rows
+
+
+class DBrowse(VistaBase):
+
+
+    def __int__(self):
+        self.setupUi(self)
+        self.lineEdit.setVisible(False)
+
+    def crea_busqueda(self, data):
+
+        ventana = UiBusqueda()
+        ventana.data = data
+        ventana.CargaDatos()
+        ventana.setModal(True)
+        ventana.show()
+        if ventana.lRetval:
+            return ventana.ValorRetorno
+        else:
+            return -1
+

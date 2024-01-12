@@ -24,6 +24,8 @@ from .utiles import InicioMes, FinMes, FechaMysql, MesIdentificador
 class Spinner(QDoubleSpinBox):
 
     proximoWidget = None
+    # emit signal
+    keyPressed = QtCore.pyqtSignal(int)  # presiona tecla manda la tecla prsionad
 
     def __init__(self, parent=None, *args, **kwargs):
         QDoubleSpinBox.__init__(self, parent)
@@ -52,6 +54,7 @@ class Spinner(QDoubleSpinBox):
                 self.focusNextChild()
         else:
             QDoubleSpinBox.keyPressEvent(self, event)
+        self.keyPressed.emit(event.key())
 
     def focusInEvent(self, *args, **kwargs):
         self.selectAll()

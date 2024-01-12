@@ -19,14 +19,16 @@ class Formulario(QDialog):
 
     def __init__(self, parent=None):
         QDialog.__init__(self, parent=None)
+        self.setModal(False)
         self.Exception = self.Traceback = ""
         self.LanzarExcepciones = False
         self.setWindowIcon(icono_sistema())
-        self.setWindowModality(Qt.ApplicationModal)
+        # self.setWindowModality(Qt.ApplicationModal)
         self._want_to_close = False
         flags = Qt.WindowMinMaxButtonsHint | Qt.WindowCloseButtonHint
         self.setWindowFlags(flags)
         self.EstablecerTema()
+        # self.EstablecerOrden()
 
     def Cerrar(self):
         self._want_to_close = True
@@ -136,3 +138,6 @@ class Formulario(QDialog):
         style = open(tema)
         style = style.read()
         self.setStyleSheet(style)
+
+    def EstablecerOrden(self):
+        pass

@@ -22,10 +22,10 @@ class Boton(QPushButton):
             self.setIcon(icono)
 
             if 'tamanio' in kwargs:
-                if kwargs['tamanio'] and isinstance(kwargs['tamanio'],QSize):
+                if kwargs['tamanio'] and isinstance(kwargs['tamanio'], QSize):
                     self.setIconSize(kwargs['tamanio'])
             else:
-                self.setIconSize(QSize(32,32))
+                self.setIconSize(QSize(32, 32))
 
         if 'tooltip' in kwargs:
             self.setToolTip(kwargs['tooltip'])
@@ -39,26 +39,29 @@ class Boton(QPushButton):
         if 'enabled' in kwargs:
             self.setEnabled(kwargs['enabled'])
 
+
 class BotonMain(Boton):
 
     def __init__(self, *args, **kwargs):
         Boton.__init__(self, *args, **kwargs)
         self.setMinimumHeight(100)
-        self.setIconSize(QSize(48,48))
+        self.setIconSize(QSize(48, 48))
+
 
 class BotonAceptar(Boton):
 
     def __init__(self, *args, **kwargs):
         kwargs['texto'] = kwargs['textoBoton'] if 'textoBoton' in kwargs else '&Aceptar'
         kwargs['imagen'] = LeerIni("iniciosistema") + 'imagenes/iconfinder_unit-completed_60215.png'
-        kwargs['tamanio'] = QSize(32,32)
+        kwargs['tamanio'] = QSize(32, 32)
         Boton.__init__(self, *args, **kwargs)
+
 
 class BotonCerrarFormulario(Boton):
 
     def __init__(self, *args, **kwargs):
         kwargs['texto'] = kwargs['textoBoton'] if 'textoBoton' in kwargs else '&Cerrar'
-        kwargs['imagen'] = imagen('if_Log Out_27856.png')
-        kwargs['tamanio'] = QSize(32,32)
+        kwargs['imagen'] = kwargs["imagen"] if kwargs["imagen"] else imagen('exit_door_logout_out_icon.png')
+        kwargs['tamanio'] = QSize(32, 32)
         Boton.__init__(self, *args, **kwargs)
         self.setDefault(False)

@@ -1,5 +1,5 @@
 # coding=utf-8
-from PyQt5.QtWidgets import QGroupBox
+from PyQt5.QtWidgets import QGroupBox, QRadioButton
 
 
 class Agrupacion(QGroupBox):
@@ -13,3 +13,14 @@ class Agrupacion(QGroupBox):
 
         if 'titulo' in kwargs:
             self.setTitle(kwargs['titulo'])
+
+
+class BotonRadio(QRadioButton):
+
+    def __init__(self, parent=None, *args, **kwargs):
+        super().__init__(parent)
+        if 'tamanio' in kwargs:
+            self.setStyleSheet('font-size: ' + str(kwargs['tamanio']) + 'px;')
+
+        if 'texto' in kwargs:
+            self.setText(kwargs['texto'])

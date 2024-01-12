@@ -1,5 +1,6 @@
 # coding=utf-8
 import datetime
+import decimal
 
 from PyQt5 import QtCore, QtWidgets
 from PyQt5.QtCore import Qt
@@ -12,7 +13,6 @@ from .utiles import validar_cuit, FechaMysql, MesIdentificador, PeriodoAFecha
 
 
 class EntradaTexto(QLineEdit):
-
     ventana = None
 
     # para cuando se presiona ENTER cual es el widget que obtiene el foco
@@ -23,12 +23,13 @@ class EntradaTexto(QLineEdit):
 
     largo = 0
 
-    #para campos numericos que debo rellenar con ceros adelante
+    # para campos numericos que debo rellenar con ceros adelante
     relleno = 0
 
-    #emit signal
-    keyPressed = QtCore.pyqtSignal(int) #presiona tecla manda la tecla prsionad
-    when = QtCore.pyqtSignal() #cuando recibe el foco emite una señal
+    # emit signal
+    keyPressed = QtCore.pyqtSignal(int)  # presiona tecla manda la tecla prsionad
+    when = QtCore.pyqtSignal()  # cuando recibe el foco emite una señal
+    lostfocus = QtCore.pyqtSignal()  # cuando pierde el foco emite una señal
 
     def __init__(self, parent=None, *args, **kwargs):
 
@@ -61,11 +62,14 @@ class EntradaTexto(QLineEdit):
         if 'largo' in kwargs:
             self.largo = kwargs['largo']
 
+        if 'relleno' in kwargs:
+            self.relleno = kwargs['relleno']
+
     def keyPressEvent(self, event):
         self.lastKey = event.key()
         if event.key() == QtCore.Qt.Key_Enter or \
-                        event.key() == QtCore.Qt.Key_Return or\
-                        event.key() == QtCore.Qt.Key_Tab:
+                event.key() == QtCore.Qt.Key_Return or \
+                event.key() == QtCore.Qt.Key_Tab:
             if self.proximoWidget:
                 self.proximoWidget.setFocus()
         QLineEdit.keyPressEvent(self, event)
@@ -84,6 +88,7 @@ class EntradaTexto(QLineEdit):
                 Ventanas.showAlert("Sistema", f"Se ha introducido mayor al permitido")
                 self.setText(self.text()[:self.largo])
         QLineEdit.focusOutEvent(self, QFocusEvent)
+        self.lostfocus.emit()
 
     def focusInEvent(self, QFocusEvent):
         self.when.emit()
@@ -101,8 +106,13 @@ class EntradaTexto(QLineEdit):
     def valor(self):
         return self.text()
 
-class Factura(QHBoxLayout):
+    def setText(self, a0: str) -> None:
+        if isinstance(a0, (int, decimal.Decimal, float)):
+            a0 = str(a0)
+        super().setText(a0)
 
+
+class Factura(QHBoxLayout):
     numero = ''
     titulo = ''
     tamanio = 10
@@ -146,11 +156,8 @@ class Factura(QHBoxLayout):
         self.lineEditNumero.editingFinished.connect(self.AssignNumero)
 
     def AssignNumero(self):
-        if self.lineEditNumero.text():
-            self.lineEditNumero.setText(str(self.lineEditNumero.text()).zfill(8))
-        if self.lineEditPtoVta.text():
-            self.lineEditPtoVta.setText(str(self.lineEditPtoVta.text()).zfill(4))
-
+        self.lineEditNumero.setText(str(self.lineEditNumero.text()).zfill(8))
+        self.lineEditPtoVta.setText(str(self.lineEditPtoVta.text()).zfill(4))
         self.numero = str(self.lineEditPtoVta.text()).zfill(4) + \
                       str(self.lineEditNumero.text()).zfill(8)
 
@@ -179,8 +186,8 @@ class TextEdit(QTextEdit):
     def valor(self):
         return self.text()
 
-class CUIT(EntradaTexto):
 
+class CUIT(EntradaTexto):
     denominacion = ""
     domicilio = ""
     consultaafip = False
@@ -201,6 +208,7 @@ class CUIT(EntradaTexto):
         #     else:
         #         self.denominacion = padron.denominacion
         #         self.domicilio = padron.direccion
+
 
 class EntradaFecha(EntradaTexto):
 
@@ -239,21 +247,23 @@ class Password(EntradaTexto):
 
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
-        self.setInputMethodHints(QtCore.Qt.ImhHiddenText|QtCore.Qt.ImhNoAutoUppercase|
-                                         QtCore.Qt.ImhNoPredictiveText|QtCore.Qt.ImhSensitiveData)
+        self.setInputMethodHints(QtCore.Qt.ImhHiddenText | QtCore.Qt.ImhNoAutoUppercase |
+                                 QtCore.Qt.ImhNoPredictiveText | QtCore.Qt.ImhSensitiveData)
         self.setEchoMode(QtWidgets.QLineEdit.Password)
+
 
 class CUITDelegate(QItemDelegate):
 
     def __init__(self):
         super().__init__()
 
-    def createEditor(self,parent, option, index):
+    def createEditor(self, parent, option, index):
         editor = CUIT(parent)
         editor.consultaafip = True
         # editor.setInputMask("99-99999999-9")
 
         return editor
+
 
 class AutoCompleter(EntradaTexto):
 
@@ -272,19 +282,20 @@ class AutoCompleter(EntradaTexto):
     def getSelected(self):
         return self.lastSelected
 
+
 class HoraDelegate(QItemDelegate):
 
     def __init__(self):
         super().__init__()
 
-    def createEditor(self,parent, option, index):
+    def createEditor(self, parent, option, index):
         editor = EntradaTexto(parent)
         editor.setInputMask("99:99:99")
 
         return editor
 
-class IdentificadorSueldo(EntradaTexto):
 
+class IdentificadorSueldo(EntradaTexto):
     periodo = ''
 
     def focusInEvent(self, QFocusEvent):

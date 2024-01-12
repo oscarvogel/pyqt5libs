@@ -187,6 +187,7 @@ class ValidaConTexto(QHBoxLayout):
     campos = [] #lista con los campos a mostrar si se hace la busqueda con F2
     largo = 0 #indica cuantos caracteres se deja introducir
     ancho = 50 #maximo ancho del control para el codigo
+    solo_numeros = True #indica si el campo permite solo numeros
 
     def __init__(self, parent=None, *args, **kwargs):
         super().__init__(parent)
@@ -207,6 +208,7 @@ class ValidaConTexto(QHBoxLayout):
         self.lineEditCodigo.condiciones = self.condiciones
         self.lineEditCodigo.campos = self.campos
         self.lineEditCodigo.largo = self.largo
+        self.lineEditCodigo.solo_numeros = self.solo_numeros
         self.lineEditCodigo.setMaximumWidth(self.ancho)
         self.addWidget(self.lineEditCodigo)
 
@@ -214,3 +216,11 @@ class ValidaConTexto(QHBoxLayout):
         self.lineEditCodigo.widgetNombre = self.textNombre
         self.addWidget(self.textNombre)
 
+    def setText(self, p_str):
+        self.lineEditCodigo.setText(p_str)
+
+    def setStyleSheet(self, p_str):
+        self.lineEditCodigo.setStyleSheet(p_str)
+
+    def valor(self):
+        return self.lineEditCodigo.valor()
