@@ -18,6 +18,7 @@ from pyqt5libs.pyqt5libs.Etiquetas import Etiqueta
 from pyqt5libs.pyqt5libs.Fechas import Fecha, FechaLine
 from pyqt5libs.pyqt5libs.Grillas import Grilla
 from pyqt5libs.pyqt5libs.Spinner import Spinner
+from pyqt5libs.pyqt5libs.Validaciones import ValidaConTexto
 from pyqt5libs.pyqt5libs.utiles import inicializar_y_capturar_excepciones, EsVerdadero, imagen
 
 
@@ -370,7 +371,10 @@ class ABM(VistaBase):
         if 'enabled' in kwargs:
             lineEditNombre.setEnabled(kwargs['enabled'])
 
-        self.controles[nombre] = lineEditNombre
+        if 'control' in kwargs and isinstance(kwargs['control'], ValidaConTexto):
+            self.controles[nombre] = kwargs['control'].lineEditCodigo
+        else:
+            self.controles[nombre] = lineEditNombre
 
         if lAgrega:
             self.verticalLayoutDatos.addLayout(boxlayout)
