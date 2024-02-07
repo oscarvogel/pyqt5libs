@@ -38,8 +38,8 @@ class EntradaTexto(QLineEdit):
         font = QFont()
         if 'tamanio' in kwargs:
             font.setPointSizeF(kwargs['tamanio'])
-        # else:
-        #     font.setPointSizeF(12)
+        else:
+            font.setPointSizeF(10)
         self.setFont(font)
 
         if 'tooltip' in kwargs:

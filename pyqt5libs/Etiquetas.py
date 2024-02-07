@@ -18,8 +18,8 @@ class Etiqueta(QLabel):
         font = QFont()
         if 'tamanio' in kwargs:
             font.setPointSizeF(kwargs['tamanio'])
-        # else:
-        #     font.setPointSizeF(12)
+        else:
+            font.setPointSizeF(10)
 
         if 'alineacion' in kwargs:
             if kwargs['alineacion'].upper() == 'DERECHA':

@@ -318,7 +318,8 @@ class ABM(VistaBase):
                         else:
                             self.controles[k].setCurrentIndex(self.controles[k].findData(d[k]))
                     elif isinstance(self.controles[k], (Fecha)):
-                        self.controles[k].setText(d[k])
+                        if self.controles[k]:
+                            self.controles[k].setText(d[k])
                     elif isinstance(self.controles[k], Spinner):
                         self.controles[k].setText(d[k])
                     else:

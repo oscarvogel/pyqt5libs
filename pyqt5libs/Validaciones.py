@@ -60,7 +60,7 @@ class Validaciones(EntradaTexto):
     def __init__(self, parent=None, *args, **kwargs):
         EntradaTexto.__init__(self, parent, *args, **kwargs)
         font = QFont()
-        # font.setPointSizeF(12)
+        font.setPointSizeF(10)
         self.setFont(font)
         if self.largo != 0:
             self.setMaxLength(self.largo)

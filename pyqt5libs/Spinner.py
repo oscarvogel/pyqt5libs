@@ -34,6 +34,8 @@ class Spinner(QDoubleSpinBox):
         if 'tamanio' in kwargs:
             self.tamanio = kwargs['tamanio']
             font.setPointSizeF(self.tamanio)
+        else:
+            font.setPointSizeF(10)
         self.setFont(font)
         self.setMaximum(9999999999)
 
