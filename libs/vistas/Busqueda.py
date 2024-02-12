@@ -2,6 +2,7 @@
 import datetime
 import decimal
 import logging
+from functools import reduce
 
 from PyQt5 import QtCore
 from PyQt5.QtCore import Qt
@@ -16,26 +17,25 @@ from pyqt5libs.pyqt5libs.utiles import LeerIni, FormatoFecha, imagen
 
 
 class UiBusqueda(Formulario):
-
-    modelo = None #modelo sobre la que se realiza la busqueda
-    cOrden = "" #orden de busqueda
-    limite = 100 #maximo registros a mostrar
-    campos = [] #campos a mostrar
-    campoBusqueda = None #campo sobre el cual realizar la busqueda
-    lRetval = False #indica si presiono en aceptar o cancelar
-    ValorRetorno = '' #valor que selecciono el usuario
-    camposTabla = None #los campos de la tabla
-    campoRetorno = None #campo del cual obtiene el dato para retornar el codigo/valor
-    colRetorno = 0 #la columna de donde retorna el valor
-    colBusqueda = 0 #la columno que establece la busqueda
-    campoRetornoDetalle = '' #campo que retorna el detalle
-    condiciones = '' #condiciones de filtrado
+    modelo = None  # modelo sobre la que se realiza la busqueda
+    cOrden = ""  # orden de busqueda
+    limite = 100  # maximo registros a mostrar
+    campos = []  # campos a mostrar
+    campoBusqueda = None  # campo sobre el cual realizar la busqueda
+    lRetval = False  # indica si presiono en aceptar o cancelar
+    ValorRetorno = ''  # valor que selecciono el usuario
+    camposTabla = None  # los campos de la tabla
+    campoRetorno = None  # campo del cual obtiene el dato para retornar el codigo/valor
+    colRetorno = 0  # la columna de donde retorna el valor
+    colBusqueda = 0  # la columno que establece la busqueda
+    campoRetornoDetalle = ''  # campo que retorna el detalle
+    condiciones = ''  # condiciones de filtrado
     data = ''  # datos a mostrar
 
     def __init__(self):
         Formulario.__init__(self)
         self.setupUi(self)
-        #self.CargaDatos()
+        # self.CargaDatos()
 
     def setupUi(self, Dialog):
         Dialog.setObjectName("Dialog")
@@ -64,7 +64,7 @@ class UiBusqueda(Formulario):
         self.horizontalLayout.addWidget(self.btnCancelar)
         self.verticalLayout.addLayout(self.horizontalLayout)
 
-        #self.retranslateUi(Dialog)
+        # self.retranslateUi(Dialog)
         self.btnCancelar.clicked.connect(self.Cerrar)
         self.lineEdit.textChanged.connect(self.CargaDatos)
         self.btnAceptar.clicked.connect(self.Aceptar)
@@ -83,10 +83,10 @@ class UiBusqueda(Formulario):
         if self.tableView.currentItem():
             self.ValorRetorno = self.tableView.currentItem().text()
             self.ValorRetorno = self.tableView.item(self.tableView.currentRow(), self.colRetorno).text()
-            self.campoRetornoDetalle  = self.tableView.item(self.tableView.currentRow(), self.colBusqueda).text()
+            self.campoRetornoDetalle = self.tableView.item(self.tableView.currentRow(), self.colBusqueda).text()
             print("Seleccionado {} columna {} fila {}".format(self.ValorRetorno,
                                                               self.tableView.currentColumn(),
-                                                              self.tableView.currentRow()) )
+                                                              self.tableView.currentRow()))
             self.close()
 
     def cell_was_clicked(self, row, column):
@@ -123,13 +123,17 @@ class UiBusqueda(Formulario):
         self.tableView.setRowCount(len(rows))
 
         logging.info("SQL de condiciones de busqueda {}".format(self.condiciones))
-        #self.tableView.horizontalHeader().setResizeMode(QHeaderView.ResizeToContents)
+        # self.tableView.horizontalHeader().setResizeMode(QHeaderView.ResizeToContents)
 
         for col in range(0, len(self.campos)):
             if self.campos[col] == self.campoRetorno.column_name:
                 self.colRetorno = col
-            if self.campos[col] == self.campoBusqueda.column_name:
-                self.colBusqueda = col
+            if isinstance(self.campoBusqueda, list):
+                if self.campos[col] == self.campoBusqueda[0]:
+                    self.colBusqueda = col
+            else:
+                if self.campos[col] == self.campoBusqueda.column_name:
+                    self.colBusqueda = col
 
             self.tableView.setHorizontalHeaderItem(col, QTableWidgetItem(self.campos[col].capitalize()))
 
@@ -143,7 +147,7 @@ class UiBusqueda(Formulario):
                 else:
                     item = QTableWidgetItem(QTableWidgetItem(row[self.campos[col]]))
 
-                item.setFlags(QtCore.Qt.ItemIsSelectable |  QtCore.Qt.ItemIsEnabled)
+                item.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
                 self.tableView.setItem(fila, col, item)
 
             fila += 1
@@ -158,15 +162,22 @@ class UiBusqueda(Formulario):
 
     def ArmaBusqueda(self, rows):
         if isinstance(self.campoBusqueda, list):
-            for b in self.campoBusqueda:
-                rows = rows.where(b.contains(self.lineEdit.text()))
+            # getattr(self.modelo, campo).contains(self.lineEdit.text()) crea una condición de búsqueda que verifica
+            # si el campo contiene la palabra buscada.
+            # (getattr(self.model, campo).contains(self.lineEdit.text()) for campo in self.campoBusqueda)
+            # genera una secuencia de condiciones para cada campo en la lista.
+            # reduce(lambda x, y: x | y, ...) combina estas condiciones utilizando el operador OR (|).
+
+            rows = rows.where(reduce(lambda x, y: x | y, (getattr(self.modelo, campo).contains(self.lineEdit.text())
+                                                          for campo in self.campoBusqueda)))
+            # for b in self.campoBusqueda:
+            #     rows = rows.where(b.contains(self.lineEdit.text()))
         else:
             rows = rows.where(self.campoBusqueda.contains(self.lineEdit.text()))
         return rows
 
 
 class DBrowse(VistaBase):
-
 
     def __int__(self):
         self.setupUi(self)
@@ -183,4 +194,3 @@ class DBrowse(VistaBase):
             return ventana.ValorRetorno
         else:
             return -1
-

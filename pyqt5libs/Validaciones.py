@@ -57,6 +57,8 @@ class Validaciones(EntradaTexto):
 
     solo_numeros = True
 
+    campos_busqueda = None
+
     def __init__(self, parent=None, *args, **kwargs):
         EntradaTexto.__init__(self, parent, *args, **kwargs)
         font = QFont()
@@ -77,7 +79,7 @@ class Validaciones(EntradaTexto):
             ventana.modelo = self.modelo
             ventana.cOrden = self.cOrden
             ventana.campos = self.campos
-            ventana.campoBusqueda = self.cOrden
+            ventana.campoBusqueda = self.campos_busqueda if self.campos_busqueda else self.cOrden
             ventana.camposTabla = self.camposTabla
             ventana.campoRetorno = self.campoRetorno
             ventana.condiciones = self.condiciones
@@ -188,6 +190,10 @@ class ValidaConTexto(QHBoxLayout):
     largo = 0 #indica cuantos caracteres se deja introducir
     ancho = 50 #maximo ancho del control para el codigo
     solo_numeros = True #indica si el campo permite solo numeros
+    campos_busqueda = None
+    #clase para la busqueda
+    clasebusqueda = None
+
 
     def __init__(self, parent=None, *args, **kwargs):
         super().__init__(parent)
@@ -204,11 +210,15 @@ class ValidaConTexto(QHBoxLayout):
         self.lineEditCodigo.modelo = self.modelo
         self.lineEditCodigo.campoNombre = self.nombre
         self.lineEditCodigo.campoRetorno = self.codigo
-        self.lineEditCodigo.cOrden = self.orden if self.orden else self.nombre
+        if self.campos_busqueda:
+            self.lineEditCodigo.campos_busqueda = self.campos_busqueda
+        else:
+            self.lineEditCodigo.cOrden = self.orden if self.orden else self.nombre
         self.lineEditCodigo.condiciones = self.condiciones
         self.lineEditCodigo.campos = self.campos
         self.lineEditCodigo.largo = self.largo
         self.lineEditCodigo.solo_numeros = self.solo_numeros
+        self.lineEditCodigo.clasebusqueda = self.clasebusqueda
         self.lineEditCodigo.setMaximumWidth(self.ancho)
         self.addWidget(self.lineEditCodigo)
 
