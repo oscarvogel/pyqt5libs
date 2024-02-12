@@ -1,5 +1,3 @@
-
-
 EMPRESA = "Servin LGSM"
 SISTEMA = "Sistema"
 
@@ -11,7 +9,7 @@ IDSISTEMA = 1
 CLIENTE_CF = 1
 
 TIPOS_DE_COMPROBANTES = {
-    "X":1001, "R":1002, "D":1003, "P":1004, "OP":1005, "REMITO":91, "PEDIDO":1015,
+    "X": 1001, "R": 1002, "D": 1003, "P": 1004, "OP": 1005, "REMITO": 91, "PEDIDO": 1015,
 }
 
 CHEQUE_DEVUELTO = 6
@@ -32,7 +30,7 @@ NOTA_CREDITO_B = '8'
 NOTA_CREDITO_C = '13'
 
 TIPO_MOVIMIENTOS = {
-    'I':'Ingreso', 'E':'Egreso'
+    'I': 'Ingreso', 'E': 'Egreso'
 }
 
 CLIENTESCUIT = [1, 2, 3, 4, 6, 9, 11]
@@ -46,7 +44,6 @@ COEFICIENTE_IVA_21 = 1.21
 
 LOCALIDAD_ORIGEN = 1
 
-ALICUOTA_AFIP = {0:"0003", 10.5:"0004", 21:"0005", 27:"0006", 2.5:"0009"}
-
+ALICUOTA_AFIP = {0: "0003", 10.5: "0004", 21: "0005", 27: "0006", 2.5: "0009"}
 
 FACTURAS_E = [19, 20, 21]

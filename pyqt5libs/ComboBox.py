@@ -159,6 +159,9 @@ class ComboSQL(QComboBox):
     def valor(self):
         return self.text()
 
+    def getDescripcion(self):
+        return self.currentText()
+
 class Combo(QComboBox):
     proximoWidget = None
     data = None
@@ -333,3 +336,9 @@ class ComboSAC(Combo):
     def __init__(self, parent=None, *args, **kwargs):
         Combo.__init__(self, parent, *args, **kwargs)
         self.CargaDatosValores(data={'J':'Junio','D':'Diciembre'})
+
+class cboTipoIngEg(Combo):
+
+    def __init__(self, parent=None, *args, **kwargs):
+        Combo.__init__(self, parent, *args, **kwargs)
+        self.CargaDatosValores(data={'I': 'Ingreso', 'E': 'Egreso'})

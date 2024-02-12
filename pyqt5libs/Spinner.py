@@ -38,6 +38,7 @@ class Spinner(QDoubleSpinBox):
             font.setPointSizeF(10)
         self.setFont(font)
         self.setMaximum(9999999999)
+        self.setMinimum(-9999999999)
 
         if 'decimales' in kwargs:
             self.setDecimals(kwargs['decimales'])
