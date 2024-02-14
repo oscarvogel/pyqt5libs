@@ -23,7 +23,7 @@ class Formulario(QDialog):
         self.Exception = self.Traceback = ""
         self.LanzarExcepciones = False
         self.setWindowIcon(icono_sistema())
-        # self.setWindowModality(Qt.ApplicationModal)
+        # self.setWindowModality(Qt.NonModal)
         self._want_to_close = False
         flags = Qt.WindowMinMaxButtonsHint | Qt.WindowCloseButtonHint
         self.setWindowFlags(flags)
