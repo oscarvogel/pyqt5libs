@@ -297,7 +297,7 @@ class Grilla(QTableWidget):
             numCol = self.cabeceras.index(col)
 
         try:
-            item = self.item(fila, numCol).text().replace('-', '/')
+            item = self.item(fila, numCol).text().replace('-', '/').strip()
             item = datetime.datetime.strptime(item, '%d/%m/%Y')
         except:
             item = ''

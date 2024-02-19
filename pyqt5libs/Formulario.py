@@ -5,6 +5,7 @@ from os.path import join
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QDialog, QDesktopWidget, QHBoxLayout
 
+from modelos.ParametrosSistema import ParamSist
 from .EntradaTexto import EntradaTexto
 from .Etiquetas import Etiqueta
 from .Fechas import FechaLine
@@ -131,7 +132,7 @@ class Formulario(QDialog):
         QKeyEvent.ignore()
 
     def EstablecerTema(self):
-        tema = join(f'{ubicacion_sistema()}', 'pyqt5libs', 'libs', 'temas', 'ubuntu.css')
+        tema = f'{ubicacion_sistema()}{ParamSist.ObtenerParametro("TEMA")}'
         if not os.path.isfile(tema):
             tema = join('temas/ubuntu.css')
 

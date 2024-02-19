@@ -37,6 +37,9 @@ class Fecha(QDateEdit):
                 fecha = datetime.date(year=int(fecha[:4]),
                                       month=int(fecha[4:6]),
                                       day=int(fecha[-2:]))
+        if isinstance(fecha, str):
+            fecha = datetime.datetime.strptime(fecha, format)
+
         if isinstance(fecha, int):
             if fecha > 0:
                 self.setDate(datetime.date.today() + datetime.timedelta(days=fecha))
