@@ -327,6 +327,7 @@ class Grilla(QTableWidget):
             self.ModificaItem(valor=valor, fila=fila, col=col)
 
     def ExportaExcel(self, columnas=None, archivo="", titulo=""):
+
         if not columnas:
             columnas = self.cabeceras
 
@@ -343,6 +344,7 @@ class Grilla(QTableWidget):
         workbook = xlsxwriter.Workbook(cArchivo)
         worksheet = workbook.add_worksheet()
 
+        formato_fecha = workbook.add_format({'num_format': 'dd/mm/yyyy'})
         fila = 0
         col = 0
         if titulo:
@@ -368,8 +370,9 @@ class Grilla(QTableWidget):
                     if dato.isdigit():
                         dato = int(dato)
                 if self.formatos[col] == 'Date':
-                    # formato = workbook.add_format({'num_format': 'dd/mm/yy'})
-                    worksheet.write_datetime(fila, col, datetime.datetime.strptime(dato, '%d/%m/%Y').date())
+
+                    worksheet.write_datetime(fila, col, datetime.datetime.strptime(dato, '%d/%m/%Y').date(),
+                                             formato_fecha)
                 else:
                     worksheet.write(fila, col, dato)
                 col += 1
