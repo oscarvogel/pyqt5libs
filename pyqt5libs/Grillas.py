@@ -14,65 +14,64 @@ from .utiles import EsVerdadero, AbrirArchivo, saveFileDialog, inicializar_y_cap
 
 
 class Grilla(QTableWidget):
-
-    #columnas a ocultar
+    # columnas a ocultar
     columnasOcultas = []
 
-    #lista con las cabeceras de la grilla
+    # lista con las cabeceras de la grilla
     cabeceras = []
 
-    #tabla desde la cual obtener los datos
+    # tabla desde la cual obtener los datos
     tabla = None
 
-    #campos de la tabla
+    # campos de la tabla
     campos = None
 
-    #condiciones para filtrar los datos
+    # condiciones para filtrar los datos
     condiciones = None
 
-    #cantidad de registros a mostrar
+    # cantidad de registros a mostrar
     limite = 100
 
-    #columnas habilitadas
+    # columnas habilitadas
     columnasHabilitadas = []
 
-    #campos tabla
+    # campos tabla
     camposTabla = None
 
-    #valores a cargar
+    # valores a cargar
     data = None
 
-    #indica si esta en la grilla
+    # indica si esta en la grilla
     engrilla = False
 
-    #indica si las columnas son seleccionables o no
+    # indica si las columnas son seleccionables o no
     enabled = True
 
-    #widget para las columnas
+    # widget para las columnas
     widgetCol = {}
 
-    #color para la columna
+    # color para la columna
     backgroundColorCol = {}
 
-    #tamaño de la fuente
+    # tamaño de la fuente
     tamanio = 10
 
-    #emit signal
+    # emit signal
     keyPressed = QtCore.pyqtSignal(int, bool, bool)
 
     when = QtCore.pyqtSignal()
 
-    #modificadores de teclas
+    # modificadores de teclas
     shift = False
     ctrl = False
 
-    #indica si permite agregar registros
+    # indica si permite agregar registros
     permiteagregar = True
 
-    #controla la tecla enter para pasar al siguiente campo
+    # controla la tecla enter para pasar al siguiente campo
     controlaenter = False
 
-    #items nuevo para cuando se agrega una fila
+    # items nuevo para cuando se agrega una fila
     items_nuevos = []
 
     LanzarExcepciones = True
@@ -110,7 +109,7 @@ class Grilla(QTableWidget):
         self.OcultaColumnas()
 
     def AgregaItem(self, items=None,
-                   backgroundColor=QColor(255,255,255), readonly=False):
+                   backgroundColor=QColor(255, 255, 255), readonly=False):
 
         if items:
             col = 0
@@ -134,7 +133,7 @@ class Grilla(QTableWidget):
                     fecha = x.strftime('%d/%m/%Y')
                     item = QTableWidgetItem(fecha)
                     self.formatos[col] = 'Date'
-                #en caso de que sea formato de hora
+                # en caso de que sea formato de hora
                 elif isinstance(x, (datetime.time)):
                     fecha = x.strftime('%H:%M:%S')
                     item = QTableWidgetItem(fecha)
@@ -172,10 +171,10 @@ class Grilla(QTableWidget):
                 # if self.widgetCol:
                 #     self.ArmaWidgetCol(col)
                 if col in self.widgetCol:
-                   widgetColumna = self.widgetCol[col]
-                   self.setItemDelegateForColumn(col, widgetColumna)
-                   # self.setItemDelegate(widgetColumna)
-                   # self.setCellWidget(cantFilas - 1, col, widgetColumna)
+                    widgetColumna = self.widgetCol[col]
+                    self.setItemDelegateForColumn(col, widgetColumna)
+                    # self.setItemDelegate(widgetColumna)
+                    # self.setCellWidget(cantFilas - 1, col, widgetColumna)
                 col += 1
             self.resizeRowsToContents()
             self.resizeColumnsToContents()
@@ -239,7 +238,7 @@ class Grilla(QTableWidget):
         if col in self.backgroundColorCol:
             item.setBackground(self.backgroundColorCol[col])
         else:
-            #si no indico un color coloco el color que tiene el item
+            # si no indico un color coloco el color que tiene el item
             if self.itemAt(fila, col):
                 item.setBackground(self.itemAt(fila, col).background().color())
 
@@ -259,7 +258,7 @@ class Grilla(QTableWidget):
                 item = True
             else:
                 item = item.text()
-                item = item.replace(',', '.') #if item else 0
+                item = item.replace(',', '.')  # if item else 0
 
         except:
             item = ''
@@ -280,7 +279,7 @@ class Grilla(QTableWidget):
                 item = True
             else:
                 item = item.text()
-                item = re.sub("[^-0123456789\.]","",item)
+                item = re.sub("[^-0123456789\.]", "", item)
 
             item = float(item)
         except:
@@ -355,7 +354,7 @@ class Grilla(QTableWidget):
             worksheet.write(fila, col, c)
             col += 1
 
-        fila +=1
+        fila += 1
         for row in range(self.rowCount()):
             col = 0
             for c in columnas:
@@ -378,6 +377,8 @@ class Grilla(QTableWidget):
                 col += 1
             fila += 1
 
+        # cabeceras_excel = [{'header': x} for x in columnas]
+        # worksheet.add_table(0, 0, fila, col-1, cabeceras_excel)
         workbook.close()
         AbrirArchivo(cArchivo)
 
@@ -481,10 +482,11 @@ class Grilla(QTableWidget):
                     fila += 1
         return
 
+
 class MiTableModel(QAbstractTableModel):
-    #columnas habilitadas
+    # columnas habilitadas
     columnasHabilitadas = []
-    #_colorColumn = {2:QColor(255, 255, 204),4:QColor(255, 128, 128)}
+    # _colorColumn = {2:QColor(255, 255, 204),4:QColor(255, 128, 128)}
     _colorColumn = {}
 
     def __init__(self, datain, headerdata, parent=None, *args):
@@ -511,7 +513,7 @@ class MiTableModel(QAbstractTableModel):
             return value
         elif role == Qt.ItemIsSelectable:
             return value
-        elif role == Qt.BackgroundRole and index.column() in(self._colorColumn):
+        elif role == Qt.BackgroundRole and index.column() in (self._colorColumn):
             return self._colorColumn[index.column()]
         return QVariant()
 
@@ -540,23 +542,23 @@ class MiTableModel(QAbstractTableModel):
             column = index.column()
             ch = (value)
             self.arraydata[row][column] = ch
-            self.dataChanged.emit(index,index)
+            self.dataChanged.emit(index, index)
             return True
 
     def ModificaDato(self, fila=0, col=0, valor=None):
         self.arraydata[fila][col] = valor
 
+
 class MiQTableView(QTableView):
     def __init__(self, *args, **kwargs):
-        QTableView.__init__(self, *args, **kwargs) #Use QTableView constructor
+        QTableView.__init__(self, *args, **kwargs)  # Use QTableView constructor
 
 
 class GrillaModel(MiQTableView):
-
-    #columnas a ocultar
+    # columnas a ocultar
     columnasOcultas = []
 
-    #emit signal
+    # emit signal
     keyPressed = QtCore.pyqtSignal(int)
 
     def __init__(self, parent=None):
@@ -566,7 +568,7 @@ class GrillaModel(MiQTableView):
         self.setFont(font)
 
     def ObtenerItem(self, fila=0, col=0):
-        #en caso de que le pase el nombre de la columnna busco el indice del header
+        # en caso de que le pase el nombre de la columnna busco el indice del header
         if isinstance(col, (str,)):
             col = self.model().headerdata.index(col)
 
@@ -575,7 +577,7 @@ class GrillaModel(MiQTableView):
         return index.data()
 
     def ModificaItem(self, fila=0, col=0, valor=''):
-        #en caso de que le pase el nombre de la columnna busco el indice del header
+        # en caso de que le pase el nombre de la columnna busco el indice del header
         if isinstance(col, (str,)):
             col = self.model().headerdata.index(col)
 
@@ -597,4 +599,3 @@ class GrillaModel(MiQTableView):
     def keyPressEvent(self, event):
         super(GrillaModel, self).keyPressEvent(event)
         self.keyPressed.emit(event.key())
-
