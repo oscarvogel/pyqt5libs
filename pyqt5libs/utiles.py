@@ -399,8 +399,8 @@ def HayInternet():
     return retorno
 
 
-def envia_correo(from_address: object = '', to_address: object = '', message: object = '', subject: object = '',
-                 password_email: object = '', to_cc: object = '', archivo_adjunto ='') -> object:
+def envia_correo(from_address='', to_address='', message='', subject='',
+                 password_email='', to_cc='', archivo_adjunto='') -> object:
     smtp_email = 'mail.forestalgaruhape.com.ar'
     mime_message = MIMEMultipart(message)
     mime_message["From"] = from_address
