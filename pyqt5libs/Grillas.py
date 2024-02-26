@@ -9,7 +9,9 @@ from PyQt5 import QtCore
 from PyQt5.QtCore import QAbstractTableModel, Qt, QVariant
 from PyQt5.QtGui import QFont, QColor
 from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QTableView
+from openpyxl.reader.excel import load_workbook
 
+from . import Ventanas
 from .utiles import EsVerdadero, AbrirArchivo, saveFileDialog, inicializar_y_capturar_excepciones
 
 
@@ -325,27 +327,45 @@ class Grilla(QTableWidget):
             valor = self.ObtenerItem(fila=fila, col=col)
             self.ModificaItem(valor=valor, fila=fila, col=col)
 
-    def ExportaExcel(self, columnas=None, archivo="", titulo=""):
+    def ExportaExcel(self, columnas=None, archivo="", titulo="", nuevo=True, hoja='', fila=0, col=0):
 
         if not columnas:
             columnas = self.cabeceras
 
-        archivo = archivo.replace('.', '').replace('/', '')
+        if nuevo:
+            archivo = archivo.replace('.', '').replace('/', '')
         if not archivo.startswith("excel"):
             archivo = "excel/" + archivo
 
-        cArchivo = saveFileDialog(filename=archivo,
-                                  files="Archivos de Excel (*.xlsx)")
+        if nuevo:
+            cArchivo = saveFileDialog(filename=archivo,
+                                      files="Archivos de Excel (*.xlsx)")
+        else:
+            cArchivo = archivo
         # cArchivo = QFileDialog.getSaveFileName(caption="Guardar archivo", directory="", filter="*.XLSX")
         if not cArchivo:
             return
 
-        workbook = xlsxwriter.Workbook(cArchivo)
-        worksheet = workbook.add_worksheet()
+        if nuevo:
+            workbook = xlsxwriter.Workbook(cArchivo)
+        else:
+            try:
+                # Carga el archivo
+                workbook = load_workbook(cArchivo)
+            except:
+                Ventanas.showAlert("Sistema", f"Ocurrio un error al intentar abrir el archivo {cArchivo}")
+                return
+
+        if hoja:
+            # Selecciona la hoja por su nombre
+            worksheet = workbook[hoja]
+        else:
+            #creamos una hoja nueva
+            worksheet = workbook.add_worksheet()
 
         formato_fecha = workbook.add_format({'num_format': 'dd/mm/yyyy'})
-        fila = 0
-        col = 0
+        # fila = 0
+        # col = 0
         if titulo:
             worksheet.write(fila, col, titulo)
             fila += 2
@@ -381,6 +401,25 @@ class Grilla(QTableWidget):
         # worksheet.add_table(0, 0, fila, col-1, cabeceras_excel)
         workbook.close()
         AbrirArchivo(cArchivo)
+
+    def obtiene_datos_lista(self, campos=None):
+        datos_retorno = []
+        if campos is None:
+            campos = []
+        for row in range(self.rowCount()):
+            for c in campos:
+                dato = self.ObtenerItem(fila=row, col=c)
+                if isinstance(dato, bool):
+                    dato = 'SI' if dato else 'NO'
+                else:
+                    dato = dato.strip()
+                try:
+                    dato = float(dato)
+                except:
+                    if dato.isdigit():
+                        dato = int(dato)
+                datos_retorno.append(dato)
+        return [x for x in datos_retorno]
 
     def keyPressEvent(self, event):
         super(Grilla, self).keyPressEvent(event)

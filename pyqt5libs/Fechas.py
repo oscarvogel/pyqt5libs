@@ -30,6 +30,8 @@ class Fecha(QDateEdit):
         self.setFont(font)
         if 'fecha' in kwargs:
             self.setFecha(kwargs['fecha'])
+        else:
+            self.setFecha(0)
 
     def setFecha(self, fecha=datetime.datetime.today(), format=None):
         if format:

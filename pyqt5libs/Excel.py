@@ -293,6 +293,9 @@ class Excel:
         self.archivo = c_archivo
         self.max_row = self.wb.active.max_row
 
+    def selecciona_hoja(self, hoja='Sheet1'):
+        self.hoja = self.wb[hoja]
+
     def LeerCelda(self, fila, columna=0):
         if not self.VerificaAperturaArchivo():
             return False
