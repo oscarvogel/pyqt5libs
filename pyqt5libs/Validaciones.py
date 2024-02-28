@@ -72,31 +72,35 @@ class Validaciones(EntradaTexto):
     def keyPressEvent(self, event, *args, **kwargs):
         self.lastKey = event.key()
         if event.key() == QtCore.Qt.Key_F2:
-            if self.clasebusqueda:
-                ventana = self.clasebusqueda()
-            else:
-                ventana = UiBusqueda()
-            ventana.modelo = self.modelo
-            ventana.cOrden = self.cOrden
-            ventana.campos = self.campos
-            ventana.campoBusqueda = self.campos_busqueda if self.campos_busqueda else self.cOrden
-            ventana.camposTabla = self.camposTabla
-            ventana.campoRetorno = self.campoRetorno
-            ventana.condiciones = self.condiciones
-            ventana.CargaDatos()
-            ventana.exec_()
-            if ventana.lRetval:
-                self.setText(ventana.ValorRetorno)
-                self.valido = True
-                QLineEdit.keyPressEvent(self, event)
+            self.busqueda()
         elif event.key() == QtCore.Qt.Key_Enter or \
                         event.key() == QtCore.Qt.Key_Return or\
                         event.key() == QtCore.Qt.Key_Tab:
+            if not self.value():
+                self.busqueda()
             if self.proximoWidget:
                 self.proximoWidget.setFocus()
             self.valida()
         QLineEdit.keyPressEvent(self, event)
-
+    @inicializar_y_capturar_excepciones
+    def busqueda(self, *args, **kwargs):
+        if self.clasebusqueda:
+            ventana = self.clasebusqueda()
+        else:
+            ventana = UiBusqueda()
+        ventana.modelo = self.modelo
+        ventana.cOrden = self.cOrden
+        ventana.campos = self.campos
+        ventana.campoBusqueda = self.campos_busqueda if self.campos_busqueda else self.cOrden
+        ventana.camposTabla = self.camposTabla
+        ventana.campoRetorno = self.campoRetorno
+        ventana.condiciones = self.condiciones
+        ventana.CargaDatos()
+        ventana.exec_()
+        if ventana.lRetval:
+            self.setText(ventana.ValorRetorno)
+            self.valido = True
+            QLineEdit.keyPressEvent(self, event)
     @inicializar_y_capturar_excepciones
     def focusOutEvent(self, QFocusEvent, *args, **kwargs):
         if self.lastKey != QtCore.Qt.Key_F2:
