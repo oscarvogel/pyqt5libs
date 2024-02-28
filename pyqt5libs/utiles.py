@@ -10,12 +10,11 @@
 # or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License
 # for more details.
 
-#Utilidades varias necesarias en el sistema
+# Utilidades varias necesarias en el sistema
 import argparse
 import calendar
 import datetime
 import decimal
-import hashlib
 import locale
 import logging
 import os
@@ -28,6 +27,7 @@ import time
 import traceback
 import platform
 from configparser import ConfigParser
+from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from functools import wraps
 from logging.handlers import RotatingFileHandler
@@ -60,8 +60,8 @@ __license__ = "GPL 3.0"
 __version__ = "0.1"
 
 
-#abro el archivo con el programa por defecto en windows
-#tendria que ver como hacerlo en Linux
+# abro el archivo con el programa por defecto en windows
+# tendria que ver como hacerlo en Linux
 def AbrirArchivo(cArchivo=None):
     if cArchivo:
         if platform.system() == 'Darwin':  # macOS
@@ -70,6 +70,7 @@ def AbrirArchivo(cArchivo=None):
             os.startfile(cArchivo)
         else:  # linux variants
             subprocess.call(('xdg-open', cArchivo))
+
 
 # leo el archivo de configuracion del sistema
 # recibe la clave y el key a leer en caso de que tenga mas de una seccion el archivo
@@ -100,22 +101,25 @@ def LeerIni(clave=None, key=None, carpeta=''):
     # print("archivo {} clave {} key {} carpeta {} valor {}".format(archivoini, clave, key, carpeta, retorno))
     return retorno
 
+
 def GrabarIni(clave=None, key=None, valor=''):
     if not clave or not key:
         return
     Config = ConfigParser()
     Config.read('sistema.ini')
-    cfgfile = open("sistema.ini",'w')
+    cfgfile = open("sistema.ini", 'w')
     if not Config.has_section(key):
         Config.add_section(key)
     Config.set(key, clave, valor)
     Config.write(cfgfile)
     cfgfile.close()
 
+
 def ubicacion_sistema():
     cUbicacion = LeerIni("iniciosistema") or os.path.dirname(argv[0])
 
     return cUbicacion
+
 
 def imagen(archivo):
     archivoImg = ubicacion_sistema() + join("imagenes", archivo)
@@ -124,12 +128,13 @@ def imagen(archivo):
     else:
         return ""
 
-def icono_sistema():
 
+def icono_sistema():
     cIcono = QtGui.QIcon(imagen(LeerIni("logo")))
     if not cIcono:
         cIcono = QtGui.QIcon(imagen(LeerIni("icono")))
     return cIcono
+
 
 def validar_cuit(cuit):
     # validaciones minimas
@@ -138,14 +143,14 @@ def validar_cuit(cuit):
 
     base = [5, 4, 3, 2, 7, 6, 5, 4, 3, 2]
 
-    cuit = cuit.replace("-", "") # remuevo las barras
+    cuit = cuit.replace("-", "")  # remuevo las barras
 
     # calculo el digito verificador:
     aux = 0
     for i in range(10):
-        aux += int(cuit[i])* base[i]
+        aux += int(cuit[i]) * base[i]
 
-    aux = 11 - (aux - (int(aux / 11)* 11))
+    aux = 11 - (aux - (int(aux / 11) * 11))
 
     if aux == 11:
         aux = 0
@@ -154,8 +159,8 @@ def validar_cuit(cuit):
 
     return aux == int(cuit[10])
 
-def FechaMysql(fecha=None):
 
+def FechaMysql(fecha=None):
     if isinstance(fecha, str):
         retorno = fecha
     else:
@@ -165,8 +170,8 @@ def FechaMysql(fecha=None):
 
     return retorno
 
-def HoraMysql(hora=None):
 
+def HoraMysql(hora=None):
     if not hora:
         hora = datetime.datetime.now()
 
@@ -174,20 +179,6 @@ def HoraMysql(hora=None):
 
     return retorno
 
-def check_password(hashed_password, user_password):
-    password, salt = hashed_password.split(':')
-    return hashlib.sha256(salt.encode() + user_password.encode()).hexdigest()
-
-# def encriptar(password):
-#     key = Fernet.generate_key()
-#     cipher_suite = Fernet(key)
-#     cipher_text = cipher_suite.encrypt(password)
-#     return cipher_text, key
-#
-# def desencriptar(encrypted_data, key):
-#     cipher_suite = Fernet(key)
-#     plain_text = cipher_suite.decrypt(encrypted_data)
-#     return plain_text
 
 def GrabaConf(clave=None, valor=None, sistema=None):
     if not sistema:
@@ -197,6 +188,7 @@ def GrabaConf(clave=None, valor=None, sistema=None):
         if isinstance(clave, (int, float, decimal.Decimal)):
             clave = str(clave)
         settings.setValue(clave, valor)
+
 
 def LeerConf(clave=None, sistema=None):
     if not sistema:
@@ -209,6 +201,7 @@ def LeerConf(clave=None, sistema=None):
 
     return cValorRetorno
 
+
 def BorrarConf(clave=None, sistema=None):
     if not sistema:
         sistema = Constantes.SISTEMA
@@ -219,14 +212,15 @@ def BorrarConf(clave=None, sistema=None):
     else:
         settings.clear()
 
-#necesario porque en mysql tengo definido el campo boolean como bit
-def EsVerdadero(valor):
 
+# necesario porque en mysql tengo definido el campo boolean como bit
+def EsVerdadero(valor):
     return valor == b'\01'
 
 
 def inicializar_y_capturar_excepciones(func):
     "Decorador para inicializar y capturar errores"
+
     @wraps(func)
     def capturar_errores_wrapper(self, *args, **kwargs):
         try:
@@ -235,15 +229,16 @@ def inicializar_y_capturar_excepciones(func):
             self.HuboError = False
             return func(self, *args, **kwargs)
         except Exception as e:
-            ex = traceback.format_exception( sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2])
+            ex = traceback.format_exception(sys.exc_info()[0], sys.exc_info()[1], sys.exc_info()[2])
             self.HuboError = True
             self.Traceback = ''.join(ex)
-            self.Excepcion = traceback.format_exception_only( sys.exc_info()[0], sys.exc_info()[1])[0]
+            self.Excepcion = traceback.format_exception_only(sys.exc_info()[0], sys.exc_info()[1])[0]
             logging.debug(self.Traceback)
-            # file = open("errors.log")
-            # file.write(self.Traceback)
-            # file.close()
+            file = open("errors.log", "a")
+            file.write(self.Traceback)
+            file.close()
             Ventanas.showAlert("Error", "Se ha producido un error \n{}".format(self.Excepcion))
+            print(self.Traceback)
             try:
                 remitente = 'fe@servinlgsm.com.ar'
                 destinatario = 'fe@servinlgsm.com.ar'
@@ -252,31 +247,33 @@ def inicializar_y_capturar_excepciones(func):
                 )
                 motivo = "Se envia informe de errores de {}".format(LeerIni(clave='nombre_sistema'))
                 envia_correo(from_address=remitente, to_address=destinatario,
-                             message=mensaje, subject = motivo, password_email = Constantes.CLAVE_SMTP)
+                             message=mensaje, subject=motivo, password_email=Constantes.CLAVE_SMTP)
             except:
                 pass
             if self.LanzarExcepciones:
                 raise
         finally:
             pass
+
     return capturar_errores_wrapper
 
-def getFileName(filename='pdf', base=False):
 
+def getFileName(filename='pdf', base=False):
     tf = tempfile.NamedTemporaryFile(prefix=filename, mode='w+b')
     if base:
         return os.path.basename(tf.name)
     return tf.name
 
 
-def FormatoFecha(fecha=datetime.datetime.today(), formato='largo'):
-
+def FormatoFecha(fecha: object = datetime.datetime.today(), formato: object = 'largo') -> object:
+    # Establecer la configuración que tenga el entorno del usuario
+    locale.setlocale(locale.LC_ALL, '')
     retorno = ''
     if isinstance(fecha, (str)):
         retorno = fecha
     else:
         if formato == 'largo':
-            retorno = datetime.datetime.strftime(fecha,'%d %b %Y')
+            retorno = datetime.datetime.strftime(fecha, '%d %b %Y')
         elif formato == 'corto':
             retorno = datetime.datetime.strftime(fecha, '%d-%b')
         elif formato == 'dma':
@@ -284,27 +281,42 @@ def FormatoFecha(fecha=datetime.datetime.today(), formato='largo'):
 
     return retorno
 
+
 def DeCodifica(dato):
-    return "{}".format(bytearray(dato, 'latin-1', errors='ignore').decode('utf-8','ignore'))
+    return "{}".format(bytearray(dato, 'latin-1', errors='ignore').decode('utf-8', 'ignore'))
 
 
 def saveFileDialog(form=None, files=None, title="Guardar", filename="excel/archivo.xlsx"):
+    ult_carpeta = LeerConf("ult_carpeta", "sistema")
+    if ult_carpeta:
+        filename = os.path.join(ult_carpeta, filename)
     if not files:
         files = "Todos los archivos (*);;Archivos de texto (*.txt)"
     options = QFileDialog.Options()
     fileName, _ = QFileDialog.getSaveFileName(form, title, filename,
                                               files, options=options)
+    GrabaConf(clave="ult_carpeta",
+              valor=os.path.dirname(os.path.abspath(fileName)),
+              sistema="sistema")
     return fileName
 
+
 def openFileNameDialog(form=None, files=None, title='Abrir', filename=''):
+    ult_carpeta = LeerConf("ult_carpeta", "sistema")
+    if ult_carpeta:
+        filename = os.path.join(ult_carpeta, filename)
     options = QFileDialog.Options()
     # options |= QFileDialog.DontUseNativeDialog
     fileName, _ = QFileDialog.getOpenFileName(form, title, filename,
                                               files, options=options)
+    ult_carpeta = GrabaConf(clave="ult_carpeta",
+                            valor=os.path.dirname(os.path.abspath(fileName)),
+                            sistema="sistema")
     if fileName:
         return fileName
     else:
         return ''
+
 
 def InicioMes(dFecha=None):
     if not dFecha:
@@ -312,11 +324,13 @@ def InicioMes(dFecha=None):
 
     return dFecha.replace(day=1)
 
+
 def FinMes(hFecha=None):
     if not hFecha:
         hFecha = datetime.date.today()
 
-    return hFecha.replace(day = calendar.monthrange(hFecha.year, hFecha.month)[1])
+    return hFecha.replace(day=calendar.monthrange(hFecha.year, hFecha.month)[1])
+
 
 def initialize_logger(output_dir):
     logger = logging.getLogger()
@@ -348,6 +362,7 @@ def initialize_logger(output_dir):
         handler.setFormatter(formatter)
         logger.addHandler(handler)
 
+
 def getText(vista, titulo='', etiqueta='', valor=''):
     text, okPressed = QInputDialog.getText(vista, titulo, etiqueta, QLineEdit.Normal, valor)
     if okPressed and text != '':
@@ -355,16 +370,18 @@ def getText(vista, titulo='', etiqueta='', valor=''):
     else:
         return ''
 
-def GuardarArchivo(caption="Guardar archivo", directory="", filter="", filename=""):
 
+def GuardarArchivo(caption="Guardar archivo", directory="", filter="", filename=""):
     cArchivo = QFileDialog.getSaveFileName(caption=caption,
                                            directory=join(directory, filename),
                                            filter=filter)
     return cArchivo[0] if cArchivo else ''
 
+
 def Normaliza(valor):
     valor = DeCodifica(valor)
-    return valor.replace('Ñ','N').replace('ñ','n').replace('º','')
+    return valor.replace('Ñ', 'N').replace('ñ', 'n').replace('º', '')
+
 
 def HayInternet():
     retorno = True
@@ -381,14 +398,23 @@ def HayInternet():
 
     return retorno
 
-def envia_correo(from_address = '', to_address = '', message = '', subject = '', password_email = '', to_cc=''):
-    smtp_email = 'mail.servinlgsm.com.ar'
-    mime_message = MIMEText(message)
+
+def envia_correo(from_address='', to_address='', message='', subject='',
+                 password_email='', to_cc='', archivo_adjunto='') -> object:
+    smtp_email = 'mail.forestalgaruhape.com.ar'
+    mime_message = MIMEMultipart(message)
     mime_message["From"] = from_address
     mime_message["To"] = to_address
     mime_message["Subject"] = subject
     if to_cc:
         mime_message["Cc"] = to_cc
+    if archivo_adjunto:
+        with open(archivo_adjunto, 'r') as archivo:
+            adjunto = MIMEText(archivo.read(), 'plain')
+            adjunto.add_header('Content-Disposition', f'attachment; filename={archivo_adjunto}')
+            mime_message.add_header('Content-Disposition', f'attachment; filename={archivo_adjunto}')
+            mime_message.attach(adjunto)
+
     smtp = SMTP(smtp_email, 587)
     smtp.ehlo()
 
@@ -396,22 +422,24 @@ def envia_correo(from_address = '', to_address = '', message = '', subject = '',
     smtp.sendmail(from_address, [to_address, to_cc], mime_message.as_string())
     smtp.quit()
 
+
 def uniqueid():
     seed = random.getrandbits(32)
     while True:
-       yield seed
-       seed += 1
+        yield seed
+        seed += 1
 
-#==============================================================================
+
+# ==============================================================================
 def getFileProperties(fname):
-#==============================================================================
+    # ==============================================================================
     """
     Read all properties of the given file return them as a dictionary.
     """
     propNames = ('Comments', 'InternalName', 'ProductName',
-        'CompanyName', 'LegalCopyright', 'ProductVersion',
-        'FileDescription', 'LegalTrademarks', 'PrivateBuild',
-        'FileVersion', 'OriginalFilename', 'SpecialBuild')
+                 'CompanyName', 'LegalCopyright', 'ProductVersion',
+                 'FileDescription', 'LegalTrademarks', 'PrivateBuild',
+                 'FileVersion', 'OriginalFilename', 'SpecialBuild')
 
     props = {'FixedFileInfo': None, 'StringFileInfo': None, 'FileVersion': None}
 
@@ -420,8 +448,8 @@ def getFileProperties(fname):
         fixedInfo = win32api.GetFileVersionInfo(fname, '\\')
         props['FixedFileInfo'] = fixedInfo
         props['FileVersion'] = "%d.%d.%d.%d" % (fixedInfo['FileVersionMS'] / 65536,
-                fixedInfo['FileVersionMS'] % 65536, fixedInfo['FileVersionLS'] / 65536,
-                fixedInfo['FileVersionLS'] % 65536)
+                                                fixedInfo['FileVersionMS'] % 65536, fixedInfo['FileVersionLS'] / 65536,
+                                                fixedInfo['FileVersionLS'] % 65536)
 
         # \VarFileInfo\Translation returns list of available (language, codepage)
         # pairs that can be used to retreive string info. We are using only the first pair.
@@ -442,9 +470,11 @@ def getFileProperties(fname):
 
     return props
 
+
 def gomonth(fecha=datetime.datetime.today(), month=1):
     fecharetorno = fecha + relativedelta(months=month)
     return fecharetorno
+
 
 def goday(fecha=datetime.datetime.today(), format=None, days=0):
     fecharetorno = None
@@ -459,10 +489,14 @@ def goday(fecha=datetime.datetime.today(), format=None, days=0):
         else:
             fecharetorno = datetime.date.today() - datetime.timedelta(days=abs(fecha))
     elif days != 0:
-        fecharetorno = datetime.date.today() + datetime.timedelta(days=days)
+        if days > 0:
+            fecharetorno = fecha + datetime.timedelta(days=days)
+        else:
+            fecharetorno = fecha - datetime.timedelta(days=days)
     else:
         fecharetorno = fecha
     return fecharetorno
+
 
 def periodo_anterior(periodo=''):
     fecha = datetime.datetime(int(periodo[:4]), int(periodo[4:]), 1, 0, 0, 0)
@@ -470,11 +504,13 @@ def periodo_anterior(periodo=''):
 
     return retorno
 
+
 def periodo_siguiente(periodo=''):
     fecha = datetime.datetime(int(periodo[:4]), int(periodo[4:]), 1, 0, 0, 0)
     retorno = FechaMysql(gomonth(fecha, 1))[:6]
 
     return retorno
+
 
 def MesIdentificador(dFecha=datetime.datetime.now().date(), formato='largo', periodo=None):
     if periodo:
@@ -499,6 +535,7 @@ def MesIdentificador(dFecha=datetime.datetime.now().date(), formato='largo', per
     elif formato == 'corto':
         retorno = '{}/{}'.format(MESES[dFecha.month - 1][:3], dFecha.year)
     return retorno
+
 
 def PeriodoAFecha(periodo: str = ''):
     fecha = datetime.date(int(periodo[:4]), int(periodo[4:]), 1)
@@ -560,9 +597,12 @@ class WinPrinters(object):
         else:
             Ventanas.showAlert("Sistema", "No existe el archivo para la impresion")
 
+
 """
 Para los archivo de texto que se generan deben tener ceros a la izquierda sin coma ni punto decimal
 """
+
+
 def NumeroTXT(valor=0, largo=12, decimales=2):
     # return str(abs(round(valor, decimales))).replace(',','').replace('.','').zfill(largo)
     return str((round(valor * 10 ** decimales))).replace(',', '').replace('.', '').zfill(largo)
@@ -574,8 +614,8 @@ def DiaSemana(fecha=datetime.datetime.now().date()):
 
     return retorno
 
-def DiasVacaciones(fecha_ingreso, anio=0):
 
+def DiasVacaciones(fecha_ingreso, anio=0):
     anios_emple = Anios(fecha_ingreso, datetime.date(anio, 12, 31)) + 1
     if anios_emple <= 5:
         ndias = 14
@@ -587,5 +627,18 @@ def DiasVacaciones(fecha_ingreso, anio=0):
         ndias = 35
     return ndias
 
+
 def Anios(inicio, fin):
     return relativedelta(fin, inicio).years
+
+
+def dias_habiles(fecha_inicial, fecha_final):
+    dias_habiles = 0
+
+    while fecha_inicial <= fecha_final:
+        dia_semana = fecha_inicial.weekday()
+        if dia_semana < 5:
+            dias_habiles += 1
+        fecha_inicial += datetime.timedelta(days=1)
+
+    return dias_habiles

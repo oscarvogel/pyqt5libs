@@ -27,6 +27,8 @@ class ComboSQL(QComboBox):
         font = QFont()
         font.setPointSizeF(10)
         self.setFont(font)
+        if 'orden' in kwargs:
+            self.cOrden = kwargs['orden']
         if 'checkeable' in kwargs:
             self.CargaDatos(checkeable=kwargs['checkeable'])
         else:
@@ -40,7 +42,12 @@ class ComboSQL(QComboBox):
 
         data = self.modelo.select().dicts()
         if self.condicion:
-            data = data.where(self.condicion)
+            #si tiene mas de una condicion de filtrado los une
+            if isinstance(self.condicion, (list,)):
+                for c in self.condicion:
+                    data = data.where(c)
+            else:
+                data = data.where(self.condicion)
 
         if self.cOrden:
             data = data.order_by(self.cOrden)
@@ -49,13 +56,20 @@ class ComboSQL(QComboBox):
         indice = 0
         for r in data:
             if isinstance(r[self.campovalor], (decimal.Decimal, int, float)):
-                valor = str(r[self.campovalor])
+                valor = str(r[self.campovalor]).strip()
             else:
                 valor = r[self.campovalor]
             if isinstance(r[self.campo1], (decimal.Decimal,)):
-                campo1 = str(r[self.campo1])
+                campo1 = str(r[self.campo1]).strip()
             else:
-                campo1 = r[self.campo1]
+                campo1 = r[self.campo1].strip()
+            if self.campo2:
+                campo1 += '-'
+                if isinstance(r[self.campo2], (decimal.Decimal,)):
+                    campo2 = str(r[self.campo2]).strip()
+                else:
+                    campo2 = r[self.campo2]
+                campo1 += campo2
             self.agregar_dato(campo1, valor, checkeable, checked)
             if campo1.strip() == self.valor_defecto or valor.strip() == self.valor_defecto:
                 indice_defecto = indice
@@ -97,6 +111,8 @@ class ComboSQL(QComboBox):
 
     def setText(self, p_str):
         # self.setCurrentIndex()
+        if isinstance(p_str, (int,)):
+            p_str = str(p_str)
         self.setCurrentText(p_str)
 
     def setIndex(self, p_str):
@@ -143,6 +159,9 @@ class ComboSQL(QComboBox):
     def valor(self):
         return self.text()
 
+    def getDescripcion(self):
+        return self.currentText()
+
 class Combo(QComboBox):
     proximoWidget = None
     data = None
@@ -154,7 +173,7 @@ class Combo(QComboBox):
         if 'tamanio' in kwargs:
             font.setPointSizeF(kwargs['tamanio'])
         else:
-            font.setPointSizeF(12)
+            font.setPointSizeF(10)
 
         if 'enabled' in kwargs:
             self.setEnabled(kwargs['enabled'])
@@ -230,6 +249,9 @@ class Combo(QComboBox):
 
     def rowCount(self):
         return self.numero_filas
+
+    def valor(self):
+        return self.text()
 
 
 class ComboSINO(Combo):
@@ -314,3 +336,9 @@ class ComboSAC(Combo):
     def __init__(self, parent=None, *args, **kwargs):
         Combo.__init__(self, parent, *args, **kwargs)
         self.CargaDatosValores(data={'J':'Junio','D':'Diciembre'})
+
+class cboTipoIngEg(Combo):
+
+    def __init__(self, parent=None, *args, **kwargs):
+        Combo.__init__(self, parent, *args, **kwargs)
+        self.CargaDatosValores(data={'I': 'Ingreso', 'E': 'Egreso'})

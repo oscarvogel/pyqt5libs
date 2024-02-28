@@ -14,11 +14,14 @@ __copyright__ = "Copyright (C) 2018 Jose Oscar Vogel"
 __license__ = "GPL 3.0"
 __version__ = "0.1"
 
+from PyQt5.QtCore import Qt
+from PyQt5.QtWidgets import QProgressDialog, QMessageBox
+
 #Controlador base del cual derivan todos los abm del sistema
-from controladores.ControladorBase import ControladorBase
-from libs.pyqt5libs import Ventanas
-from libs.pyqt5libs.utiles import inicializar_y_capturar_excepciones
-from libs.libs.vistas import ABM
+from pyqt5libs.libs.controladores.ControladorBase import ControladorBase
+from pyqt5libs.pyqt5libs import Ventanas
+from pyqt5libs.pyqt5libs.utiles import inicializar_y_capturar_excepciones
+from pyqt5libs.libs.vistas.ABM import ABM
 
 
 class ControladorBaseABM(ControladorBase):
@@ -33,6 +36,12 @@ class ControladorBaseABM(ControladorBase):
     def conectarWidgets(self):
         self.view.btnAceptar.clicked.connect(self.onClickBtnAceptar)
         self.view.tableView.doubleClicked.connect(self.onDoubleClikedTableWidget)
+        self.view.btnExcel.clicked.connect(self.onClickBtnExcel)
+        self.view.btnBorrar.clicked.connect(self.onClickBtnBorrar)
+        self.view.btnEditar.clicked.connect(self.view.Modifica)
+        self.view.btnAgregar.clicked.connect(self.view.Agrega)
+        self.view.btnCerrar.clicked.connect(self.view.Cerrar)
+        self.view.lineEditBusqueda.textChanged.connect(self.view.Busqueda)
 
     @inicializar_y_capturar_excepciones
     def onClickBtnAceptar(self, *args, **kwargs):
@@ -52,8 +61,37 @@ class ControladorBaseABM(ControladorBase):
             dato.__data__[control] = self.view.controles[control].valor()
         dato.save(force_insert=self.view.tipo == 'A')
         self.view.btnAceptarClicked()
+        self.onPostClickAceptar()
+
+    def onPostClickAceptar(self):
+        pass
 
     def onDoubleClikedTableWidget(self, index):
         if self.view.tableView.currentRow() == -1:
             return
         self.view.btnEditar.click()
+
+    @inicializar_y_capturar_excepciones
+    def onClickBtnExcel(self, *args, **kwargs):
+        limite = self.view.limite
+        self.view.limite = 10000000
+        self.view.ArmaTabla()
+        self.view.tableView.ExportaExcel()
+        self.view.limite = limite
+
+    @inicializar_y_capturar_excepciones
+    def onClickBtnBorrar(self, *args, **kwargs):
+        if not self.view.tableView.currentRow() != -1:
+            return
+
+        if not self.view.campoClave:
+            Ventanas.showAlert("Sistema", "No tenes establecido el campo clave y no podemos continuar")
+
+        if Ventanas.showConfirmation("Sistema", "Deseas borrar el registro seleccionado?") == QMessageBox.Ok:
+            id = self.view.tableView.ObtenerItem(
+                fila=self.view.tableView.currentRow(),
+                col=self.view.campoClave.column_name.capitalize())
+
+            modelo = self.model.get_by_id(id)
+            modelo.delete_instance()
+            self.CargaDatos()

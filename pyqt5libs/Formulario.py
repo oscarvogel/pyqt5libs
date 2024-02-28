@@ -5,6 +5,7 @@ from os.path import join
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QDialog, QDesktopWidget, QHBoxLayout
 
+from modelos.ParametrosSistema import ParamSist
 from .EntradaTexto import EntradaTexto
 from .Etiquetas import Etiqueta
 from .Fechas import FechaLine
@@ -19,14 +20,16 @@ class Formulario(QDialog):
 
     def __init__(self, parent=None):
         QDialog.__init__(self, parent=None)
+        self.setModal(False)
         self.Exception = self.Traceback = ""
         self.LanzarExcepciones = False
         self.setWindowIcon(icono_sistema())
-        self.setWindowModality(Qt.ApplicationModal)
+        # self.setWindowModality(Qt.NonModal)
         self._want_to_close = False
         flags = Qt.WindowMinMaxButtonsHint | Qt.WindowCloseButtonHint
         self.setWindowFlags(flags)
         self.EstablecerTema()
+        # self.EstablecerOrden()
 
     def Cerrar(self):
         self._want_to_close = True
@@ -129,10 +132,13 @@ class Formulario(QDialog):
         QKeyEvent.ignore()
 
     def EstablecerTema(self):
-        tema = join(f'{ubicacion_sistema()}', 'pyqt5libs', 'libs', 'temas', 'ubuntu.css')
+        tema = f'{ubicacion_sistema()}{ParamSist.ObtenerParametro("TEMA")}'
         if not os.path.isfile(tema):
             tema = join('temas/ubuntu.css')
 
         style = open(tema)
         style = style.read()
         self.setStyleSheet(style)
+
+    def EstablecerOrden(self):
+        pass

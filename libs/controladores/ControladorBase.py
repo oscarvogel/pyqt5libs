@@ -17,7 +17,10 @@ __copyright__ = "Copyright (C) 2018 Jose Oscar Vogel"
 __license__ = "GPL 3.0"
 __version__ = "0.1"
 
-from vistas.VistaBase import VistaBase
+from modelos.Accesos import Acceso
+from pyqt5libs.libs.vistas.VistaBase import VistaBase
+from pyqt5libs.pyqt5libs import Ventanas
+from pyqt5libs.pyqt5libs.utiles import LeerConf
 
 
 class ControladorBase(object):
@@ -27,6 +30,7 @@ class ControladorBase(object):
     LanzarExcepciones = False #se usa para controlar los errores
     HuboError = False #se usa para indicar si ocurrio un error o no
     LOG = True #indica si se genera el log
+    id_formulario = 0 #id del formulario para validar el acceso, se toma de la tabla formula
 
     def __init__(self):
         self.view = VistaBase()
@@ -37,8 +41,14 @@ class ControladorBase(object):
     def conectarWidgets(self):
         pass
 
-    def exec_(self):
-        self.view.exec_()
+    def exec_(self, valida_ingreso=True):
+        if valida_ingreso:
+            if Acceso().AccesoUsuario(usu_id=LeerConf("idUsuario"), for_id=self.id_formulario):
+                self.view.exec_()
+            else:
+                Ventanas.showAlert("Sistema", "No posees permisos para el ingreso a esta opcion")
+        else:
+            self.view.exec_()
 
     def CargaDatos(self):
         pass

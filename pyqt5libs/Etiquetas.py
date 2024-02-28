@@ -12,14 +12,14 @@ from .utiles import openFileNameDialog, getFileName
 
 class Etiqueta(QLabel):
 
-    def __init__(self, parent=None, texto='', *args, **kwargs):
+    def __init__(self, parent=None, texto='', *args, **kwargs) -> object:
         QLabel.__init__(self, *args)
         self.setText(texto)
         font = QFont()
         if 'tamanio' in kwargs:
             font.setPointSizeF(kwargs['tamanio'])
-        # else:
-        #     font.setPointSizeF(12)
+        else:
+            font.setPointSizeF(10)
 
         if 'alineacion' in kwargs:
             if kwargs['alineacion'].upper() == 'DERECHA':

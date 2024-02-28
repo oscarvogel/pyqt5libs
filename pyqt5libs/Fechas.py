@@ -30,6 +30,8 @@ class Fecha(QDateEdit):
         self.setFont(font)
         if 'fecha' in kwargs:
             self.setFecha(kwargs['fecha'])
+        else:
+            self.setFecha(0)
 
     def setFecha(self, fecha=datetime.datetime.today(), format=None):
         if format:
@@ -37,6 +39,9 @@ class Fecha(QDateEdit):
                 fecha = datetime.date(year=int(fecha[:4]),
                                       month=int(fecha[4:6]),
                                       day=int(fecha[-2:]))
+        if isinstance(fecha, str):
+            fecha = datetime.datetime.strptime(fecha, format)
+
         if isinstance(fecha, int):
             if fecha > 0:
                 self.setDate(datetime.date.today() + datetime.timedelta(days=fecha))
@@ -100,6 +105,7 @@ class RangoFechas(QHBoxLayout):
         self.addWidget(self.desde_fecha)
         self.addWidget(lblHastaFecha)
         self.addWidget(self.hasta_fecha)
+        self.desde_fecha.proximoWidget = self.hasta_fecha
 
 class FechaLine(EntradaTexto):
 

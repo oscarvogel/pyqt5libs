@@ -8,7 +8,7 @@ from . import Ventanas
 from .EntradaTexto import EntradaTexto
 from .Etiquetas import Etiqueta, EtiquetaRoja
 from .utiles import inicializar_y_capturar_excepciones
-from vistas.Busqueda import UiBusqueda
+from ..libs.vistas.Busqueda import UiBusqueda
 
 
 class Validaciones(EntradaTexto):
@@ -55,10 +55,14 @@ class Validaciones(EntradaTexto):
     #emite una señal cuando se realizo la validacion
     postvalida = pyqtSignal()
 
+    solo_numeros = True
+
+    campos_busqueda = None
+
     def __init__(self, parent=None, *args, **kwargs):
         EntradaTexto.__init__(self, parent, *args, **kwargs)
         font = QFont()
-        # font.setPointSizeF(12)
+        font.setPointSizeF(10)
         self.setFont(font)
         if self.largo != 0:
             self.setMaxLength(self.largo)
@@ -68,31 +72,35 @@ class Validaciones(EntradaTexto):
     def keyPressEvent(self, event, *args, **kwargs):
         self.lastKey = event.key()
         if event.key() == QtCore.Qt.Key_F2:
-            if self.clasebusqueda:
-                ventana = self.clasebusqueda()
-            else:
-                ventana = UiBusqueda()
-            ventana.modelo = self.modelo
-            ventana.cOrden = self.cOrden
-            ventana.campos = self.campos
-            ventana.campoBusqueda = self.cOrden
-            ventana.camposTabla = self.camposTabla
-            ventana.campoRetorno = self.campoRetorno
-            ventana.condiciones = self.condiciones
-            ventana.CargaDatos()
-            ventana.exec_()
-            if ventana.lRetval:
-                self.setText(ventana.ValorRetorno)
-                self.valido = True
-                QLineEdit.keyPressEvent(self, event)
+            self.busqueda()
         elif event.key() == QtCore.Qt.Key_Enter or \
                         event.key() == QtCore.Qt.Key_Return or\
                         event.key() == QtCore.Qt.Key_Tab:
+            if not self.value():
+                self.busqueda()
             if self.proximoWidget:
                 self.proximoWidget.setFocus()
             self.valida()
         QLineEdit.keyPressEvent(self, event)
-
+    @inicializar_y_capturar_excepciones
+    def busqueda(self, *args, **kwargs):
+        if self.clasebusqueda:
+            ventana = self.clasebusqueda()
+        else:
+            ventana = UiBusqueda()
+        ventana.modelo = self.modelo
+        ventana.cOrden = self.cOrden
+        ventana.campos = self.campos
+        ventana.campoBusqueda = self.campos_busqueda if self.campos_busqueda else self.cOrden
+        ventana.camposTabla = self.camposTabla
+        ventana.campoRetorno = self.campoRetorno
+        ventana.condiciones = self.condiciones
+        ventana.CargaDatos()
+        ventana.exec_()
+        if ventana.lRetval:
+            self.setText(ventana.ValorRetorno)
+            self.valido = True
+            QLineEdit.keyPressEvent(self, event)
     @inicializar_y_capturar_excepciones
     def focusOutEvent(self, QFocusEvent, *args, **kwargs):
         if self.lastKey != QtCore.Qt.Key_F2:
@@ -104,10 +112,11 @@ class Validaciones(EntradaTexto):
             return
         if self.largo != 0:
             self.setText(str(self.text()).zfill(self.largo))
-        if not self.text().isnumeric():
-            Ventanas.showAlert("Sistema", "Campo permite unicamente numeros")
-            self.setText('')
-            return
+        if self.solo_numeros:
+            if not self.text().isnumeric():
+                Ventanas.showAlert("Sistema", "Campo permite unicamente numeros")
+                self.setText('')
+                return
         #data = SQL().BuscaUno(self.tabla, self.campoRetorno, self.text())
         data = self.modelo.select().where(self.campoRetorno == self.text())
 
@@ -184,6 +193,11 @@ class ValidaConTexto(QHBoxLayout):
     campos = [] #lista con los campos a mostrar si se hace la busqueda con F2
     largo = 0 #indica cuantos caracteres se deja introducir
     ancho = 50 #maximo ancho del control para el codigo
+    solo_numeros = True #indica si el campo permite solo numeros
+    campos_busqueda = None
+    #clase para la busqueda
+    clasebusqueda = None
+
 
     def __init__(self, parent=None, *args, **kwargs):
         super().__init__(parent)
@@ -200,10 +214,15 @@ class ValidaConTexto(QHBoxLayout):
         self.lineEditCodigo.modelo = self.modelo
         self.lineEditCodigo.campoNombre = self.nombre
         self.lineEditCodigo.campoRetorno = self.codigo
-        self.lineEditCodigo.cOrden = self.orden if self.orden else self.nombre
+        if self.campos_busqueda:
+            self.lineEditCodigo.campos_busqueda = self.campos_busqueda
+        else:
+            self.lineEditCodigo.cOrden = self.orden if self.orden else self.nombre
         self.lineEditCodigo.condiciones = self.condiciones
         self.lineEditCodigo.campos = self.campos
         self.lineEditCodigo.largo = self.largo
+        self.lineEditCodigo.solo_numeros = self.solo_numeros
+        self.lineEditCodigo.clasebusqueda = self.clasebusqueda
         self.lineEditCodigo.setMaximumWidth(self.ancho)
         self.addWidget(self.lineEditCodigo)
 
@@ -211,3 +230,11 @@ class ValidaConTexto(QHBoxLayout):
         self.lineEditCodigo.widgetNombre = self.textNombre
         self.addWidget(self.textNombre)
 
+    def setText(self, p_str):
+        self.lineEditCodigo.setText(p_str)
+
+    def setStyleSheet(self, p_str):
+        self.lineEditCodigo.setStyleSheet(p_str)
+
+    def valor(self):
+        return self.lineEditCodigo.valor()

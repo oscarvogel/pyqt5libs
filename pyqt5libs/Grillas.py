@@ -9,68 +9,76 @@ from PyQt5 import QtCore
 from PyQt5.QtCore import QAbstractTableModel, Qt, QVariant
 from PyQt5.QtGui import QFont, QColor
 from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QTableView
+from openpyxl.reader.excel import load_workbook
 
+from . import Ventanas
 from .utiles import EsVerdadero, AbrirArchivo, saveFileDialog, inicializar_y_capturar_excepciones
 
 
 class Grilla(QTableWidget):
-
-    #columnas a ocultar
+    # columnas a ocultar
     columnasOcultas = []
 
-    #lista con las cabeceras de la grilla
+    # lista con las cabeceras de la grilla
     cabeceras = []
 
-    #tabla desde la cual obtener los datos
+    # tabla desde la cual obtener los datos
     tabla = None
 
-    #campos de la tabla
+    # campos de la tabla
     campos = None
 
-    #condiciones para filtrar los datos
+    # condiciones para filtrar los datos
     condiciones = None
 
-    #cantidad de registros a mostrar
+    # cantidad de registros a mostrar
     limite = 100
 
-    #columnas habilitadas
+    # columnas habilitadas
     columnasHabilitadas = []
 
-    #campos tabla
+    # campos tabla
     camposTabla = None
 
-    #valores a cargar
+    # valores a cargar
     data = None
 
-    #indica si esta en la grilla
+    # indica si esta en la grilla
     engrilla = False
 
-    #indica si las columnas son seleccionables o no
+    # indica si las columnas son seleccionables o no
     enabled = True
 
-    #widget para las columnas
+    # widget para las columnas
     widgetCol = {}
 
-    #color para la columna
+    # color para la columna
     backgroundColorCol = {}
 
-    #tamaño de la fuente
+    # tamaño de la fuente
     tamanio = 10
 
-    #emit signal
+    # emit signal
     keyPressed = QtCore.pyqtSignal(int, bool, bool)
 
     when = QtCore.pyqtSignal()
 
-    #modificadores de teclas
+    # modificadores de teclas
     shift = False
     ctrl = False
 
-    #indica si permite agregar registros
+    # indica si permite agregar registros
     permiteagregar = True
 
-    #controla la tecla enter para pasar al siguiente campo
+    # controla la tecla enter para pasar al siguiente campo
     controlaenter = False
+
+    # items nuevo para cuando se agrega una fila
+    items_nuevos = []
+
+    LanzarExcepciones = True
+
+    formatos = {}
 
     def __init__(self, *args, **kwargs):
 
@@ -103,7 +111,7 @@ class Grilla(QTableWidget):
         self.OcultaColumnas()
 
     def AgregaItem(self, items=None,
-                   backgroundColor=QColor(255,255,255), readonly=False):
+                   backgroundColor=QColor(255, 255, 255), readonly=False):
 
         if items:
             col = 0
@@ -111,31 +119,37 @@ class Grilla(QTableWidget):
             self.setRowCount(cantFilas)
             for x in items:
                 flags = QtCore.Qt.ItemIsSelectable
-                if isinstance(x, (bool)):
+                if isinstance(x, bool):
                     item = QTableWidgetItem(x)
                     if x:
                         item.setCheckState(QtCore.Qt.Checked)
                     else:
                         item.setCheckState(QtCore.Qt.Unchecked)
+                    self.formatos[col] = 'Bool'
                 elif isinstance(x, (int, float, decimal.Decimal)):
                     item = QTableWidgetItem(str(x))
                     item.setTextAlignment(Qt.AlignRight)
+                    self.formatos[col] = 'Decimal'
                 # en caso de que sea formato de fecha
                 elif isinstance(x, (datetime.date)):
                     fecha = x.strftime('%d/%m/%Y')
                     item = QTableWidgetItem(fecha)
-                #en caso de que sea formato de hora
+                    self.formatos[col] = 'Date'
+                # en caso de que sea formato de hora
                 elif isinstance(x, (datetime.time)):
                     fecha = x.strftime('%H:%M:%S')
                     item = QTableWidgetItem(fecha)
+                    self.formatos[col] = 'Time'
                 elif isinstance(x, (bytes)):
                     if EsVerdadero(x):
                         item = 'Si'
                     else:
                         item = 'No'
                     item = QTableWidgetItem(QTableWidgetItem(x))
+                    self.formatos[col] = 'Bytes'
                 else:
                     item = QTableWidgetItem(QTableWidgetItem(x))
+                    self.formatos[col] = 'String'
 
                 if readonly:
                     flags = QtCore.Qt.ItemIsSelectable
@@ -159,10 +173,10 @@ class Grilla(QTableWidget):
                 # if self.widgetCol:
                 #     self.ArmaWidgetCol(col)
                 if col in self.widgetCol:
-                   widgetColumna = self.widgetCol[col]
-                   self.setItemDelegateForColumn(col, widgetColumna)
-                   # self.setItemDelegate(widgetColumna)
-                   # self.setCellWidget(cantFilas - 1, col, widgetColumna)
+                    widgetColumna = self.widgetCol[col]
+                    self.setItemDelegateForColumn(col, widgetColumna)
+                    # self.setItemDelegate(widgetColumna)
+                    # self.setCellWidget(cantFilas - 1, col, widgetColumna)
                 col += 1
             self.resizeRowsToContents()
             self.resizeColumnsToContents()
@@ -181,14 +195,23 @@ class Grilla(QTableWidget):
                 numCol = x
             self.hideColumn(numCol)
 
-    def ModificaItem(self, valor, fila, col, backgroundColor=None):
+    def ModificaItem(self, valor, fila, col, backgroundColor=None, readonly=False):
         """
 
         :param fila: la fila que se quiere modificar
         :param valor: valor a modificar
         :type col: entero en caso de indicar un numero de columna y string si quiero el nombre
         """
-        if isinstance(valor, (int, float, decimal.Decimal)):
+        if isinstance(col, str):
+            col = self.cabeceras.index(col)
+
+        if isinstance(valor, bool):
+            item = QTableWidgetItem(valor)
+            if valor:
+                item.setCheckState(QtCore.Qt.Checked)
+            else:
+                item.setCheckState(QtCore.Qt.Unchecked)
+        elif isinstance(valor, (int, float, decimal.Decimal)):
             item = QTableWidgetItem(str(valor))
         elif isinstance(valor, (datetime.date)):
             fecha = valor.strftime('%d/%m/%Y')
@@ -200,19 +223,29 @@ class Grilla(QTableWidget):
             numCol = self.cabeceras.index(col)
         else:
             numCol = col
-
-        if numCol in self.columnasHabilitadas:
-            item.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable)
+        flags = QtCore.Qt.ItemIsSelectable
+        if readonly:
+            flags = QtCore.Qt.ItemIsSelectable
+        elif col in self.columnasHabilitadas:
+            if isinstance(valor, (bool)):
+                flags |= QtCore.Qt.ItemIsUserCheckable | QtCore.Qt.ItemIsEditable | QtCore.Qt.ItemIsEnabled
+            else:
+                flags |= QtCore.Qt.ItemIsEnabled | QtCore.Qt.ItemIsEditable
         else:
-            # item.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
-            item.setFlags(QtCore.Qt.ItemIsSelectable)
+            if self.enabled and not readonly:
+                flags |= QtCore.Qt.ItemIsEnabled
+
+        item.setFlags(flags)
 
         if col in self.backgroundColorCol:
             item.setBackground(self.backgroundColorCol[col])
+        else:
+            # si no indico un color coloco el color que tiene el item
+            if self.itemAt(fila, col):
+                item.setBackground(self.itemAt(fila, col).background().color())
 
         self.setItem(fila, numCol, item)
         self.resizeColumnsToContents()
-        #self.dataChanged()
 
     def ObtenerItem(self, fila, col):
 
@@ -227,7 +260,7 @@ class Grilla(QTableWidget):
                 item = True
             else:
                 item = item.text()
-                item = item.replace(',', '.') #if item else 0
+                item = item.replace(',', '.')  # if item else 0
 
         except:
             item = ''
@@ -244,11 +277,11 @@ class Grilla(QTableWidget):
 
         try:
             item = self.item(fila, numCol)
-            if item.checkState() == QtCore.Qt.Checked:
+            if item.checkState() == QtCore.Qt.ItemIsUserCheckable:
                 item = True
             else:
                 item = item.text()
-                item = re.sub("[^-0123456789\.]","",item)
+                item = re.sub("[^-0123456789\.]", "", item)
 
             item = float(item)
         except:
@@ -264,8 +297,11 @@ class Grilla(QTableWidget):
         else:
             numCol = self.cabeceras.index(col)
 
-        item = self.item(fila, numCol).text()
-        item = datetime.datetime.strptime(item, '%d/%m/%Y')
+        try:
+            item = self.item(fila, numCol).text().replace('-', '/').strip()
+            item = datetime.datetime.strptime(item, '%d/%m/%Y')
+        except:
+            item = ''
 
         return item
 
@@ -291,45 +327,99 @@ class Grilla(QTableWidget):
             valor = self.ObtenerItem(fila=fila, col=col)
             self.ModificaItem(valor=valor, fila=fila, col=col)
 
-    def ExportaExcel(self, columnas=None, archivo=""):
+    def ExportaExcel(self, columnas=None, archivo="", titulo="", nuevo=True, hoja='', fila=0, col=0):
+
         if not columnas:
             columnas = self.cabeceras
 
-        archivo = archivo.replace('.', '').replace('/', '')
+        if nuevo:
+            archivo = archivo.replace('.', '').replace('/', '')
         if not archivo.startswith("excel"):
             archivo = "excel/" + archivo
 
-        cArchivo = saveFileDialog(filename=archivo,
-                                  files="Archivos de Excel (*.xlsx)")
+        if nuevo:
+            cArchivo = saveFileDialog(filename=archivo,
+                                      files="Archivos de Excel (*.xlsx)")
+        else:
+            cArchivo = archivo
         # cArchivo = QFileDialog.getSaveFileName(caption="Guardar archivo", directory="", filter="*.XLSX")
         if not cArchivo:
             return
 
-        workbook = xlsxwriter.Workbook(cArchivo)
-        worksheet = workbook.add_worksheet()
+        if nuevo:
+            workbook = xlsxwriter.Workbook(cArchivo)
+        else:
+            try:
+                # Carga el archivo
+                workbook = load_workbook(cArchivo)
+            except:
+                Ventanas.showAlert("Sistema", f"Ocurrio un error al intentar abrir el archivo {cArchivo}")
+                return
 
-        fila = 0
-        col = 0
+        if hoja:
+            # Selecciona la hoja por su nombre
+            worksheet = workbook[hoja]
+        else:
+            #creamos una hoja nueva
+            worksheet = workbook.add_worksheet()
+
+        formato_fecha = workbook.add_format({'num_format': 'dd/mm/yyyy'})
+        # fila = 0
+        # col = 0
+        if titulo:
+            worksheet.write(fila, col, titulo)
+            fila += 2
+
         for c in columnas:
             worksheet.write(fila, col, c)
             col += 1
 
-        fila +=1
+        fila += 1
         for row in range(self.rowCount()):
             col = 0
             for c in columnas:
-                dato = self.ObtenerItem(fila=row, col=c).strip()
+                dato = self.ObtenerItem(fila=row, col=c)
+                if isinstance(dato, bool):
+                    dato = 'SI' if dato else 'NO'
+                else:
+                    dato = dato.strip()
                 try:
                     dato = float(dato)
                 except:
                     if dato.isdigit():
                         dato = int(dato)
-                worksheet.write(fila, col, dato)
+                if self.formatos[col] == 'Date':
+
+                    worksheet.write_datetime(fila, col, datetime.datetime.strptime(dato, '%d/%m/%Y').date(),
+                                             formato_fecha)
+                else:
+                    worksheet.write(fila, col, dato)
                 col += 1
             fila += 1
 
+        # cabeceras_excel = [{'header': x} for x in columnas]
+        # worksheet.add_table(0, 0, fila, col-1, cabeceras_excel)
         workbook.close()
         AbrirArchivo(cArchivo)
+
+    def obtiene_datos_lista(self, campos=None):
+        datos_retorno = []
+        if campos is None:
+            campos = []
+        for row in range(self.rowCount()):
+            for c in campos:
+                dato = self.ObtenerItem(fila=row, col=c)
+                if isinstance(dato, bool):
+                    dato = 'SI' if dato else 'NO'
+                else:
+                    dato = dato.strip()
+                try:
+                    dato = float(dato)
+                except:
+                    if dato.isdigit():
+                        dato = int(dato)
+                datos_retorno.append(dato)
+        return [x for x in datos_retorno]
 
     def keyPressEvent(self, event):
         super(Grilla, self).keyPressEvent(event)
@@ -345,7 +435,10 @@ class Grilla(QTableWidget):
         if event.key() in [Qt.Key_Return, Qt.Key_Enter] and self.controlaenter:
             if col + 1 == self.columnCount() and row + 1 == self.rowCount():
                 if self.permiteagregar:
-                    item = ['' for x in self.cabeceras]
+                    if self.items_nuevos:
+                        item = self.items_nuevos
+                    else:
+                        item = ['' for x in self.cabeceras]
                     self.AgregaItem(item)
                     self.Activar(row=self.rowCount(), col=0)
             elif col == self.columnCount():
@@ -354,10 +447,16 @@ class Grilla(QTableWidget):
                 self.Activar(col=col + 1)
         elif event.key() == Qt.Key_Down and row + 1 == self.rowCount():
             if self.permiteagregar:
-                item = ['' for x in self.cabeceras]
+                if self.items_nuevos:
+                    item = self.items_nuevos
+                else:
+                    item = ['' for x in self.cabeceras]
                 self.AgregaItem(item)
                 # self.Activar(row=row + 1, col=0)
-
+        elif event.key() == Qt.Key_C and self.ctrl:
+            self.copySelection()
+        elif event.key() == Qt.Key_V and self.ctrl:
+            self.pasteSelection()
         self.keyPressed.emit(event.key(), self.shift, self.ctrl)
 
     def SumaTodo(self, col=None):
@@ -389,11 +488,44 @@ class Grilla(QTableWidget):
         items = ['' for x in self.cabeceras]
         self.AgregaItem(items)
 
+    def copySelection(self):
+        selection = self.selectedIndexes()
+        if selection:
+            rows = sorted(index.row() for index in selection)
+            columns = sorted(index.column() for index in selection)
+            rowcount = rows[-1] - rows[0] + 1
+            colcount = columns[-1] - columns[0] + 1
+            table = [[''] * colcount for _ in range(rowcount)]
+            for index in selection:
+                row = index.row() - rows[0]
+                column = index.column() - columns[0]
+                table[row][column] = index.data()
+            self.copy_data = table
+        return
+
+    def pasteSelection(self):
+        selection = self.selectedIndexes()
+        if selection:
+            model = self.model()
+            rows = sorted(index.row() for index in selection)
+            columns = sorted(index.column() for index in selection)
+            if len(rows) == 1 and len(columns) == 1:
+                fila = rows[0]
+                columna = columns[0]
+                self.setCurrentCell(0, 0)
+                for f in self.copy_data:
+                    for c in f:
+                        self.ModificaItem(valor=c, fila=fila, col=columna)
+                        columna += 1
+                        self.setCurrentCell(fila, columna)
+                    fila += 1
+        return
+
 
 class MiTableModel(QAbstractTableModel):
-    #columnas habilitadas
+    # columnas habilitadas
     columnasHabilitadas = []
-    #_colorColumn = {2:QColor(255, 255, 204),4:QColor(255, 128, 128)}
+    # _colorColumn = {2:QColor(255, 255, 204),4:QColor(255, 128, 128)}
     _colorColumn = {}
 
     def __init__(self, datain, headerdata, parent=None, *args):
@@ -420,7 +552,7 @@ class MiTableModel(QAbstractTableModel):
             return value
         elif role == Qt.ItemIsSelectable:
             return value
-        elif role == Qt.BackgroundRole and index.column() in(self._colorColumn):
+        elif role == Qt.BackgroundRole and index.column() in (self._colorColumn):
             return self._colorColumn[index.column()]
         return QVariant()
 
@@ -449,23 +581,23 @@ class MiTableModel(QAbstractTableModel):
             column = index.column()
             ch = (value)
             self.arraydata[row][column] = ch
-            self.dataChanged.emit(index,index)
+            self.dataChanged.emit(index, index)
             return True
 
     def ModificaDato(self, fila=0, col=0, valor=None):
         self.arraydata[fila][col] = valor
 
+
 class MiQTableView(QTableView):
     def __init__(self, *args, **kwargs):
-        QTableView.__init__(self, *args, **kwargs) #Use QTableView constructor
+        QTableView.__init__(self, *args, **kwargs)  # Use QTableView constructor
 
 
 class GrillaModel(MiQTableView):
-
-    #columnas a ocultar
+    # columnas a ocultar
     columnasOcultas = []
 
-    #emit signal
+    # emit signal
     keyPressed = QtCore.pyqtSignal(int)
 
     def __init__(self, parent=None):
@@ -475,7 +607,7 @@ class GrillaModel(MiQTableView):
         self.setFont(font)
 
     def ObtenerItem(self, fila=0, col=0):
-        #en caso de que le pase el nombre de la columnna busco el indice del header
+        # en caso de que le pase el nombre de la columnna busco el indice del header
         if isinstance(col, (str,)):
             col = self.model().headerdata.index(col)
 
@@ -484,7 +616,7 @@ class GrillaModel(MiQTableView):
         return index.data()
 
     def ModificaItem(self, fila=0, col=0, valor=''):
-        #en caso de que le pase el nombre de la columnna busco el indice del header
+        # en caso de que le pase el nombre de la columnna busco el indice del header
         if isinstance(col, (str,)):
             col = self.model().headerdata.index(col)
 
@@ -506,4 +638,3 @@ class GrillaModel(MiQTableView):
     def keyPressEvent(self, event):
         super(GrillaModel, self).keyPressEvent(event)
         self.keyPressed.emit(event.key())
-
