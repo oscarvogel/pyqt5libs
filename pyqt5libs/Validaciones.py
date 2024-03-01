@@ -72,18 +72,18 @@ class Validaciones(EntradaTexto):
     def keyPressEvent(self, event, *args, **kwargs):
         self.lastKey = event.key()
         if event.key() == QtCore.Qt.Key_F2:
-            self.busqueda()
+            self.busqueda(event)
         elif event.key() == QtCore.Qt.Key_Enter or \
                         event.key() == QtCore.Qt.Key_Return or\
                         event.key() == QtCore.Qt.Key_Tab:
             if not self.value():
-                self.busqueda()
+                self.busqueda(event)
             if self.proximoWidget:
                 self.proximoWidget.setFocus()
             self.valida()
         QLineEdit.keyPressEvent(self, event)
     @inicializar_y_capturar_excepciones
-    def busqueda(self, *args, **kwargs):
+    def busqueda(self, event, *args, **kwargs):
         if self.clasebusqueda:
             ventana = self.clasebusqueda()
         else:

@@ -402,10 +402,11 @@ def HayInternet():
 def envia_correo(from_address='', to_address='', message='', subject='',
                  password_email='', to_cc='', archivo_adjunto='') -> object:
     smtp_email = 'mail.forestalgaruhape.com.ar'
-    mime_message = MIMEMultipart(message)
+    mime_message = MIMEMultipart()
     mime_message["From"] = from_address
     mime_message["To"] = to_address
     mime_message["Subject"] = subject
+    mime_message.attach(MIMEText(message))
     if to_cc:
         mime_message["Cc"] = to_cc
     if archivo_adjunto:
