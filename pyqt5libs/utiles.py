@@ -77,7 +77,7 @@ def AbrirArchivo(cArchivo=None):
 def LeerIni(clave=None, key=None, carpeta=''):
     analizador = argparse.ArgumentParser(description='Sistema.')
     analizador.add_argument("-i", "--inicio", default=os.getcwd(), help="Carpeta de Inicio de sistema.")
-    analizador.add_argument("-a", "--archivo", default="sistema.ini", help="Archivo de Configuracion de sistema.")
+    analizador.add_argument("-a", "--archivo", default="fasa.ini", help="Archivo de Configuracion de sistema.")
     argumento = analizador.parse_args()
     retorno = ''
     Config = ConfigParser()

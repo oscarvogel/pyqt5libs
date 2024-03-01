@@ -133,7 +133,7 @@ class Validaciones(EntradaTexto):
             self.cursor = data
             if self.widgetNombre:
                 for d in data:
-                    self.widgetNombre.setText(d[self.campoNombre.column_name].strip())
+                    self.widgetNombre.setText(d[self.campoNombre.name].strip())
         else:
             self.valido = False
             self.setStyleSheet("background-color: yellow")
