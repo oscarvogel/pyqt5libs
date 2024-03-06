@@ -65,6 +65,12 @@ class Excel:
 
         return self.archivo
 
+    def crea_hoja(self):
+        if not self.libro:
+            self.libro = xlsxwriter.Workbook(self.archivo)
+        if not self.hoja:
+            self.hoja = self.libro.add_worksheet()
+
     def Titulo(self, titulo: str = '', desdecol: str = 'A', hastacol: str = 'A',
                fila: int = 0, combina: bool = True, **kwargs) -> None:
         # Create a format to use in the merged range.

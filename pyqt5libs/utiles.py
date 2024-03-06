@@ -19,6 +19,7 @@ import locale
 import logging
 import os
 import random
+import smtplib
 import socket
 import subprocess
 import sys
@@ -27,6 +28,7 @@ import time
 import traceback
 import platform
 from configparser import ConfigParser
+from email.mime.application import MIMEApplication
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
 from functools import wraps
@@ -77,7 +79,7 @@ def AbrirArchivo(cArchivo=None):
 def LeerIni(clave=None, key=None, carpeta=''):
     analizador = argparse.ArgumentParser(description='Sistema.')
     analizador.add_argument("-i", "--inicio", default=os.getcwd(), help="Carpeta de Inicio de sistema.")
-    analizador.add_argument("-a", "--archivo", default="fasa.ini", help="Archivo de Configuracion de sistema.")
+    analizador.add_argument("-a", "--archivo", default="sistema.ini", help="Archivo de Configuracion de sistema.")
     argumento = analizador.parse_args()
     retorno = ''
     Config = ConfigParser()
@@ -401,27 +403,43 @@ def HayInternet():
 
 def envia_correo(from_address='', to_address='', message='', subject='',
                  password_email='', to_cc='', archivo_adjunto='') -> object:
-    smtp_email = 'mail.forestalgaruhape.com.ar'
+    smtp_server = 'mail.forestalgaruhape.com.ar'
+    smtp_port = 587
+    smtp_username = 'oscar@forestalgaruhape.com.ar'
+    smtp_password = password_email
     mime_message = MIMEMultipart()
     mime_message["From"] = from_address
-    mime_message["To"] = to_address
+    if isinstance(to_address, list):
+        mime_message["To"] = ', '.join(to_address)
+    else:
+        mime_message["To"] = to_address
+
     mime_message["Subject"] = subject
     mime_message.attach(MIMEText(message))
     if to_cc:
         mime_message["Cc"] = to_cc
     if archivo_adjunto:
-        with open(archivo_adjunto, 'r') as archivo:
-            adjunto = MIMEText(archivo.read(), 'plain')
-            adjunto.add_header('Content-Disposition', f'attachment; filename={archivo_adjunto}')
-            mime_message.add_header('Content-Disposition', f'attachment; filename={archivo_adjunto}')
+        # with open(archivo_adjunto, 'r') as archivo:
+        #     adjunto = MIMEText(archivo.read(), 'plain')
+        #     adjunto.add_header('Content-Disposition', f'attachment; filename={archivo_adjunto}')
+        #     mime_message.add_header('Content-Disposition', f'attachment; filename={archivo_adjunto}')
+        #     mime_message.attach(adjunto)
+        with open(archivo_adjunto, 'rb') as archivo:
+            adjunto = MIMEApplication(archivo.read(), Name=archivo_adjunto)
+            adjunto['Content-Disposition'] = f'attachment; filename="{archivo_adjunto}"'
             mime_message.attach(adjunto)
 
-    smtp = SMTP(smtp_email, 587)
-    smtp.ehlo()
-
-    smtp.login(from_address, password_email)
-    smtp.sendmail(from_address, [to_address, to_cc], mime_message.as_string())
-    smtp.quit()
+    # smtp = SMTP(smtp_email, 587)
+    # smtp.ehlo()
+    #
+    # smtp.login(from_address, password_email)
+    # smtp.sendmail(from_address, [to_address, to_cc], mime_message.as_string())
+    # smtp.quit()
+    # Conéctate al servidor SMTP y envía el correo
+    with smtplib.SMTP(smtp_server, smtp_port) as servidor:
+        servidor.starttls()
+        servidor.login(smtp_username, smtp_password)
+        servidor.sendmail(mime_message['From'], mime_message['To'], mime_message.as_string())
 
 
 def uniqueid():

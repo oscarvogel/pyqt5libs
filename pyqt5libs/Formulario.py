@@ -133,6 +133,7 @@ class Formulario(QDialog):
 
     def EstablecerTema(self):
         tema = f'{ubicacion_sistema()}{ParamSist.ObtenerParametro("TEMA")}'
+        # tema=''
         if not os.path.isfile(tema):
             tema = join('temas/ubuntu.css')
 
