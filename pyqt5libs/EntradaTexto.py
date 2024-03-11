@@ -101,6 +101,7 @@ class EntradaTexto(QLineEdit):
             self.setMaxLength(self.largo)
 
     def value(self):
+
         return float(self.text() or 0)
 
     def valor(self):

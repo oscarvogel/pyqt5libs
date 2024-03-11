@@ -76,8 +76,8 @@ class Validaciones(EntradaTexto):
         elif event.key() == QtCore.Qt.Key_Enter or \
                         event.key() == QtCore.Qt.Key_Return or\
                         event.key() == QtCore.Qt.Key_Tab:
-            if not self.value():
-                self.busqueda(event)
+            # if not self.value():
+            #     self.busqueda(event)
             if self.proximoWidget:
                 self.proximoWidget.setFocus()
             self.valida()
