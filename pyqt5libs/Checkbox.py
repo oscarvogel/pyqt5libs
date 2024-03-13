@@ -32,4 +32,4 @@ class CheckBox(QCheckBox):
                 return False
 
     def valor(self):
-        return self.text()
+        return self.isChecked()
