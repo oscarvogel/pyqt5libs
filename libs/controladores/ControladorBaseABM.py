@@ -52,19 +52,23 @@ class ControladorBaseABM(ControladorBase):
             Ventanas.showAlert("Sistema", "Debes establecer un campo clave a actualizar")
             return
 
-        if self.view.tipo == 'M':
-            dato = self.model.get_by_id(self.view.controles[self.campoclave].text())
-        else:
-            dato = self.model()
+        if self.onPreClickAceptar():
+            if self.view.tipo == 'M':
+                dato = self.model.get_by_id(self.view.controles[self.campoclave].text())
+            else:
+                dato = self.model()
 
-        for control in self.view.controles:
-            dato.__data__[control] = self.view.controles[control].valor()
-        dato.save(force_insert=self.view.tipo == 'A')
-        self.view.btnAceptarClicked()
+            for control in self.view.controles:
+                dato.__data__[control] = self.view.controles[control].valor()
+            dato.save(force_insert=self.view.tipo == 'A')
+            self.view.btnAceptarClicked()
         self.onPostClickAceptar()
 
     def onPostClickAceptar(self):
         pass
+
+    def onPreClickAceptar(self):
+        return True
 
     def onDoubleClikedTableWidget(self, index):
         if self.view.tableView.currentRow() == -1:
