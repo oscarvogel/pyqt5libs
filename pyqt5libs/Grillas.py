@@ -389,9 +389,11 @@ class Grilla(QTableWidget):
                     if dato.isdigit():
                         dato = int(dato)
                 if self.formatos[col] == 'Date':
-
-                    worksheet.write_datetime(fila, col, datetime.datetime.strptime(dato, '%d/%m/%Y').date(),
-                                             formato_fecha)
+                    try:
+                        worksheet.write_datetime(fila, col, datetime.datetime.strptime(dato.replace("-", "/"), '%d/%m/%Y').date(),
+                                                formato_fecha)
+                    except:
+                        worksheet.write(fila, col, dato, formato_fecha)
                 else:
                     worksheet.write(fila, col, dato)
                 col += 1

@@ -661,3 +661,10 @@ def dias_habiles(fecha_inicial, fecha_final):
         fecha_inicial += datetime.timedelta(days=1)
 
     return dias_habiles
+
+def obtener_fechas_semana(fecha):
+    # Calcula el lunes de la semana
+    inicio_semana = fecha - timedelta(days=fecha.weekday())
+    # Calcula el domingo de la semana
+    fin_semana = inicio_semana + timedelta(days=6)
+    return inicio_semana, fin_semana
