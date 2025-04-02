@@ -48,6 +48,10 @@ class Excel:
             })
         if not self.archivo:
             return
+
+        if isinstance(cabeceras, list):
+            cabeceras = {i+1: cabecera for i, cabecera in enumerate(cabeceras)}
+
         for k, v in cabeceras.items():
             self.hoja.write(fila, v, k, formato_celda)
 
