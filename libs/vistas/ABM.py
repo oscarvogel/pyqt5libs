@@ -200,12 +200,16 @@ class ABM(VistaBase):
 
     def ArmaBusqueda(self, data):
         if self.ordenBusqueda:
-            if isinstance(self.ordenBusqueda, (list,)):
-                for b in self.ordenBusqueda:
-                    # data = data.where(self.ordenBusqueda.contains(self.lineEditBusqueda.text()))
-                    data = data.where((b.contains(self.lineEditBusqueda.text())))
+            texto = self.lineEditBusqueda.text()
+            if isinstance(self.ordenBusqueda, list):
+                # Construimos una expresión OR combinando todos los campos
+                cond = None
+                for campo in self.ordenBusqueda:
+                    expr = campo.contains(texto)
+                    cond = expr if cond is None else cond | expr
+                data = data.where(cond)
             else:
-                data = data.where(self.ordenBusqueda.contains(self.lineEditBusqueda.text()))
+                data = data.where(self.ordenBusqueda.contains(texto))
         else:
             Ventanas.showAlert("Sistema", "Orden no establecido y no se puede realizar la busqueda")
         return data
