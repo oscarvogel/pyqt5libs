@@ -323,7 +323,10 @@ class ABM(VistaBase):
                     elif isinstance(self.controles[k], Spinner):
                         self.controles[k].setText(d[k])
                     else:
-                        self.controles[k].setText(d[k].strip())
+                        if d[k] is None:
+                            self.controles[k].setText('')
+                        else:
+                            self.controles[k].setText(d[k].strip())
 
                     self.controles[k].setStyleSheet("background-color: white")
 
