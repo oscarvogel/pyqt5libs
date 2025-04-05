@@ -59,7 +59,7 @@ class UiBusqueda(Formulario):
         self.btnAceptar = BotonAceptar(textoBoton="&Seleccionar", imagen=imagen("cargar.png"))
         self.btnAceptar.setObjectName("btnAceptar")
         self.horizontalLayout.addWidget(self.btnAceptar)
-        self.btnCancelar = BotonCerrarFormulario(imagen=imagen("exit_door_logout_out_icon.png"))
+        self.btnCancelar = BotonCerrarFormulario(imagen=imagen("close.png"))
         self.btnCancelar.setObjectName("btnCancelar")
         self.horizontalLayout.addWidget(self.btnCancelar)
         self.verticalLayout.addLayout(self.horizontalLayout)
