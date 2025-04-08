@@ -52,7 +52,8 @@ class BotonAceptar(Boton):
 
     def __init__(self, *args, **kwargs):
         kwargs['texto'] = kwargs['textoBoton'] if 'textoBoton' in kwargs else '&Aceptar'
-        kwargs['imagen'] = LeerIni("iniciosistema") + 'imagenes/iconfinder_unit-completed_60215.png'
+        if 'imagen' not in kwargs:
+            kwargs['imagen'] = LeerIni("iniciosistema") + 'imagenes/aceptar.png'
         kwargs['tamanio'] = QSize(32, 32)
         Boton.__init__(self, *args, **kwargs)
 
