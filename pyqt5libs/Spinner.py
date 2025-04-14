@@ -26,6 +26,8 @@ class Spinner(QDoubleSpinBox):
     proximoWidget = None
     # emit signal
     keyPressed = QtCore.pyqtSignal(int)  # presiona tecla manda la tecla prsionad
+    
+    focusOut = pyqtSignal()  # 🔔 señal personalizada
 
     def __init__(self, parent=None, *args, **kwargs):
         QDoubleSpinBox.__init__(self, parent)
@@ -65,6 +67,7 @@ class Spinner(QDoubleSpinBox):
 
     def focusOutEvent(self, *args, **kwargs):
         self.setStyleSheet("background-color: Dodgerblue")
+        self.focusOut.emit()  # 🔥 emitís la señal cuando pierde el foco
         QDoubleSpinBox.focusOutEvent(self, *args, **kwargs)
 
     def setText(self, p_str):
