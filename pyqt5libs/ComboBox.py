@@ -260,7 +260,6 @@ class ComboSINO(Combo):
         super().__init__(parent)
         self.CargaDatosValores(data={'S': 'SI', 'N': 'NO'})
 
-
 class FormaPago(Combo):
 
     def __init__(self, parent=None, *args, **kwargs):

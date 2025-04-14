@@ -132,8 +132,11 @@ class Formulario(QDialog):
         QKeyEvent.ignore()
 
     def EstablecerTema(self):
-        tema = f'{ubicacion_sistema()}{ParamSist.ObtenerParametro("TEMA")}'
-        # tema=''
+        # tema = f'{ubicacion_sistema()}{ParamSist.ObtenerParametro("TEMA")}'
+        tema = join(ubicacion_sistema(), 'temas', ParamSist.ObtenerParametro("TEMA"))
+        if not tema.lower().endswith('.css'):
+            tema += '.css'
+        
         if not os.path.isfile(tema):
             tema = join('temas/ubuntu.css')
 

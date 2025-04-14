@@ -67,6 +67,7 @@ class Validaciones(EntradaTexto):
         if self.largo != 0:
             self.setMaxLength(self.largo)
         self.setMaximumWidth(50)
+        self.setToolTip("Presione F2 para buscar")
 
     @inicializar_y_capturar_excepciones
     def keyPressEvent(self, event, *args, **kwargs):
