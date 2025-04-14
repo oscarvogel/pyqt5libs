@@ -226,3 +226,10 @@ class HoraEntradaSalida(QHBoxLayout):
         self.addWidget(self.desde_hora)
         self.addWidget(lblHastaHora)
         self.addWidget(self.hasta_hora)
+
+class Hora(EntradaTexto):
+    
+    def __init__(self, parent=None, *args, **kwargs):
+        super().__init__(parent, *args, **kwargs)
+        self.setInputMask("00:00")
+        self.setMaxLength(5)

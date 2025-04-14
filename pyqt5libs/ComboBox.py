@@ -21,6 +21,7 @@ class ComboSQL(QComboBox):
     proximoWidget = None
     numero_filas = 0
     valor_defecto = ''  # valor por defecto, para establecer el indice a ese valor
+    lcarga = True  # indica si se carga el combo al iniciar la clase
 
     def __init__(self, *args, **kwargs):
         super().__init__()
@@ -29,10 +30,12 @@ class ComboSQL(QComboBox):
         self.setFont(font)
         if 'orden' in kwargs:
             self.cOrden = kwargs['orden']
-        if 'checkeable' in kwargs:
-            self.CargaDatos(checkeable=kwargs['checkeable'])
-        else:
-            self.CargaDatos()
+        if self.lcarga:
+            if 'checkeable' in kwargs:
+                self.CargaDatos(checkeable=kwargs['checkeable'])
+            else:
+                self.CargaDatos()
+        
 
     def CargaDatos(self, checkeable=False, checked=False):
         self.clear()
