@@ -281,7 +281,7 @@ class Grilla(QTableWidget):
                 item = True
             else:
                 item = item.text()
-                item = re.sub("[^-0123456789\.]", "", item)
+                item = re.sub(r"[^-0123456789\.]", "", item)
 
             item = float(item)
         except:

@@ -50,7 +50,9 @@ class Excel:
             return
 
         if isinstance(cabeceras, list):
-            cabeceras = {i+1: cabecera for i, cabecera in enumerate(cabeceras)}
+            # Diccionario con { "nombre_cabecera": número_de_columna }
+            cabeceras = {cabecera: i for i, cabecera in enumerate(cabeceras)}
+
 
         for k, v in cabeceras.items():
             self.hoja.write(fila, v, k, formato_celda)
@@ -122,11 +124,16 @@ class Excel:
 
         col = inicio
         for d in datos:
-            if isinstance(d, date):
-                item = FormatoFecha(d, formato='dma')
+            formato_celda = None
+            # if isinstance(d, date):
+            #     item = FormatoFecha(d, formato='dma')
+            #     formato_celda = self.libro.add_format({'num_format': 'dd/mm/yyyy'})
+            # else:
+            #     item = d
+            if isinstance(d, bool):
+                item = 'SI' if d else 'NO'
             else:
                 item = d
-            formato_celda = None
             if formato:
                 if col in formato:
                     formato_celda = self.libro.add_format(formato[col])
