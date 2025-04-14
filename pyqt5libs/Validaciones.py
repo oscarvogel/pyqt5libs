@@ -83,6 +83,7 @@ class Validaciones(EntradaTexto):
                 self.proximoWidget.setFocus()
             self.valida()
         QLineEdit.keyPressEvent(self, event)
+    
     @inicializar_y_capturar_excepciones
     def busqueda(self, event, *args, **kwargs):
         if self.clasebusqueda:
@@ -102,6 +103,7 @@ class Validaciones(EntradaTexto):
             self.setText(ventana.ValorRetorno)
             self.valido = True
             QLineEdit.keyPressEvent(self, event)
+   
     @inicializar_y_capturar_excepciones
     def focusOutEvent(self, QFocusEvent, *args, **kwargs):
         if self.lastKey != QtCore.Qt.Key_F2:
@@ -134,7 +136,11 @@ class Validaciones(EntradaTexto):
             self.cursor = data
             if self.widgetNombre:
                 for d in data:
-                    self.widgetNombre.setText(d[self.campoNombre.name].strip())
+                    if isinstance(self.campoNombre, list):
+                        texto = " ".join(str(d[c.name]).strip() for c in self.campoNombre)
+                        self.widgetNombre.setText(texto)
+                    else:
+                        self.widgetNombre.setText(str(d[self.campoNombre.name]).strip())
         else:
             self.valido = False
             self.setStyleSheet("background-color: yellow")
