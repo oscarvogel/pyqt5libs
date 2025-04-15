@@ -526,6 +526,12 @@ class Grilla(QTableWidget):
     def limpiarGrilla(self):
         self.setSortingEnabled(False)
         self.setRowCount(0)
+        
+    def filaSeleccionada(self):
+        try:
+            return self.currentRow()
+        except:
+            return 0
 
 class MiTableModel(QAbstractTableModel):
     # columnas habilitadas
