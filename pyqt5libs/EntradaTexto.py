@@ -110,6 +110,12 @@ class EntradaTexto(QLineEdit):
     def setText(self, a0: str) -> None:
         if isinstance(a0, (int, decimal.Decimal, float)):
             a0 = str(a0)
+        elif isinstance(a0, datetime.time):
+            a0 = a0.strftime("%H:%M:%S")
+        elif isinstance(a0, datetime.datetime):
+            a0 = a0.strftime("%d/%m/%Y")
+        elif isinstance(a0, datetime.date):
+            a0 = a0.strftime("%d/%m/%Y")
         super().setText(a0)
 
 

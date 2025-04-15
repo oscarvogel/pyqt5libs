@@ -1,4 +1,5 @@
 # coding=utf-8
+import datetime
 import decimal
 
 from PyQt5 import QtCore
@@ -116,6 +117,12 @@ class ComboSQL(QComboBox):
         # self.setCurrentIndex()
         if isinstance(p_str, (int,)):
             p_str = str(p_str)
+        elif isinstance(p_str, (datetime.time,)):
+            p_str = p_str.strftime('%H:%M')
+        elif isinstance(p_str, (datetime.datetime,)):
+            p_str = p_str.strftime('%d/%m/%Y')
+        elif isinstance(p_str, (decimal.Decimal,)):
+            p_str = str(p_str).strip()
         self.setCurrentText(p_str)
 
     def setIndex(self, p_str):
