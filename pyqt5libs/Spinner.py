@@ -28,6 +28,8 @@ class Spinner(QDoubleSpinBox):
     keyPressed = QtCore.pyqtSignal(int)  # presiona tecla manda la tecla prsionad
     
     focusOut = pyqtSignal()  # 🔔 señal personalizada
+    
+    focosIn = pyqtSignal()  # 🔔 señal personalizada
 
     def __init__(self, parent=None, *args, **kwargs):
         QDoubleSpinBox.__init__(self, parent)
@@ -63,6 +65,7 @@ class Spinner(QDoubleSpinBox):
 
     def focusInEvent(self, *args, **kwargs):
         self.selectAll()
+        self.focosIn.emit()  # 🔔 emitís la señal cuando gana el foco
         QDoubleSpinBox.focusInEvent(self, *args, **kwargs)
 
     def focusOutEvent(self, *args, **kwargs):
