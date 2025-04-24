@@ -29,7 +29,7 @@ class Spinner(QDoubleSpinBox):
     
     focusOut = pyqtSignal()  # 🔔 señal personalizada
     
-    focosIn = pyqtSignal()  # 🔔 señal personalizada
+    focusIn = pyqtSignal()  # 🔔 señal personalizada
 
     def __init__(self, parent=None, *args, **kwargs):
         QDoubleSpinBox.__init__(self, parent)
