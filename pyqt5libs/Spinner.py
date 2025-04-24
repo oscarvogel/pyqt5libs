@@ -65,7 +65,7 @@ class Spinner(QDoubleSpinBox):
 
     def focusInEvent(self, *args, **kwargs):
         self.selectAll()
-        self.focosIn.emit()  # 🔔 emitís la señal cuando gana el foco
+        self.focusIn.emit()  # 🔔 emitís la señal cuando gana el foco
         QDoubleSpinBox.focusInEvent(self, *args, **kwargs)
 
     def focusOutEvent(self, *args, **kwargs):
