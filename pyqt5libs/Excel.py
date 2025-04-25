@@ -67,15 +67,21 @@ class Excel:
 
         if self.archivo:
             self.libro = xlsxwriter.Workbook(self.archivo)
-            self.hoja = self.libro.add_worksheet()
+            self.hoja = self.crea_hoja()
 
         return self.archivo
 
-    def crea_hoja(self):
+    def crea_hoja(self, nombre_hoja: str = 'Hoja1'):
         if not self.libro:
             self.libro = xlsxwriter.Workbook(self.archivo)
         if not self.hoja:
-            self.hoja = self.libro.add_worksheet()
+            self.hoja = self.libro.add_worksheet(nombre_hoja)
+    
+    def agrega_hoja(self, nombre_hoja: str = 'Hoja1'):
+        if not self.libro:
+            self.libro = xlsxwriter.Workbook(self.archivo)
+        if not self.hoja:
+            self.hoja = self.libro.add_worksheet(nombre_hoja)
 
     def Titulo(self, titulo: str = '', desdecol: str = 'A', hastacol: str = 'A',
                fila: int = 0, combina: bool = True, **kwargs) -> None:
@@ -172,7 +178,7 @@ class Excel:
                 worksheet.str_table.string_table,
                 key=worksheet.str_table.string_table.__getitem__)
         lengths = set()
-        for row_id, colums_dict in worksheet.table.items():  # type: int, dict
+        for row_id, colums_dict in worksheet.table.items():
             data = colums_dict.get(column)
             if not data:
                 continue
