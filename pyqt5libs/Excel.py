@@ -25,17 +25,32 @@ class Excel:
     libro = None
     hoja = None
     cabeceras = {}
-
+    
+    hojas = {}
+    
     formato = None
     formatos = {
         'moneda': {'num_format': '$#,##0.00'},
         'negrita': {'bold': True},
         'centradoh': {'align': 'center'},
         'porcentaje': {'num_format': '0.00%'},
-        'numero': {'num_format': '#,##0.00'}
+        'numero': {'num_format': '#,##0.00'},
+        'fecha': {'num_format': 'dd/mm/yyyy'},
+        'fechahora': {'num_format': 'dd/mm/yyyy hh:mm:ss'},
     }
     max_row = 0  # ultima fila de un archivo
 
+    def __init__(self, archivo='', hoja=None):
+        self.hojas = {}
+        self.archivo = archivo
+        self.libro: xlsxwriter.Workbook = None
+    
+    def asegura_libro(self):
+        """Inicializa el libro si aún no existe."""
+        if not self.libro:
+            self.libro = xlsxwriter.Workbook(self.archivo)
+            print(f"Libro creado: {self.archivo}")
+    
     def ArmaCabeceras(self, cabeceras, fila=0, formato=None):
         if formato:
             formato_celda = self.libro.add_format(formato)
@@ -72,16 +87,21 @@ class Excel:
         return self.archivo
 
     def crea_hoja(self, nombre_hoja: str = 'Hoja1'):
-        if not self.libro:
-            self.libro = xlsxwriter.Workbook(self.archivo)
+        self.asegura_libro()
         if not self.hoja:
-            self.hoja = self.libro.add_worksheet(nombre_hoja)
+            self.agrega_hoja(nombre_hoja)
     
     def agrega_hoja(self, nombre_hoja: str = 'Hoja1'):
-        if not self.libro:
-            self.libro = xlsxwriter.Workbook(self.archivo)
-        if not self.hoja:
+        self.asegura_libro()
+        nombre_hoja = nombre_hoja[:30].translate(str.maketrans("áéíóúÁÉÍÓÚñÑ", "aeiouAEIOUnN"))
+        if nombre_hoja in self.hojas:
+            print(f"La hoja '{nombre_hoja}' ya existe.")
+            self.hoja = self.hojas[nombre_hoja]
+            return self.hojas[nombre_hoja]
+        else:
             self.hoja = self.libro.add_worksheet(nombre_hoja)
+            self.hojas[nombre_hoja] = self.hoja # Guarda la referencia
+            return self.hojas[nombre_hoja]
 
     def Titulo(self, titulo: str = '', desdecol: str = 'A', hastacol: str = 'A',
                fila: int = 0, combina: bool = True, **kwargs) -> None:
