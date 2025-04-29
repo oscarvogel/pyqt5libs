@@ -169,4 +169,8 @@ class Periodo(QHBoxLayout):
 
     def valor(self):
         return self.cPeriodo
+    
+    def setFocus(self):
+        self.lineEditMes.setFocus()
+        self.lineEditMes.selectAll()
 

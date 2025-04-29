@@ -97,11 +97,11 @@ class Excel:
         if nombre_hoja in self.hojas:
             print(f"La hoja '{nombre_hoja}' ya existe.")
             self.hoja = self.hojas[nombre_hoja]
-            return self.hojas[nombre_hoja]
+            return True
         else:
             self.hoja = self.libro.add_worksheet(nombre_hoja)
             self.hojas[nombre_hoja] = self.hoja # Guarda la referencia
-            return self.hojas[nombre_hoja]
+            return False
 
     def Titulo(self, titulo: str = '', desdecol: str = 'A', hastacol: str = 'A',
                fila: int = 0, combina: bool = True, **kwargs) -> None:

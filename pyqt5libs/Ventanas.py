@@ -3,6 +3,8 @@ import sys
 
 from PyQt5.QtWidgets import QMessageBox, QApplication, QWidget, QPushButton
 
+NO = QMessageBox.Cancel
+SI = QMessageBox.Ok
 
 def showAlert(titulo, mensaje):
 
