@@ -103,6 +103,14 @@ class Excel:
             self.hojas[nombre_hoja] = self.hoja # Guarda la referencia
             return False
 
+    def activa_hoja(self, nombre_hoja: str = 'Hoja1'):
+        """Activa una hoja existente o crea una nueva si no existe."""
+        if nombre_hoja in self.hojas:
+            self.hoja = self.hojas[nombre_hoja]
+            return True
+        else:
+            return self.agrega_hoja(nombre_hoja)
+    
     def Titulo(self, titulo: str = '', desdecol: str = 'A', hastacol: str = 'A',
                fila: int = 0, combina: bool = True, **kwargs) -> None:
         # Create a format to use in the merged range.
