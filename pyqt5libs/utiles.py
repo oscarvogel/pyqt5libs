@@ -53,6 +53,7 @@ try:
     import win32api
 except:
     pass
+from cryptography.fernet import Fernet
 
 from . import Constantes, Ventanas
 
@@ -668,3 +669,16 @@ def obtener_fechas_semana(fecha):
     # Calcula el domingo de la semana
     fin_semana = inicio_semana + datetime.timedelta(days=6)
     return inicio_semana, fin_semana
+
+def encriptar(password):
+    key = Fernet.generate_key()
+    cipher_suite = Fernet(key)
+    cipher_text = cipher_suite.encrypt(password)
+    return cipher_text, key
+
+def desencriptar(encrypted_data, key):
+    cipher_suite = Fernet(key)
+    if not isinstance(encrypted_data, bytes):
+        encrypted_data = encrypted_data.encode()
+    plain_text = cipher_suite.decrypt(encrypted_data)
+    return plain_text.decode('utf-8')
