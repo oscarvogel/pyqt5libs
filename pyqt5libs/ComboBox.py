@@ -23,6 +23,7 @@ class ComboSQL(QComboBox):
     numero_filas = 0
     valor_defecto = ''  # valor por defecto, para establecer el indice a ese valor
     lcarga = True  # indica si se carga el combo al iniciar la clase
+    agrega_todos = False  # indica si se agrega la opcion "Todos" al combo
 
     def __init__(self, *args, **kwargs):
         super().__init__()
@@ -31,6 +32,9 @@ class ComboSQL(QComboBox):
         self.setFont(font)
         if 'orden' in kwargs:
             self.cOrden = kwargs['orden']
+        if 'todos' in kwargs:
+            self.agrega_todos = True
+            
         if self.lcarga:
             if 'checkeable' in kwargs:
                 self.CargaDatos(checkeable=kwargs['checkeable'])
@@ -58,6 +62,14 @@ class ComboSQL(QComboBox):
 
         indice_defecto = 0
         indice = 0
+        if self.agrega_todos:
+            if self.valor_defecto == '':
+                self.valor_defecto = '**TODOS**'
+            if checkeable:
+                checked = True
+            # Agregar la opción "Todos" al combo
+            self.agregar_dato('**TODOS**', 'T', checkeable, checked)
+
         for r in data:
             if isinstance(r[self.campovalor], (decimal.Decimal, int, float)):
                 valor = str(r[self.campovalor]).strip()
