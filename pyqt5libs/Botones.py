@@ -1,7 +1,7 @@
 # coding=utf-8
 from PyQt5.QtCore import QSize
 from PyQt5.QtGui import QIcon
-from PyQt5.QtWidgets import QPushButton
+from PyQt5.QtWidgets import QPushButton, QToolButton
 
 from .utiles import LeerIni, imagen
 
@@ -66,3 +66,22 @@ class BotonCerrarFormulario(Boton):
         kwargs['tamanio'] = QSize(32, 32)
         Boton.__init__(self, *args, **kwargs)
         self.setDefault(False)
+
+class ToolButton(QToolButton):
+
+    texto = '...'
+    tamanio = 12
+
+    def __init__(self, *args, **kwargs):
+        super().__init__()
+
+        if 'tamanio' in kwargs:
+            self.tamanio = kwargs['tamanio']
+
+        if 'texto' in kwargs:
+            self.texto = kwargs['texto']
+
+        self.setText(self.texto)
+        font = QFont()
+        font.setPointSizeF(self.tamanio)
+        self.setFont(font)
