@@ -51,7 +51,7 @@ class Excel:
             self.libro = xlsxwriter.Workbook(self.archivo)
             print(f"Libro creado: {self.archivo}")
     
-    def ArmaCabeceras(self, cabeceras, fila=0, formato=None):
+    def ArmaCabeceras(self, cabeceras, fila=0, col_inicio=0, formato=None):
         if formato:
             formato_celda = self.libro.add_format(formato)
         else:
@@ -70,7 +70,7 @@ class Excel:
 
 
         for k, v in cabeceras.items():
-            self.hoja.write(fila, v, k, formato_celda)
+            self.hoja.write(fila, v - 1 + col_inicio, k, formato_celda)
 
         self.cabeceras = cabeceras
 
