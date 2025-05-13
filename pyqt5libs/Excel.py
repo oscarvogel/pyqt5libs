@@ -68,7 +68,6 @@ class Excel:
             # Diccionario con { "nombre_cabecera": número_de_columna }
             cabeceras = {cabecera: i for i, cabecera in enumerate(cabeceras)}
 
-
         for k, v in cabeceras.items():
             self.hoja.write(fila, v, k, formato_celda)
 
