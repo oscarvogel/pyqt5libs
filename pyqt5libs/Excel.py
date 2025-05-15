@@ -153,27 +153,34 @@ class Excel:
         if abre:
             AbrirArchivo(self.archivo)
 
-    def EscribeFila(self, datos='', fila=1, inicio=0, formato=None, **kwargs):
-
+    def EscribeFila(self, datos='', fila=1, inicio=0, formato=None, color_fondo=None, **kwargs):
         col = inicio
         for d in datos:
             formato_celda = None
-            # if isinstance(d, date):
-            #     item = FormatoFecha(d, formato='dma')
-            #     formato_celda = self.libro.add_format({'num_format': 'dd/mm/yyyy'})
-            # else:
-            #     item = d
+
             if isinstance(d, bool):
                 item = 'SI' if d else 'NO'
             else:
                 item = d
-            if formato:
-                if col in formato:
-                    formato_celda = self.libro.add_format(formato[col])
+
+            # Construcción del formato
+            if formato and col in formato:
+                formato_base = formato[col]
+            else:
+                formato_base = {}
+
+            if color_fondo:
+                formato_base = dict(formato_base)  # Copia para no alterar el original
+                formato_base.update({'bg_color': color_fondo})
+
+            if formato_base:
+                formato_celda = self.libro.add_format(formato_base)
+
             if formato_celda:
                 self.hoja.write(fila, col, item, formato_celda)
             else:
                 self.hoja.write(fila, col, item)
+
             col += 1
 
     def Totales(self, columnas, desdefila, hastafila, filaformula, formato=None):
