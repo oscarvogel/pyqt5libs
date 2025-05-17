@@ -86,9 +86,7 @@ class Excel:
         return self.archivo
 
     def crea_hoja(self, nombre_hoja: str = 'Hoja1'):
-        self.asegura_libro()
-        if not self.hoja:
-            self.agrega_hoja(nombre_hoja)
+        self.agrega_hoja(nombre_hoja)
     
     def agrega_hoja(self, nombre_hoja: str = 'Hoja1'):
         self.asegura_libro()
