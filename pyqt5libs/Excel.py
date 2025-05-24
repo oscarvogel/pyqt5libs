@@ -69,7 +69,7 @@ class Excel:
             cabeceras = {cabecera: i for i, cabecera in enumerate(cabeceras)}
 
         for k, v in cabeceras.items():
-            self.hoja.write(fila, v - 1 + col_inicio, k, formato_celda)
+            self.hoja.write(fila, v + col_inicio, k, formato_celda)
 
         self.cabeceras = cabeceras
 
