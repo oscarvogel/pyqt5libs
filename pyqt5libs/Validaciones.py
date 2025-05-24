@@ -58,6 +58,8 @@ class Validaciones(EntradaTexto):
     solo_numeros = True
 
     campos_busqueda = None
+    
+    realiza_busqueda = False
 
     def __init__(self, parent=None, *args, **kwargs):
         EntradaTexto.__init__(self, parent, *args, **kwargs)
@@ -77,8 +79,9 @@ class Validaciones(EntradaTexto):
         elif event.key() == QtCore.Qt.Key_Enter or \
                         event.key() == QtCore.Qt.Key_Return or\
                         event.key() == QtCore.Qt.Key_Tab:
-            # if not self.value():
-            #     self.busqueda(event)
+            
+            if self.realiza_busqueda and not self.value():
+                self.busqueda(event)
             if self.proximoWidget:
                 self.proximoWidget.setFocus()
             self.valida()
