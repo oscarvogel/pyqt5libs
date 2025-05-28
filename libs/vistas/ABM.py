@@ -319,8 +319,10 @@ class ABM(VistaBase):
                                 self.controles[k].setCurrentIndex(self.controles[k].findData('Si'))
                             else:
                                 self.controles[k].setCurrentIndex(self.controles[k].findData('No'))
-                        else:
+                        elif isinstance(d[k], (int, decimal.Decimal, float)):
                             self.controles[k].setCurrentIndex(self.controles[k].findData(d[k]))
+                        else:
+                            self.controles[k].setCurrentText(d[k] if d[k] else '')
                     elif isinstance(self.controles[k], (Fecha)):
                         if self.controles[k]:
                             self.controles[k].setText(d[k])

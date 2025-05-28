@@ -190,6 +190,10 @@ class ValidaConNombre(QHBoxLayout):
         self.labelDescripcion.setObjectName("labelDescripcion")
         self.addWidget(self.labelDescripcion)
         self.lineEditCodigo.widgetNombre = self.labelDescripcion
+        
+    def valor(self):
+        """Devuelve el valor del campo de retorno"""
+        return self.lineEditCodigo.valor()
 
 class ValidaConTexto(QHBoxLayout):
 
