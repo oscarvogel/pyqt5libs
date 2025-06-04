@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+from ast import mod
 import datetime
 import decimal
 import logging
@@ -194,3 +195,36 @@ class DBrowse(VistaBase):
             return ventana.ValorRetorno
         else:
             return -1
+
+
+class Buscador:
+    
+    modelo = None  # modelo sobre la que se realiza la busqueda
+    codigo = None  # campo que contiene el codigo
+    nombre = None  # campo que contiene el nombre
+    campos = []  # campos a mostrar
+    cOrden = None  # orden de busqueda
+    condiciones = []  # condiciones de filtrado
+    campos_busqueda = []  # campos sobre los cuales realizar la busqueda
+
+    def __init__(self):
+        self.valorRetorno = None
+        self.lRetval = False  # indica si presiono en aceptar o cancelar
+    
+    def buscar(self, parent=None):
+        """Realiza una busqueda y devuelve el resultado seleccionado"""
+        ventana = UiBusqueda()
+        ventana.modelo = self.modelo
+        ventana.cOrden = self.cOrden
+        ventana.campos = self.campos
+        ventana.campoBusqueda = self.campos_busqueda if self.campos_busqueda else self.campoRetorno.column_name
+        ventana.camposTabla = self.campos
+        ventana.campoRetorno = self.codigo.column_name if isinstance(self.codigo, str) else self.codigo
+        ventana.condiciones = self.condiciones
+        ventana.CargaDatos()
+        ventana.exec_()
+        if ventana.lRetval:
+            self.valorRetorno = ventana.ValorRetorno
+            self.lRetval = True
+            return self.valorRetorno
+        return None

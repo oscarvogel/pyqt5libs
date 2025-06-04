@@ -17,8 +17,9 @@ __copyright__ = "Copyright (C) 2021 Jose Oscar Vogel"
 __license__ = "GPL 3.0"
 __version__ = "0.1"
 
+from pyqt5libs.pyqt5libs.Botones import Boton
 from pyqt5libs.pyqt5libs.Formulario import Formulario
-from pyqt5libs.pyqt5libs.utiles import icono_sistema
+from pyqt5libs.pyqt5libs.utiles import icono_sistema, imagen
 
 
 class VistaBase(Formulario):
@@ -35,3 +36,17 @@ class VistaBase(Formulario):
 
     def cerrarformulario(self):
         self.close()
+
+    def CreaBoton(self, texto, tooltip=None, imagen_str=None):
+        """_summary_
+
+        Args:
+            texto (str): Texto a mostrar en el botón.
+            tooltip (_type_str, optional): Tooltip del boton. Defaults to None.
+            imagen (str, optional): Imagen para mostrar en el boton. Defaults to None.
+
+        Returns:
+            boton: Retorna un objeto Boton configurado con el texto, tooltip e imagen proporcionados.
+        """
+        boton = Boton(texto=texto, tooltip=tooltip, imagen=imagen(imagen_str))
+        return boton

@@ -50,6 +50,9 @@ class Spinner(QDoubleSpinBox):
             self.setDecimals(4)
         if 'enabled' in kwargs:
             self.setEnabled(kwargs['enabled'])
+            
+        if 'placeholderText' in kwargs:
+            self.setToolTip(kwargs['placeholderText'])
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Enter or \
