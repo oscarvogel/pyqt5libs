@@ -31,6 +31,7 @@ class ControladorBase(object):
     HuboError = False #se usa para indicar si ocurrio un error o no
     LOG = True #indica si se genera el log
     id_formulario = 0 #id del formulario para validar el acceso, se toma de la tabla formula
+    for_valid = '' #en caso de usar el sistema en mas de una base puedo tener la validacion que es unica
 
     def __init__(self):
         self.view = VistaBase()
@@ -43,7 +44,8 @@ class ControladorBase(object):
 
     def exec_(self, valida_ingreso=True):
         if valida_ingreso:
-            if Acceso().AccesoUsuario(usu_id=LeerConf("idUsuario"), for_id=self.id_formulario):
+            if Acceso().AccesoUsuario(usu_id=LeerConf("idUsuario"), 
+                                      for_id=self.id_formulario, for_valid=self.for_valid):
                 self.view.exec_()
             else:
                 Ventanas.showAlert("Sistema", "No posees permisos para el ingreso a esta opcion")
