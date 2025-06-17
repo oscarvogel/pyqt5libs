@@ -161,6 +161,7 @@ class ValidaConNombre(QHBoxLayout):
     maxwidth = 50
     solo_numeros = True
     condiciones = None
+    campos_busqueda = None
 
     def __init__(self, parent=None, *args, **kwargs):
         super().__init__(parent)
@@ -184,6 +185,7 @@ class ValidaConNombre(QHBoxLayout):
         self.lineEditCodigo.condiciones = self.condiciones
         self.lineEditCodigo.solo_numeros = self.solo_numeros
         self.lineEditCodigo.setMaximumWidth(self.maxwidth)
+        self.lineEditCodigo.campos_busqueda = self.campos_busqueda if self.campos_busqueda else self.campoNombre
         self.addWidget(self.lineEditCodigo)
 
         self.labelDescripcion = EtiquetaRoja(parent, texto="")
