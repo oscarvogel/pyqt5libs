@@ -8,6 +8,7 @@ from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QVBoxLayout, QTabWidget, QWidget, QGridLayout, QHBoxLayout, QLineEdit, QCheckBox, QComboBox, \
     QApplication, QMessageBox
 
+from modelos.ModeloBase import reconnect_if_needed
 from pyqt5libs.libs.vistas.VistaBase import VistaBase
 from pyqt5libs.pyqt5libs import Ventanas
 from pyqt5libs.pyqt5libs.BarraProgreso import Avance
@@ -157,7 +158,9 @@ class ABM(VistaBase):
     def BotonesAdicionales(self):
         pass
 
-    def ArmaTabla(self):
+    @reconnect_if_needed
+    @inicializar_y_capturar_excepciones
+    def ArmaTabla(self, *args, **kwargs):
         self.tableView.setRowCount(0)
         self.avance.setVisible(True)
         if self.data:
@@ -214,7 +217,10 @@ class ABM(VistaBase):
             Ventanas.showAlert("Sistema", "Orden no establecido y no se puede realizar la busqueda")
         return data
 
-    def ArmaDatos(self):
+    
+    @reconnect_if_needed
+    @inicializar_y_capturar_excepciones
+    def ArmaDatos(self, *args, **kwargs):
         self.verticalLayoutDatos = QVBoxLayout(self.tabDetalle)
         self.verticalLayoutDatos.setObjectName("verticalLayoutDatos")
         self.ArmaCarga()
@@ -250,6 +256,7 @@ class ABM(VistaBase):
         self.btnEditar.clicked.connect(self.Modifica)
         self.btnAgregar.clicked.connect(self.Agrega)
 
+    @reconnect_if_needed
     @inicializar_y_capturar_excepciones
     def Borrar(self, *args, **kwargs):
         if not self.tableView.currentRow() != -1:
@@ -264,7 +271,9 @@ class ABM(VistaBase):
             data.delete_instance()
             self.ArmaTabla()
 
-    def Modifica(self):
+    @reconnect_if_needed
+    @inicializar_y_capturar_excepciones
+    def Modifica(self, *args, **kwargs):
 
         self.tipo = 'M'
         if not self.tableView.currentRow() != -1:

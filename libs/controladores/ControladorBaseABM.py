@@ -18,6 +18,7 @@ from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QProgressDialog, QMessageBox
 
 #Controlador base del cual derivan todos los abm del sistema
+from modelos.ModeloBase import reconnect_if_needed
 from pyqt5libs.libs.controladores.ControladorBase import ControladorBase
 from pyqt5libs.pyqt5libs import Ventanas
 from pyqt5libs.pyqt5libs.utiles import inicializar_y_capturar_excepciones
@@ -43,6 +44,7 @@ class ControladorBaseABM(ControladorBase):
         self.view.btnCerrar.clicked.connect(self.view.Cerrar)
         self.view.lineEditBusqueda.textChanged.connect(self.view.Busqueda)
 
+    @reconnect_if_needed
     @inicializar_y_capturar_excepciones
     def onClickBtnAceptar(self, *args, **kwargs):
         if not self.model:
@@ -75,6 +77,7 @@ class ControladorBaseABM(ControladorBase):
             return
         self.view.btnEditar.click()
 
+    @reconnect_if_needed
     @inicializar_y_capturar_excepciones
     def onClickBtnExcel(self, *args, **kwargs):
         limite = self.view.limite
