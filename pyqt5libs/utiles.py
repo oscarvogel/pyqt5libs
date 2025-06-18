@@ -66,13 +66,25 @@ __version__ = "0.1"
 # abro el archivo con el programa por defecto en windows
 # tendria que ver como hacerlo en Linux
 def AbrirArchivo(cArchivo=None):
-    if cArchivo:
+    if not cArchivo:
+        return
+
+    # Convertimos la ruta a absoluta para evitar problemas
+    ruta_absoluta = os.path.abspath(cArchivo)
+
+    if not os.path.exists(ruta_absoluta):
+        print(f"Error: El archivo no existe en la ruta: {ruta_absoluta}")
+        return
+
+    try:
         if platform.system() == 'Darwin':  # macOS
-            subprocess.call(('open', cArchivo))
+            subprocess.call(['open', ruta_absoluta])
         elif platform.system() == 'Windows':  # Windows
-            os.startfile(cArchivo)
-        else:  # linux variants
-            subprocess.call(('xdg-open', cArchivo))
+            os.startfile(ruta_absoluta)
+        else:  # Linux
+            subprocess.call(['xdg-open', ruta_absoluta])
+    except Exception as e:
+        print(f"No se pudo abrir el archivo: {e}")
 
 
 # leo el archivo de configuracion del sistema
