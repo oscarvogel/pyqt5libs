@@ -91,16 +91,22 @@ class RangoFechas(QHBoxLayout):
 
     etiqueta_desde = "Desde fecha"
     etiqueta_hasta = "Hasta fecha"
+    desde_fecha_ini = 0
+    hasta_fecha_ini = 0
 
-    def __init__(self):
+    def __init__(self, *args, **kwargs):
         super().__init__()
+        if 'desde_fecha' in kwargs:
+            self.desde_fecha_ini = kwargs['desde_fecha']
+        if 'hasta_fecha' in kwargs:
+            self.hasta_fecha_ini = kwargs['hasta_fecha']
         self.setupUi()
 
     def setupUi(self):
         lblDesdeFecha = Etiqueta(texto=self.etiqueta_desde)
-        self.desde_fecha = Fecha(fecha=0)
+        self.desde_fecha = Fecha(fecha=self.desde_fecha_ini)
         lblHastaFecha = Etiqueta(texto=self.etiqueta_hasta)
-        self.hasta_fecha = Fecha(fecha=0)
+        self.hasta_fecha = Fecha(fecha=self.hasta_fecha_ini)
         self.addWidget(lblDesdeFecha)
         self.addWidget(self.desde_fecha)
         self.addWidget(lblHastaFecha)
