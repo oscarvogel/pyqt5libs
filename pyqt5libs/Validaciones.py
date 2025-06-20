@@ -213,6 +213,7 @@ class ValidaConTexto(QHBoxLayout):
     campos_busqueda = None
     #clase para la busqueda
     clasebusqueda = None
+    campoNombre = None #campo que se va a mostrar como nombre
 
 
     def __init__(self, parent=None, *args, **kwargs):
@@ -228,7 +229,7 @@ class ValidaConTexto(QHBoxLayout):
         self.lineEditCodigo = Validaciones(parent)
         self.lineEditCodigo.setObjectName("lineEditNombre")
         self.lineEditCodigo.modelo = self.modelo
-        self.lineEditCodigo.campoNombre = self.nombre
+        self.lineEditCodigo.campoNombre = self.campoNombre if self.campoNombre else self.nombre
         self.lineEditCodigo.campoRetorno = self.codigo
         if self.campos_busqueda:
             self.lineEditCodigo.campos_busqueda = self.campos_busqueda

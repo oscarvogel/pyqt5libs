@@ -127,7 +127,12 @@ class Grilla(QTableWidget):
                         item.setCheckState(QtCore.Qt.Unchecked)
                     self.formatos[col] = 'Bool'
                 elif isinstance(x, (int, float, decimal.Decimal)):
-                    item = QTableWidgetItem(str(x))
+                    # Formatear con separador de miles y decimales
+                    if isinstance(x, int):
+                        texto = "{:,}".format(x).replace(",", ".")
+                    else:
+                        texto = "{:,.2f}".format(float(x)).replace(",", "X").replace(".", ",").replace("X", ".")
+                    item = QTableWidgetItem(texto)
                     item.setTextAlignment(Qt.AlignRight)
                     self.formatos[col] = 'Decimal'
                 # en caso de que sea formato de fecha
