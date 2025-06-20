@@ -6,8 +6,6 @@ from datetime import date
 import xlsxwriter
 from openpyxl import load_workbook
 from xlsxwriter.utility import xl_rowcol_to_cell
-from xlsxwriter.worksheet import (
-    cell_number_tuple, cell_string_tuple)
 
 try:
     import win32com.client as win32
@@ -210,21 +208,16 @@ class Excel:
                 worksheet.str_table.string_table,
                 key=worksheet.str_table.string_table.__getitem__)
         lengths = set()
-        for row_id, colums_dict in worksheet.table.items():
-            data = colums_dict.get(column)
-            if not data:
+        for row in range(worksheet.dim_rowmax + 1):
+            try:
+                cell = worksheet.table.get(row, {}).get(column)
+                if cell is not None:
+                    value = str(cell)
+                    iter_length = len(value)
+                    if iter_length:
+                        lengths.add(iter_length)
+            except Exception:
                 continue
-            if type(data) is cell_string_tuple:
-                iter_length = len(strings[data.string])
-                if not iter_length:
-                    continue
-                lengths.add(iter_length)
-                continue
-            if type(data) is cell_number_tuple:
-                iter_length = len(str(data.number))
-                if not iter_length:
-                    continue
-                lengths.add(iter_length)
         if not lengths:
             return None
         return max(lengths)
