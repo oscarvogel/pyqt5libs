@@ -56,6 +56,7 @@ except:
 from cryptography.fernet import Fernet
 
 from . import Constantes, Ventanas
+import threading
 
 __author__ = "Jose Oscar Vogel <oscar@ferreteriaavenida.com.ar>"
 __copyright__ = "Copyright (C) 2019 Steffen Hnos SRL"
@@ -254,15 +255,19 @@ def inicializar_y_capturar_excepciones(func):
             file.close()
             Ventanas.showAlert("Error", "Se ha producido un error \n{}".format(self.Excepcion))
             print(self.Traceback)
+            # if LeerIni('debug') == 'N':
+            logging.debug(self.Traceback)
+            # Envio un correo al administrador del sistema
+            # si no se ha configurado el correo, no se envia nada
             try:
-                remitente = 'fe@servinlgsm.com.ar'
-                destinatario = 'fe@servinlgsm.com.ar'
+                remitente = 'sistemas@servinlgsm.com.ar'
+                destinatario = 'sistemas@servinlgsm.com.ar'
                 mensaje = "{} {} Enviado desde mi Software de Gestion desarrollado por http://www.servinlgsm.com.ar".format(
                     self.Traceback, self.Excepcion
                 )
                 motivo = "Se envia informe de errores de {}".format(LeerIni(clave='nombre_sistema'))
                 envia_correo(from_address=remitente, to_address=destinatario,
-                             message=mensaje, subject=motivo, password_email=Constantes.CLAVE_SMTP)
+                            message=mensaje, subject=motivo)
             except:
                 pass
             if self.LanzarExcepciones:
@@ -413,46 +418,37 @@ def HayInternet():
 
     return retorno
 
-
 def envia_correo(from_address='', to_address='', message='', subject='',
-                 password_email='', to_cc='', archivo_adjunto='') -> object:
-    smtp_server = 'mail.forestalgaruhape.com.ar'
-    smtp_port = 587
-    smtp_username = 'oscar@forestalgaruhape.com.ar'
-    smtp_password = password_email
-    mime_message = MIMEMultipart()
-    mime_message["From"] = from_address
-    if isinstance(to_address, list):
-        mime_message["To"] = ', '.join(to_address)
-    else:
-        mime_message["To"] = to_address
+                    password_email='', to_cc='', archivo_adjunto='') -> object:
+    def send_email():
+        smtp_server = 'c2650268.ferozo.com'
+        smtp_port = 587
+        smtp_username = 'sistemas@servinlgsm.com.ar'
+        smtp_password = 'oc*nmlo5Koxwlnx'
+        mime_message = MIMEMultipart()
+        mime_message["From"] = from_address
+        if isinstance(to_address, list):
+            mime_message["To"] = ', '.join(to_address)
+        else:
+            mime_message["To"] = to_address
 
-    mime_message["Subject"] = subject
-    mime_message.attach(MIMEText(message))
-    if to_cc:
-        mime_message["Cc"] = to_cc
-    if archivo_adjunto:
-        # with open(archivo_adjunto, 'r') as archivo:
-        #     adjunto = MIMEText(archivo.read(), 'plain')
-        #     adjunto.add_header('Content-Disposition', f'attachment; filename={archivo_adjunto}')
-        #     mime_message.add_header('Content-Disposition', f'attachment; filename={archivo_adjunto}')
-        #     mime_message.attach(adjunto)
-        with open(archivo_adjunto, 'rb') as archivo:
-            adjunto = MIMEApplication(archivo.read(), Name=archivo_adjunto)
-            adjunto['Content-Disposition'] = f'attachment; filename="{archivo_adjunto}"'
-            mime_message.attach(adjunto)
+        mime_message["Subject"] = subject
+        mime_message.attach(MIMEText(message))
+        if to_cc:
+            mime_message["Cc"] = to_cc
+        if archivo_adjunto:
+            with open(archivo_adjunto, 'rb') as archivo:
+                adjunto = MIMEApplication(archivo.read(), Name=archivo_adjunto)
+                adjunto['Content-Disposition'] = f'attachment; filename="{archivo_adjunto}"'
+                mime_message.attach(adjunto)
 
-    # smtp = SMTP(smtp_email, 587)
-    # smtp.ehlo()
-    #
-    # smtp.login(from_address, password_email)
-    # smtp.sendmail(from_address, [to_address, to_cc], mime_message.as_string())
-    # smtp.quit()
-    # Conéctate al servidor SMTP y envía el correo
-    with smtplib.SMTP(smtp_server, smtp_port) as servidor:
-        servidor.starttls()
-        servidor.login(smtp_username, smtp_password)
-        servidor.sendmail(mime_message['From'], mime_message['To'], mime_message.as_string())
+        with smtplib.SMTP(smtp_server, smtp_port) as servidor:
+            servidor.starttls()
+            servidor.login(smtp_username, smtp_password)
+            servidor.sendmail(mime_message['From'], mime_message['To'], mime_message.as_string())
+
+    thread = threading.Thread(target=send_email)
+    thread.start()
 
 
 def uniqueid():
