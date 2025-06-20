@@ -168,6 +168,21 @@ class Factura(QHBoxLayout):
         self.numero = str(self.lineEditPtoVta.text()).zfill(4) + \
                       str(self.lineEditNumero.text()).zfill(8)
 
+    def setText(self, texto):
+        if texto:
+            if len(texto) == 12:
+                self.lineEditPtoVta.setText(texto[:4])
+                self.lineEditNumero.setText(texto[4:])
+            elif len(texto) == 8:
+                self.lineEditPtoVta.setText('0000')
+                self.lineEditNumero.setText(texto)
+            else:
+                self.lineEditPtoVta.setText('')
+                self.lineEditNumero.setText('')
+        else:
+            self.lineEditPtoVta.setText('')
+            self.lineEditNumero.setText('')
+        self.AssignNumero()
 
 class TextEdit(QTextEdit):
     tamanio = 10
