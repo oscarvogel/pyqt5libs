@@ -57,7 +57,7 @@ class Excel:
                 'bold': True,
                 'border': 2,
                 'align': 'center',
-                'bg_color': 'yellow'
+                'bg_color': '#D9D9D9'  # Gris claro
             })
         if not self.archivo:
             return

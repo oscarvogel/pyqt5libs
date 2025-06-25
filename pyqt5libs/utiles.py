@@ -678,8 +678,10 @@ def obtener_fechas_semana(fecha):
     fin_semana = inicio_semana + datetime.timedelta(days=6)
     return inicio_semana, fin_semana
 
-def encriptar(password):
-    key = Fernet.generate_key()
+def encriptar(password, key=None):
+    if not key:
+        # Genera una nueva clave si no se proporciona
+        key = Fernet.generate_key()
     cipher_suite = Fernet(key)
     cipher_text = cipher_suite.encrypt(password)
     return cipher_text, key

@@ -4,6 +4,8 @@ from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QLineEdit, QHBoxLayout
 
+from modelos.ModeloBase import reconnect_if_needed
+
 from . import Ventanas
 from .EntradaTexto import EntradaTexto
 from .Etiquetas import Etiqueta, EtiquetaRoja
@@ -87,6 +89,7 @@ class Validaciones(EntradaTexto):
             self.valida()
         QLineEdit.keyPressEvent(self, event)
     
+    @reconnect_if_needed
     @inicializar_y_capturar_excepciones
     def busqueda(self, event, *args, **kwargs):
         if self.clasebusqueda:
@@ -113,7 +116,9 @@ class Validaciones(EntradaTexto):
             self.valida()
         QLineEdit.focusOutEvent(self, QFocusEvent)
 
-    def valida(self):
+    @reconnect_if_needed
+    @inicializar_y_capturar_excepciones
+    def valida(self, *args, **kwargs):
         if not self.text():
             return
         if self.largo != 0:
