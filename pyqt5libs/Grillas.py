@@ -274,7 +274,21 @@ class Grilla(QTableWidget):
         return item
 
     def ObtenerItemNumerico(self, fila, col):
+        import locale
+        import os
 
+        try:
+            # Intenta usar el locale por defecto del sistema
+            locale.setlocale(locale.LC_NUMERIC, '')
+        except locale.Error:
+            # En caso de error (Windows sin locale), usa uno por defecto o el del sistema
+            lang, _ = locale.getdefaultlocale()
+            try:
+                locale.setlocale(locale.LC_NUMERIC, lang)
+            except locale.Error:
+                print("No se pudo cargar el locale del sistema, usando 'C'")
+                locale.setlocale(locale.LC_NUMERIC, 'C.UTF-8')  # Fallback seguro
+        
         if isinstance(col, int):
             numCol = col
         else:
@@ -286,9 +300,10 @@ class Grilla(QTableWidget):
                 item = True
             else:
                 item = item.text()
-                item = re.sub(r"[^-0123456789\.]", "", item)
+                item = re.sub(r"[^-0123456789\.,]", "", item)
 
-            item = float(item)
+            # item = float(item)
+            item = locale.atof(item)
         except:
             item = 0
 
