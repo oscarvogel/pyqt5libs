@@ -273,21 +273,22 @@ class Grilla(QTableWidget):
         # return item.replace(',','.') if item else 0
         return item
 
-    def ObtenerItemNumerico(self, fila, col):
-        import locale
-        import os
+    def ObtenerItemNumerico(self, fila, col, configuracion_numero=False):
+        if configuracion_numero:
+            import locale
+            import os
 
-        try:
-            # Intenta usar el locale por defecto del sistema
-            locale.setlocale(locale.LC_NUMERIC, '')
-        except locale.Error:
-            # En caso de error (Windows sin locale), usa uno por defecto o el del sistema
-            lang, _ = locale.getdefaultlocale()
             try:
-                locale.setlocale(locale.LC_NUMERIC, lang)
+                # Intenta usar el locale por defecto del sistema
+                locale.setlocale(locale.LC_NUMERIC, '')
             except locale.Error:
-                print("No se pudo cargar el locale del sistema, usando 'C'")
-                locale.setlocale(locale.LC_NUMERIC, 'C.UTF-8')  # Fallback seguro
+                # En caso de error (Windows sin locale), usa uno por defecto o el del sistema
+                lang, _ = locale.getdefaultlocale()
+                try:
+                    locale.setlocale(locale.LC_NUMERIC, lang)
+                except locale.Error:
+                    print("No se pudo cargar el locale del sistema, usando 'C'")
+                    locale.setlocale(locale.LC_NUMERIC, 'C.UTF-8')  # Fallback seguro
         
         if isinstance(col, int):
             numCol = col
@@ -301,11 +302,14 @@ class Grilla(QTableWidget):
             else:
                 item = item.text()
                 item = re.sub(r"[^-0123456789\.,]", "", item)
-
-            # item = float(item)
-            item = locale.atof(item)
-        except:
+            
+            if configuracion_numero:
+                item = locale.atof(item)
+            else:
+                item = float(item)
+        except Exception as e:
             item = 0
+            Ventanas.showAlert("INFO", f"Error al convertir a numero {e}")
 
         # return item.replace(',','.') if item else 0
         return item

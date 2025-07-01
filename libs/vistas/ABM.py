@@ -285,6 +285,7 @@ class ABM(VistaBase):
         id = self.tableView.ObtenerItem(fila=self.tableView.currentRow(),
                                         col=self.campoClave.verbose_name if self.campoClave.verbose_name else
                                         self.campoClave.column_name.capitalize())
+        id = id.replace('.', '')
         self.idtabla = id
 
         if self.campoClave.field_type in ['VARCHAR']:

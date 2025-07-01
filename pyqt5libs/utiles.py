@@ -265,7 +265,7 @@ def inicializar_y_capturar_excepciones(func):
                 mensaje = "{} {} Enviado desde mi Software de Gestion desarrollado por http://www.servinlgsm.com.ar".format(
                     self.Traceback, self.Excepcion
                 )
-                motivo = "Se envia informe de errores de {}".format(LeerIni(clave='nombre_sistema'))
+                motivo = f"Se envia informe de errores de {LeerIni(clave='nombre_sistema')} . Usuario {LeerConf('usuario')}"
                 envia_correo(from_address=remitente, to_address=destinatario,
                             message=mensaje, subject=motivo)
             except:
