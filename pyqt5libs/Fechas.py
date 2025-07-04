@@ -239,3 +239,18 @@ class Hora(EntradaTexto):
         super().__init__(parent, *args, **kwargs)
         self.setInputMask("00:00")
         self.setMaxLength(5)
+    
+def calcular_diferencia_horas(hora_inicio, hora_fin):
+    formato = "%H:%M"
+    
+    # Convertir los strings a objetos datetime
+    inicio = datetime.datetime.strptime(hora_inicio, formato)
+    fin = datetime.datetime.strptime(hora_fin, formato)
+    
+    # Calcular la diferencia
+    diferencia = fin - inicio
+    
+    # Convertir la diferencia a horas en float
+    horas_float = diferencia.total_seconds() / 3600.0
+    
+    return horas_float
