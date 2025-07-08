@@ -255,21 +255,21 @@ def inicializar_y_capturar_excepciones(func):
             file.close()
             Ventanas.showAlert("Error", "Se ha producido un error \n{}".format(self.Excepcion))
             print(self.Traceback)
-            # if LeerIni('debug') == 'N':
             logging.debug(self.Traceback)
-            # Envio un correo al administrador del sistema
-            # si no se ha configurado el correo, no se envia nada
-            try:
-                remitente = 'sistemas@servinlgsm.com.ar'
-                destinatario = 'sistemas@servinlgsm.com.ar'
-                mensaje = "{} {} Enviado desde mi Software de Gestion desarrollado por http://www.servinlgsm.com.ar".format(
-                    self.Traceback, self.Excepcion
-                )
-                motivo = f"Se envia informe de errores de {LeerIni(clave='nombre_sistema')} . Usuario {LeerConf('usuario')}"
-                envia_correo(from_address=remitente, to_address=destinatario,
-                            message=mensaje, subject=motivo)
-            except:
-                pass
+            if LeerIni('debug') == 'N':
+                # Envio un correo al administrador del sistema
+                # si no se ha configurado el correo, no se envia nada
+                try:
+                    remitente = 'sistemas@servinlgsm.com.ar'
+                    destinatario = 'sistemas@servinlgsm.com.ar'
+                    mensaje = "{} {} Enviado desde mi Software de Gestion desarrollado por http://www.servinlgsm.com.ar".format(
+                        self.Traceback, self.Excepcion
+                    )
+                    motivo = f"Se envia informe de errores de {LeerIni(clave='nombre_sistema')} . Usuario {LeerConf('usuario')}"
+                    envia_correo(from_address=remitente, to_address=destinatario,
+                                message=mensaje, subject=motivo)
+                except:
+                    pass
             if self.LanzarExcepciones:
                 raise
         finally:
