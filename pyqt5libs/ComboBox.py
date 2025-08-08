@@ -203,6 +203,8 @@ class Combo(QComboBox):
         self.setFont(font)
 
     def CargaDatos(self, data=None):
+        self.clear()
+        self.numero_filas = 0
         if data:
             for r in data:
                 self.addItem(r)
