@@ -15,6 +15,7 @@ import argparse
 import calendar
 import datetime
 import decimal
+from io import BytesIO
 import locale
 import logging
 import os
@@ -34,8 +35,11 @@ from email.mime.text import MIMEText
 from functools import wraps
 from logging.handlers import RotatingFileHandler
 from smtplib import SMTP
-
+from dotenv import load_dotenv
 from ..libs.vistas.select_printer import Ui_FormPrinter
+
+# Cargar variables de entorno desde el archivo .env
+load_dotenv()
 
 try:
     import win32print
@@ -418,38 +422,58 @@ def HayInternet():
 
     return retorno
 
+
 def envia_correo(from_address='', to_address='', message='', subject='',
-                    password_email='', to_cc='', archivo_adjunto='') -> object:
+                password_email='', to_cc='', archivo_adjunto=None, nombre_archivo=None) -> object:
     def send_email():
-        smtp_server = 'c2650268.ferozo.com'
-        smtp_port = 587
-        smtp_username = 'sistemas@servinlgsm.com.ar'
-        smtp_password = 'oc*nmlo5Koxwlnx'
+        smtp_server = os.getenv('SMTP_HOST')
+        smtp_port = os.getenv('SMPT_PORT', 587)
+        smtp_username = os.getenv('SMTP_USER')
+        smtp_password = os.getenv('SMTP_PASS')
         mime_message = MIMEMultipart()
         mime_message["From"] = from_address
         if isinstance(to_address, list):
             mime_message["To"] = ', '.join(to_address)
         else:
             mime_message["To"] = to_address
-
         mime_message["Subject"] = subject
         mime_message.attach(MIMEText(message))
         if to_cc:
             mime_message["Cc"] = to_cc
+            
+        # Procesamiento del archivo adjunto (puede ser ruta en disco o BytesIO)
         if archivo_adjunto:
-            with open(archivo_adjunto, 'rb') as archivo:
-                adjunto = MIMEApplication(archivo.read(), Name=archivo_adjunto)
-                adjunto['Content-Disposition'] = f'attachment; filename="{archivo_adjunto}"'
-                mime_message.attach(adjunto)
-
+            # Determinar el nombre del archivo
+            if nombre_archivo:
+                filename = nombre_archivo
+            elif isinstance(archivo_adjunto, str):
+                filename = os.path.basename(archivo_adjunto)
+            else:
+                filename = "archivo_adjunto"
+                
+            # Manejar diferentes tipos de archivos adjuntos
+            if isinstance(archivo_adjunto, str):
+                # Es una ruta de archivo en disco
+                with open(archivo_adjunto, 'rb') as archivo:
+                    adjunto = MIMEApplication(archivo.read(), Name=filename)
+            elif isinstance(archivo_adjunto, BytesIO):
+                # Es un archivo en memoria
+                archivo_adjunto.seek(0)  # Asegurarnos de leer desde el principio
+                adjunto = MIMEApplication(archivo_adjunto.read(), Name=filename)
+            else:
+                # Es un objeto similar a un archivo
+                archivo_adjunto.seek(0)  # Asegurarnos de leer desde el principio
+                adjunto = MIMEApplication(archivo_adjunto.read(), Name=filename)
+                
+            adjunto['Content-Disposition'] = f'attachment; filename="{filename}"'
+            mime_message.attach(adjunto)
+            
         with smtplib.SMTP(smtp_server, smtp_port) as servidor:
-            servidor.starttls()
             servidor.login(smtp_username, smtp_password)
             servidor.sendmail(mime_message['From'], mime_message['To'], mime_message.as_string())
-
+    
     thread = threading.Thread(target=send_email)
     thread.start()
-
 
 def uniqueid():
     seed = random.getrandbits(32)

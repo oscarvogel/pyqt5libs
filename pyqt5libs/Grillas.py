@@ -111,7 +111,7 @@ class Grilla(QTableWidget):
         self.OcultaColumnas()
 
     def AgregaItem(self, items=None,
-                   backgroundColor=QColor(255, 255, 255), readonly=False):
+                   backgroundColor=QColor(255, 255, 255), readonly=False, formatea_miles=False):
 
         if items:
             col = 0
@@ -127,11 +127,14 @@ class Grilla(QTableWidget):
                         item.setCheckState(QtCore.Qt.Unchecked)
                     self.formatos[col] = 'Bool'
                 elif isinstance(x, (int, float, decimal.Decimal)):
-                    # Formatear con separador de miles y decimales
-                    if isinstance(x, int):
-                        texto = "{:,}".format(x).replace(",", ".")
+                    if formatea_miles:
+                        # Formatear con separador de miles y decimales
+                        if isinstance(x, int):
+                            texto = "{:,}".format(x).replace(",", ".")
+                        else:
+                            texto = "{:,.2f}".format(float(x)).replace(",", "X").replace(".", ",").replace("X", ".")
                     else:
-                        texto = "{:,.2f}".format(float(x)).replace(",", "X").replace(".", ",").replace("X", ".")
+                        texto = str(x)
                     item = QTableWidgetItem(texto)
                     item.setTextAlignment(Qt.AlignRight)
                     self.formatos[col] = 'Decimal'
@@ -309,7 +312,7 @@ class Grilla(QTableWidget):
                 item = float(item)
         except Exception as e:
             item = 0
-            Ventanas.showAlert("INFO", f"Error al convertir a numero {e}")
+            Ventanas.showAlert("INFO", f"Error al convertir a numero {e} {col} {fila}")
 
         # return item.replace(',','.') if item else 0
         return item
