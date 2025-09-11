@@ -79,6 +79,8 @@ class Grilla(QTableWidget):
     LanzarExcepciones = True
 
     formatos = {}
+    
+    copy_data = []
 
     def __init__(self, *args, **kwargs):
 
