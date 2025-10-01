@@ -426,53 +426,135 @@ def HayInternet():
 def envia_correo(from_address='', to_address='', message='', subject='',
                 password_email='', to_cc='', archivo_adjunto=None, nombre_archivo=None) -> object:
     def send_email():
-        smtp_server = os.getenv('SMTP_HOST')
-        smtp_port = os.getenv('SMPT_PORT', 587)
-        smtp_username = os.getenv('SMTP_USER')
-        smtp_password = os.getenv('SMTP_PASS')
-        mime_message = MIMEMultipart()
-        mime_message["From"] = from_address
-        if isinstance(to_address, list):
-            mime_message["To"] = ', '.join(to_address)
-        else:
-            mime_message["To"] = to_address
-        mime_message["Subject"] = subject
-        mime_message.attach(MIMEText(message))
-        if to_cc:
-            mime_message["Cc"] = to_cc
+        try:
+            # Leer configuración SMTP desde variables de entorno
+            smtp_server = os.getenv('SMTP_HOST')
+            smtp_port = os.getenv('SMPT_PORT', '587')  # Lee también SMTP_PORT si existe
+            if not smtp_port:
+                smtp_port = os.getenv('SMTP_PORT', '587')
             
-        # Procesamiento del archivo adjunto (puede ser ruta en disco o BytesIO)
-        if archivo_adjunto:
-            # Determinar el nombre del archivo
-            if nombre_archivo:
-                filename = nombre_archivo
-            elif isinstance(archivo_adjunto, str):
-                filename = os.path.basename(archivo_adjunto)
-            else:
-                filename = "archivo_adjunto"
-                
-            # Manejar diferentes tipos de archivos adjuntos
-            if isinstance(archivo_adjunto, str):
-                # Es una ruta de archivo en disco
-                with open(archivo_adjunto, 'rb') as archivo:
-                    adjunto = MIMEApplication(archivo.read(), Name=filename)
-            elif isinstance(archivo_adjunto, BytesIO):
-                # Es un archivo en memoria
-                archivo_adjunto.seek(0)  # Asegurarnos de leer desde el principio
-                adjunto = MIMEApplication(archivo_adjunto.read(), Name=filename)
-            else:
-                # Es un objeto similar a un archivo
-                archivo_adjunto.seek(0)  # Asegurarnos de leer desde el principio
-                adjunto = MIMEApplication(archivo_adjunto.read(), Name=filename)
-                
-            adjunto['Content-Disposition'] = f'attachment; filename="{filename}"'
-            mime_message.attach(adjunto)
+            smtp_username = os.getenv('SMTP_USER')
+            smtp_password = os.getenv('SMTP_PASS')
+            smtp_use_ssl = os.getenv('SMTP_USE_SSL', 'false').lower() == 'true'
             
-        with smtplib.SMTP(smtp_server, smtp_port) as servidor:
-            servidor.login(smtp_username, smtp_password)
-            servidor.sendmail(mime_message['From'], mime_message['To'], mime_message.as_string())
+            # Validar que tengamos al menos el servidor
+            if not smtp_server:
+                logging.error("SMTP_HOST no está configurado. No se puede enviar el correo.")
+                return
+            
+            # Convertir puerto a entero
+            try:
+                smtp_port = int(smtp_port)
+            except (ValueError, TypeError):
+                logging.warning(f"Puerto SMTP inválido '{smtp_port}', usando 587 por defecto")
+                smtp_port = 587
+            
+            logging.debug(f"Intentando conectar a SMTP: {smtp_server}:{smtp_port} (SSL={smtp_use_ssl})")
+            
+            # Construir mensaje MIME
+            mime_message = MIMEMultipart()
+            mime_message["From"] = from_address
+            if isinstance(to_address, list):
+                mime_message["To"] = ', '.join(to_address)
+            else:
+                mime_message["To"] = to_address
+            mime_message["Subject"] = subject
+            mime_message.attach(MIMEText(message))
+            if to_cc:
+                mime_message["Cc"] = to_cc
+                
+            # Procesamiento del archivo adjunto (puede ser ruta en disco o BytesIO)
+            if archivo_adjunto:
+                # Determinar el nombre del archivo
+                if nombre_archivo:
+                    filename = nombre_archivo
+                elif isinstance(archivo_adjunto, str):
+                    filename = os.path.basename(archivo_adjunto)
+                else:
+                    filename = "archivo_adjunto"
+                    
+                # Manejar diferentes tipos de archivos adjuntos
+                if isinstance(archivo_adjunto, str):
+                    # Es una ruta de archivo en disco
+                    with open(archivo_adjunto, 'rb') as archivo:
+                        adjunto = MIMEApplication(archivo.read(), Name=filename)
+                elif isinstance(archivo_adjunto, BytesIO):
+                    # Es un archivo en memoria
+                    archivo_adjunto.seek(0)  # Asegurarnos de leer desde el principio
+                    adjunto = MIMEApplication(archivo_adjunto.read(), Name=filename)
+                else:
+                    # Es un objeto similar a un archivo
+                    archivo_adjunto.seek(0)  # Asegurarnos de leer desde el principio
+                    adjunto = MIMEApplication(archivo_adjunto.read(), Name=filename)
+                    
+                adjunto['Content-Disposition'] = f'attachment; filename="{filename}"'
+                mime_message.attach(adjunto)
+            
+            # Preparar lista de destinatarios para sendmail
+            destinatarios = []
+            if isinstance(to_address, list):
+                destinatarios.extend(to_address)
+            elif to_address:
+                destinatarios.append(to_address)
+            if to_cc:
+                if isinstance(to_cc, list):
+                    destinatarios.extend(to_cc)
+                else:
+                    destinatarios.append(to_cc)
+            
+            if not destinatarios:
+                logging.error("No hay destinatarios para enviar el correo")
+                return
+            
+            # Conectar al servidor SMTP con timeout
+            servidor = None
+            try:
+                if smtp_use_ssl or smtp_port == 465:
+                    # Usar SMTP_SSL para puerto 465 o si está explícitamente configurado
+                    logging.debug("Usando SMTP_SSL")
+                    servidor = smtplib.SMTP_SSL(smtp_server, smtp_port, timeout=30)
+                else:
+                    # Usar SMTP normal con STARTTLS para puerto 587 u otros
+                    logging.debug("Usando SMTP con STARTTLS")
+                    servidor = smtplib.SMTP(smtp_server, smtp_port, timeout=30)
+                    servidor.ehlo()
+                    if smtp_port == 587:
+                        servidor.starttls()
+                        servidor.ehlo()
+                
+                # Autenticación si hay credenciales
+                if smtp_username and smtp_password:
+                    logging.debug(f"Autenticando con usuario: {smtp_username}")
+                    servidor.login(smtp_username, smtp_password)
+                else:
+                    logging.warning("No se proporcionaron credenciales SMTP, intentando envío sin autenticación")
+                
+                # Enviar correo
+                logging.debug(f"Enviando correo a: {destinatarios}")
+                servidor.sendmail(from_address, destinatarios, mime_message.as_string())
+                logging.info(f"Correo enviado exitosamente a {destinatarios}")
+                
+            except smtplib.SMTPAuthenticationError as e:
+                logging.error(f"Error de autenticación SMTP: {e}")
+            except smtplib.SMTPException as e:
+                logging.error(f"Error SMTP: {e}")
+            except socket.timeout:
+                logging.error(f"Timeout al conectar con {smtp_server}:{smtp_port}")
+            except Exception as e:
+                logging.error(f"Error inesperado al enviar correo: {e}")
+                logging.exception("Detalles del error:")
+            finally:
+                if servidor:
+                    try:
+                        servidor.quit()
+                    except Exception:
+                        pass
+                        
+        except Exception as e:
+            logging.error(f"Error en send_email: {e}")
+            logging.exception("Detalles del error:")
     
-    thread = threading.Thread(target=send_email)
+    thread = threading.Thread(target=send_email, daemon=True)
     thread.start()
 
 def uniqueid():
