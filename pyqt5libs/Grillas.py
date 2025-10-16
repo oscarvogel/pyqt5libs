@@ -302,16 +302,19 @@ class Grilla(QTableWidget):
 
         try:
             item = self.item(fila, numCol)
-            if item.checkState() == QtCore.Qt.ItemIsUserCheckable:
-                item = True
+            if item:
+                if item.checkState() == QtCore.Qt.ItemIsUserCheckable:
+                    item = True
+                else:
+                    item = item.text()
+                    item = re.sub(r"[^-0123456789\.,]", "", item)
+                
+                if configuracion_numero:
+                    item = locale.atof(item)
+                else:
+                    item = float(item)
             else:
-                item = item.text()
-                item = re.sub(r"[^-0123456789\.,]", "", item)
-            
-            if configuracion_numero:
-                item = locale.atof(item)
-            else:
-                item = float(item)
+                item = 0
         except Exception as e:
             item = 0
             Ventanas.showAlert("INFO", f"Error al convertir a numero {e} {col} {fila}")
