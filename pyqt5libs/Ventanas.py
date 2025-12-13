@@ -7,6 +7,19 @@ NO = QMessageBox.Cancel
 SI = QMessageBox.Ok
 
 def showAlert(titulo, mensaje):
+    # Si no hay una QApplication activa (modo CLI/headless), mostramos por consola
+    try:
+        app = QApplication.instance()
+    except Exception:
+        app = None
+
+    # Si estamos en modo CLI silencioso, evitar imprimir
+    import os
+    if app is None:
+        if os.environ.get('FORESTAL_CLI_QUIET', '0') == '1':
+            return QMessageBox.Ok
+        print(f"ALERT - {titulo}: {mensaje}")
+        return QMessageBox.Ok
 
     msg = QMessageBox()
     msg.setIcon(QMessageBox.Information)
@@ -19,6 +32,19 @@ def showAlert(titulo, mensaje):
     return retval
 
 def showConfirmation(titulo, mensaje):
+    try:
+        app = QApplication.instance()
+    except Exception:
+        app = None
+
+    if app is None:
+        import os
+        if os.environ.get('FORESTAL_CLI_QUIET', '0') == '1':
+            return QMessageBox.Ok
+        # En modo CLI devolvemos Ok por defecto (comportamiento conservador)
+        print(f"CONFIRM - {titulo}: {mensaje} [auto-OK en modo CLI]")
+        return QMessageBox.Ok
+
     msg = QMessageBox()
     msg.setIcon(QMessageBox.Question)
     msg.setText(mensaje)
@@ -42,6 +68,19 @@ def showTextInput(titulo, mensaje, texto_por_defecto=""):
             - texto_ingresado (str): El texto que ingresó el usuario
             - ok_presionado (bool): True si se presionó OK, False si se canceló
     """
+    try:
+        app = QApplication.instance()
+    except Exception:
+        app = None
+
+    if app is None:
+        import os
+        if os.environ.get('FORESTAL_CLI_QUIET', '0') == '1':
+            return texto_por_defecto, False
+        # No hay UI: devolvemos el valor por defecto
+        print(f"INPUT - {titulo}: {mensaje} [usando valor por defecto: {texto_por_defecto}]")
+        return texto_por_defecto, False
+
     texto, ok = QInputDialog.getText(None, titulo, mensaje, text=texto_por_defecto)
     return texto, ok
 
@@ -89,6 +128,19 @@ def showCustomDialog(titulo, mensaje, botones=["Aceptar", "Cancelar"], por_defec
         else:
             print("Operación cancelada.")
     """
+    try:
+        app = QApplication.instance()
+    except Exception:
+        app = None
+
+    if app is None:
+        import os
+        if os.environ.get('FORESTAL_CLI_QUIET', '0') == '1':
+            return por_defecto
+        # En modo CLI retornamos el valor por defecto
+        print(f"CUSTOM DIALOG - {titulo}: {mensaje} [botones: {botones}] -> devolviendo '{por_defecto}' en modo CLI")
+        return por_defecto
+
     msg = QMessageBox()
     msg.setIcon(QMessageBox.Question)
     msg.setText(mensaje)
