@@ -257,7 +257,21 @@ def inicializar_y_capturar_excepciones(func):
             file = open("errors.log", "a")
             file.write(self.Traceback)
             file.close()
-            Ventanas.showAlert("Error", "Se ha producido un error \n{}".format(self.Excepcion))
+            # Cuando estamos en modo CLI puede que no exista un QApplication activo
+            # En ese caso evitamos invocar los dialogs de Qt y mostramos por consola
+            try:
+                from PyQt5.QtWidgets import QApplication
+                gui_available = hasattr(self, 'view') and self.view is not None and QApplication.instance() is not None
+            except Exception:
+                gui_available = False
+
+            if gui_available:
+                Ventanas.showAlert("Error", "Se ha producido un error \n{}".format(self.Excepcion))
+            else:
+                # Mostrar mensaje por consola en modo headless/CLI
+                print("ERROR: Se ha producido un error:\n{}".format(self.Excepcion))
+
+            # Siempre volcamos el traceback en consola y logs
             print(self.Traceback)
             logging.debug(self.Traceback)
             if LeerIni('debug') == 'N':
@@ -585,6 +599,7 @@ def envia_correo(from_address='', to_address='', message='', subject='',
     
     thread = threading.Thread(target=send_email, daemon=True)
     thread.start()
+    return thread
 
 def uniqueid():
     seed = random.getrandbits(32)
