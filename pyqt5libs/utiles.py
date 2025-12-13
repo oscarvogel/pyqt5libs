@@ -424,22 +424,48 @@ def HayInternet():
 
 
 def envia_correo(from_address='', to_address='', message='', subject='',
-                password_email='', to_cc='', archivo_adjunto=None, nombre_archivo=None) -> object:
+                password_email='', to_cc='', archivo_adjunto=None, nombre_archivo=None, es_html=False) -> object:
     def send_email():
         try:
-            # Leer configuración SMTP desde variables de entorno
-            smtp_server = os.getenv('SMTP_HOST')
-            smtp_port = os.getenv('SMPT_PORT', '587')  # Lee también SMTP_PORT si existe
+            # Intentar importar ParamSist aquí para evitar dependencias circulares
+            try:
+                from modelos.ParametrosSistema import ParamSist
+                
+                # Obtener configuración de ParamSist
+                smtp_server = ParamSist.ObtenerParametro('SMTP_SERVER')
+                smtp_port = ParamSist.ObtenerParametro('SMTP_PORT', '587')
+                smtp_username = ParamSist.ObtenerParametro('EMAIL_ADDRESS')
+                
+                # Prioridad: 1. Argumento password_email, 2. ParamSist EMAIL_PASSWORD, 3. ParamSist PASSWORD_EMAIL
+                smtp_password = password_email
+                if not smtp_password:
+                    smtp_password = ParamSist.ObtenerParametro('EMAIL_PASSWORD')
+                if not smtp_password:
+                    smtp_password = ParamSist.ObtenerParametro('PASSWORD_EMAIL')
+                    
+            except ImportError:
+                # Si no se puede importar (ej. uso fuera del proyecto), usar variables de entorno o valores por defecto
+                logging.warning("No se pudo importar ParamSist, usando variables de entorno")
+                smtp_server = os.getenv('SMTP_HOST')
+                smtp_port = os.getenv('SMPT_PORT', '587')
+                smtp_username = os.getenv('SMTP_USER')
+                smtp_password = password_email or os.getenv('SMTP_PASS')
+
+            # Fallback a variables de entorno si ParamSist devolvió vacío (y se pudo importar)
+            if not smtp_server:
+                smtp_server = os.getenv('SMTP_HOST')
             if not smtp_port:
-                smtp_port = os.getenv('SMTP_PORT', '587')
-            
-            smtp_username = os.getenv('SMTP_USER')
-            smtp_password = os.getenv('SMTP_PASS')
+                smtp_port = os.getenv('SMPT_PORT', '587')
+            if not smtp_username:
+                smtp_username = os.getenv('SMTP_USER')
+            if not smtp_password:
+                smtp_password = os.getenv('SMTP_PASS')
+
             smtp_use_ssl = os.getenv('SMTP_USE_SSL', 'false').lower() == 'true'
             
             # Validar que tengamos al menos el servidor
             if not smtp_server:
-                logging.error("SMTP_HOST no está configurado. No se puede enviar el correo.")
+                logging.error("SMTP_SERVER no está configurado. No se puede enviar el correo.")
                 return
             
             # Convertir puerto a entero
@@ -459,7 +485,10 @@ def envia_correo(from_address='', to_address='', message='', subject='',
             else:
                 mime_message["To"] = to_address
             mime_message["Subject"] = subject
-            mime_message.attach(MIMEText(message))
+            if es_html:
+                mime_message.attach(MIMEText(message, 'html'))
+            else:
+                mime_message.attach(MIMEText(message))
             if to_cc:
                 mime_message["Cc"] = to_cc
                 
