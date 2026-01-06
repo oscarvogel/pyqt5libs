@@ -79,12 +79,12 @@ class Excel:
 
         if self.archivo:
             self.libro = xlsxwriter.Workbook(self.archivo)
-            self.hoja = self.crea_hoja()
+            self.crea_hoja()
 
         return self.archivo
 
     def crea_hoja(self, nombre_hoja: str = 'Hoja1'):
-        self.agrega_hoja(nombre_hoja)
+        return self.agrega_hoja(nombre_hoja)
     
     def agrega_hoja(self, nombre_hoja: str = 'Hoja1'):
         self.asegura_libro()

@@ -316,8 +316,8 @@ class Grilla(QTableWidget):
             else:
                 item = 0
         except Exception as e:
-            item = 0
-            Ventanas.showAlert("INFO", f"Error al convertir a numero {e} {col} {fila}")
+            item = item.text()
+            # Ventanas.showAlert("INFO", f"Error al convertir a numero {e} {col} {fila}")
 
         # return item.replace(',','.') if item else 0
         return item
