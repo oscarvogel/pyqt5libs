@@ -142,11 +142,16 @@ def ubicacion_sistema():
 
 
 def imagen(archivo):
-    archivoImg = ubicacion_sistema() + join("imagenes", archivo)
+    if not archivo:
+        return ""
+    # Build a safe path to the imagenes folder inside the application root
+    archivoImg = os.path.join(ubicacion_sistema(), 'imagenes', archivo)
     if os.path.exists(archivoImg):
         return archivoImg
-    else:
-        return ""
+    # fallback: try the filename as provided (in case it's already an absolute path)
+    if os.path.exists(archivo):
+        return archivo
+    return ""
 
 
 def icono_sistema():
@@ -477,6 +482,14 @@ def envia_correo(from_address='', to_address='', message='', subject='',
 
             smtp_use_ssl = os.getenv('SMTP_USE_SSL', 'false').lower() == 'true'
             
+            # Sanitizar credenciales: eliminar espacios en blanco al inicio/fin
+            if smtp_server:
+                smtp_server = smtp_server.strip()
+            if smtp_username:
+                smtp_username = smtp_username.strip()
+            if smtp_password:
+                smtp_password = smtp_password.strip()
+            
             # Validar que tengamos al menos el servidor
             if not smtp_server:
                 logging.error("SMTP_SERVER no está configurado. No se puede enviar el correo.")
@@ -556,6 +569,9 @@ def envia_correo(from_address='', to_address='', message='', subject='',
                     # Usar SMTP_SSL para puerto 465 o si está explícitamente configurado
                     logging.debug("Usando SMTP_SSL")
                     servidor = smtplib.SMTP_SSL(smtp_server, smtp_port, timeout=30)
+                    # EHLO después de conectar con SSL
+                    logging.debug("Enviando EHLO")
+                    servidor.ehlo()
                 else:
                     # Usar SMTP normal con STARTTLS para puerto 587 u otros
                     logging.debug("Usando SMTP con STARTTLS")
