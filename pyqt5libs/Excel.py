@@ -198,14 +198,14 @@ class Excel:
                     formato_celda = self.libro.add_format(formato)
                 else:
                     formato_celda = formato
+            # Convertir a filas 1-based en la referencia de la fórmula
+            start_row = desdefila + 1
+            end_row = hastafila + 1
+            formula = '=SUM({}{}:{}{})'.format(chr(col + 65), start_row, chr(col + 65), end_row)
             if formato_celda:
-                self.hoja.write_formula(filaformula, col, '=sum({}{}:{}{})'.format(
-                    chr(col + 65), desdefila, chr(col + 65), hastafila
-                ), formato_celda)
+                self.hoja.write_formula(filaformula, col, formula, formato_celda)
             else:
-                self.hoja.write_formula(filaformula, col, '=sum({}{}:{}{})'.format(
-                    chr(col + 65), desdefila, chr(col + 65), hastafila
-                ))
+                self.hoja.write_formula(filaformula, col, formula)
 
     def SubTitulo(self, titulo='', desdecol='A', hastacol='A', fila=0, combina=True):
         self.Titulo(titulo, desdecol, hastacol, fila, combina, tamanio=12)

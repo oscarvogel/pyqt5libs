@@ -98,7 +98,8 @@ def LeerIni(clave=None, key=None, carpeta=''):
     analizador = argparse.ArgumentParser(description='Sistema.')
     analizador.add_argument("-i", "--inicio", default=os.getcwd(), help="Carpeta de Inicio de sistema.")
     analizador.add_argument("-a", "--archivo", default="sistema.ini", help="Archivo de Configuracion de sistema.")
-    argumento = analizador.parse_args()
+    # Use parse_known_args to avoid failing when other scripts pass custom CLI flags
+    argumento, _ = analizador.parse_known_args()
     retorno = ''
     Config = ConfigParser()
     archivoini = argumento.archivo
