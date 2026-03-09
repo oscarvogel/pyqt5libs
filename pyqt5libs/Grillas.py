@@ -8,7 +8,7 @@ import xlsxwriter
 from PyQt5 import QtCore
 from PyQt5.QtCore import QAbstractTableModel, Qt, QVariant
 from PyQt5.QtGui import QFont, QColor
-from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QTableView
+from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QTableView, QApplication
 from openpyxl.reader.excel import load_workbook
 
 from . import Ventanas
@@ -359,7 +359,7 @@ class Grilla(QTableWidget):
             valor = self.ObtenerItem(fila=fila, col=col)
             self.ModificaItem(valor=valor, fila=fila, col=col)
 
-    def ExportaExcel(self, columnas=None, archivo="", titulo="", nuevo=True, hoja='', fila=0, col=0):
+    def ExportaExcel(self, columnas=None, archivo="", titulo="", nuevo=True, hoja='', fila=0, col=0, avance=None):
 
         if not columnas:
             columnas = self.cabeceras
@@ -407,7 +407,8 @@ class Grilla(QTableWidget):
             col += 1
 
         fila += 1
-        for row in range(self.rowCount()):
+        total_rows = self.rowCount()
+        for row in range(total_rows):
             col = 0
             for c in columnas:
                 dato = self.ObtenerItem(fila=row, col=c)
@@ -430,7 +431,17 @@ class Grilla(QTableWidget):
                     worksheet.write(fila, col, dato)
                 col += 1
             fila += 1
-
+            # actualizar barra de progreso si se provee
+            try:
+                if avance is not None and total_rows > 0:
+                    porcentaje = int((row + 1) / total_rows * 100)
+                    # avance puede ser un widget Avance con método actualizar
+                    if hasattr(avance, 'actualizar'):
+                        avance.actualizar(porcentaje)
+                    # asegurarse de procesar eventos para mantener UI responsive
+                    QApplication.processEvents()
+            except Exception:
+                pass
         # cabeceras_excel = [{'header': x} for x in columnas]
         # worksheet.add_table(0, 0, fila, col-1, cabeceras_excel)
         workbook.close()
