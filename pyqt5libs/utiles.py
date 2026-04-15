@@ -37,6 +37,9 @@ from logging.handlers import RotatingFileHandler
 from smtplib import SMTP
 from dotenv import load_dotenv
 from ..libs.vistas.select_printer import Ui_FormPrinter
+import json
+import re
+from urllib.request import Request, urlopen
 
 # Cargar variables de entorno desde el archivo .env
 load_dotenv()
@@ -405,6 +408,46 @@ def initialize_logger(output_dir):
         formatter = logging.Formatter("%(asctime)s - %(levelname)s - %(message)s", datefmt='%m/%d/%Y %I:%M:%S %p')
         handler.setFormatter(formatter)
         logger.addHandler(handler)
+
+
+def obtener_dolar_oficial_compra_ambito(timeout=15):
+    """Obtiene la cotizacion del Dolar Oficial (COMPRA) desde Ambito.
+
+    Intenta primero consumir el JSON público y como fallback parsea el HTML.
+    Devuelve un float o lanza ValueError si no se puede obtener un valor valido.
+    """
+    headers = {'User-Agent': 'Mozilla/5.0 (compatible; ProcesoTarifa/1.0)'}
+
+    api_url = 'https://mercados.ambito.com/dolar/oficial/variacion'
+    try:
+        req = Request(api_url, headers=headers)
+        with urlopen(req, timeout=timeout) as resp:
+            payload = resp.read().decode('utf-8', errors='ignore')
+        data = json.loads(payload)
+        compra = str(data.get('compra', '')).strip()
+        if compra:
+            valor = float(compra.replace('.', '').replace(',', '.'))
+            if valor > 0:
+                return valor
+    except Exception:
+        pass
+
+    # Fallback por si el sitio vuelve a renderizar el valor en el HTML.
+    url = 'https://www.ambito.com/contenidos/dolar.html'
+    req = Request(url, headers=headers)
+    with urlopen(req, timeout=timeout) as resp:
+        html = resp.read().decode('utf-8', errors='ignore')
+
+    m = re.search(r'D[oó]lar\s+Oficial.*?(\d{1,4},\d{1,2})\s*(?:<[^>]+>\s*)*COMPRA', html, flags=re.IGNORECASE | re.DOTALL)
+    if not m:
+        raise ValueError('No se pudo extraer Dolar Oficial COMPRA desde Ambito (API y HTML)')
+
+    valor_txt = m.group(1).replace('.', '').replace(',', '.')
+    valor = float(valor_txt)
+    if valor <= 0:
+        raise ValueError(f'Valor de dolar invalido obtenido desde Ambito: {valor}')
+    return valor
+    
 
 
 def getText(vista, titulo='', etiqueta='', valor=''):
