@@ -97,19 +97,92 @@ def AbrirArchivo(cArchivo=None):
 
 # leo el archivo de configuracion del sistema
 # recibe la clave y el key a leer en caso de que tenga mas de una seccion el archivo
-def LeerIni(clave=None, key=None, carpeta=''):
-    analizador = argparse.ArgumentParser(description='Sistema.')
-    analizador.add_argument("-i", "--inicio", default=os.getcwd(), help="Carpeta de Inicio de sistema.")
-    analizador.add_argument("-a", "--archivo", default="sistema.ini", help="Archivo de Configuracion de sistema.")
-    # Use parse_known_args to avoid failing when other scripts pass custom CLI flags
+def _normalizar_perfil(perfil):
+    if not perfil:
+        return ''
+    valor = str(perfil).strip().upper()
+    alias = {
+        'DESARROLLO': 'FGPY',
+        'DEVELOPMENT': 'FGPY',
+        'DEV': 'FGPY',
+        'MANTENIMIENTO': 'FGLOCAL',
+        'MANT': 'FGLOCAL',
+        'LOCAL': 'FGLOCAL',
+        'PRODUCCION': 'FGPRODUCCION',
+        'PRODUCCIÓN': 'FGPRODUCCION',
+        'PROD': 'FGPRODUCCION',
+    }
+    return alias.get(valor, valor)
+
+
+def _archivo_por_perfil(perfil):
+    perfil_normalizado = _normalizar_perfil(perfil)
+    if not perfil_normalizado:
+        return ''
+
+    if perfil_normalizado.endswith('.ini'):
+        return perfil_normalizado
+
+    archivos = {
+        'FGPY': 'sistema.ini',
+        'FGLOCAL': 'conil.ini',
+        'FGPRODUCCION': 'ini\\sistema-fg-py.ini',
+    }
+    return archivos.get(perfil_normalizado, '')
+
+
+def resolver_configuracion_activa():
+    analizador = argparse.ArgumentParser(description='Sistema.', add_help=False)
+    analizador.add_argument("-i", "--inicio", default=None)
+    analizador.add_argument("-a", "--archivo", default=None)
+    analizador.add_argument("-p", "--perfil", default=None)
     argumento, _ = analizador.parse_known_args()
+
+    carpeta = argumento.inicio or os.getcwd()
+    archivo = argumento.archivo
+    perfil = argumento.perfil
+    origen = 'cli-archivo'
+
+    if not archivo:
+        perfil = perfil or os.environ.get('FGPY_CONFIG')
+        if perfil:
+            origen = 'perfil'
+            archivo = _archivo_por_perfil(perfil)
+
+    if not archivo:
+        archivo = 'sistema.ini'
+        origen = 'fallback'
+
+    perfil = _normalizar_perfil(perfil)
+
+    ruta_absoluta = archivo
+    if not os.path.isabs(ruta_absoluta):
+        ruta_absoluta = join(carpeta, ruta_absoluta)
+
+    if not os.path.exists(ruta_absoluta) and archivo != 'sistema.ini':
+        archivo = 'sistema.ini'
+        ruta_absoluta = join(carpeta, archivo)
+        origen = 'fallback'
+
+    return {
+        'carpeta': carpeta,
+        'archivo': archivo,
+        'ruta': ruta_absoluta,
+        'perfil': perfil,
+        'origen': origen,
+    }
+
+
+def LeerIni(clave=None, key=None, carpeta=''):
     retorno = ''
     Config = ConfigParser()
-    archivoini = argumento.archivo
-    carpeta = argumento.inicio
+    configuracion = resolver_configuracion_activa()
+    archivoini = configuracion['archivo']
+    carpeta = configuracion['carpeta']
+    ruta_archivo = configuracion['ruta']
     # Config.read("fasa.ini")
     if carpeta:
-        Config.read(join(carpeta, archivoini))
+        Config.read(ruta_archivo)
         # logging.debug("Archivo utilizado {}".format(join(carpeta, archivoini)))
     else:
         Config.read(archivoini)
@@ -287,8 +360,8 @@ def inicializar_y_capturar_excepciones(func):
                 # Envio un correo al administrador del sistema
                 # si no se ha configurado el correo, no se envia nada
                 try:
-                    remitente = 'sistemas@servinlgsm.com.ar'
-                    destinatario = 'sistemas@servinlgsm.com.ar'
+                    remitente = 'info@vogelconsultoria.com.ar'
+                    destinatario = 'info@vogelconsultoria.com.ar'
                     mensaje = "{} {} Enviado desde mi Software de Gestion desarrollado por http://www.servinlgsm.com.ar".format(
                         self.Traceback, self.Excepcion
                     )
