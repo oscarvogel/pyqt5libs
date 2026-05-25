@@ -266,6 +266,16 @@ def inicializar_y_capturar_excepciones(func):
             file = open("errors.log", "a")
             file.write(self.Traceback)
             file.close()
+            try:
+                from utiles.error_reporting import report_exception
+                report_exception(
+                    sys.exc_info()[0],
+                    sys.exc_info()[1],
+                    sys.exc_info()[2],
+                    source='decorator',
+                )
+            except Exception:
+                logging.debug("No se pudo reportar el error al monitor central", exc_info=True)
             # Cuando estamos en modo CLI puede que no exista un QApplication activo
             # En ese caso evitamos invocar los dialogs de Qt y mostramos por consola
             try:
@@ -283,20 +293,6 @@ def inicializar_y_capturar_excepciones(func):
             # Siempre volcamos el traceback en consola y logs
             print(self.Traceback)
             logging.debug(self.Traceback)
-            if LeerIni('debug') == 'N':
-                # Envio un correo al administrador del sistema
-                # si no se ha configurado el correo, no se envia nada
-                try:
-                    remitente = 'sistemas@servinlgsm.com.ar'
-                    destinatario = 'sistemas@servinlgsm.com.ar'
-                    mensaje = "{} {} Enviado desde mi Software de Gestion desarrollado por http://www.servinlgsm.com.ar".format(
-                        self.Traceback, self.Excepcion
-                    )
-                    motivo = f"Se envia informe de errores de {LeerIni(clave='nombre_sistema')} . Usuario {LeerConf('usuario')}"
-                    envia_correo(from_address=remitente, to_address=destinatario,
-                                message=mensaje, subject=motivo)
-                except:
-                    pass
             if self.LanzarExcepciones:
                 raise
         finally:
