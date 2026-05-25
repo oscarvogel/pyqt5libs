@@ -8,7 +8,7 @@ import xlsxwriter
 from PyQt5 import QtCore
 from PyQt5.QtCore import QAbstractTableModel, Qt, QVariant
 from PyQt5.QtGui import QFont, QColor
-from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QTableView, QApplication
+from PyQt5.QtWidgets import QTableWidget, QTableWidgetItem, QTableView, QApplication, QHeaderView
 from openpyxl.reader.excel import load_workbook
 
 from . import Ventanas
@@ -96,6 +96,14 @@ class Grilla(QTableWidget):
             self.setSortingEnabled(True)
         if 'enabled' in kwargs:
             self.setEnabled(kwargs['enabled'])
+        self.setAlternatingRowColors(True)
+        self.setSelectionBehavior(QTableWidget.SelectRows)
+        self.setSelectionMode(QTableWidget.SingleSelection)
+        self.setShowGrid(False)
+        self.setWordWrap(False)
+        self.verticalHeader().setVisible(False)
+        self.verticalHeader().setDefaultSectionSize(28)
+        self.horizontalHeader().setHighlightSections(False)
 
     def ArmaCabeceras(self, cabeceras=None):
 
@@ -107,10 +115,12 @@ class Grilla(QTableWidget):
         for col in range(0, len(cabeceras)):
             self.setHorizontalHeaderItem(col, QTableWidgetItem(cabeceras[col]))
 
-        self.resizeRowsToContents()
-        self.resizeColumnsToContents()
         self.cabeceras = cabeceras
         self.OcultaColumnas()
+        self.horizontalHeader().setSectionResizeMode(QHeaderView.Interactive)
+        self.horizontalHeader().setStretchLastSection(False)
+        self.resizeRowsToContents()
+        self.resizeColumnsToContents()
 
     def AgregaItem(self, items=None,
                    backgroundColor=QColor(255, 255, 255), readonly=False, formatea_miles=False):
@@ -188,8 +198,9 @@ class Grilla(QTableWidget):
                     # self.setItemDelegate(widgetColumna)
                     # self.setCellWidget(cantFilas - 1, col, widgetColumna)
                 col += 1
-            self.resizeRowsToContents()
-            self.resizeColumnsToContents()
+            if cantFilas <= 25:
+                self.resizeRowsToContents()
+                self.resizeColumnsToContents()
 
     # def ArmaWidgetCol(self, col):
     #     for x in range(self.rowCount()):
@@ -255,7 +266,8 @@ class Grilla(QTableWidget):
                 item.setBackground(self.itemAt(fila, col).background().color())
 
         self.setItem(fila, numCol, item)
-        self.resizeColumnsToContents()
+        if self.rowCount() <= 25:
+            self.resizeColumnsToContents()
 
     def ObtenerItem(self, fila, col):
 

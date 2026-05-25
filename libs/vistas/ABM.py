@@ -88,12 +88,17 @@ class ABM(VistaBase):
             self.setWindowTitle("ABM de {}".format(nombre_tabla))
 
         self.verticalLayout = QVBoxLayout(self)
+        self.verticalLayout.setContentsMargins(18, 18, 18, 14)
+        self.verticalLayout.setSpacing(12)
         self.lblTitulo = Etiqueta(tamanio=15, texto="ABM de {}".format(nombre_tabla))
+        self.lblTitulo.setObjectName("tituloPantalla")
         self.verticalLayout.addWidget(self.lblTitulo)
 
         self.tabWidget = QTabWidget()
         self.tabLista = QWidget()
         self.gridLayout = QGridLayout(self.tabLista)
+        self.gridLayout.setContentsMargins(14, 14, 14, 14)
+        self.gridLayout.setSpacing(10)
 
         self.avance = Avance()
         self.avance.setVisible(False)
@@ -114,6 +119,8 @@ class ABM(VistaBase):
         self.gridLayout.addWidget(self.tableView, 1, 0, 1, 1)
         self.horizontalLayout = QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
+        self.horizontalLayout.setSpacing(8)
+        self.horizontalLayout.addStretch()
 
         self.BotonesAdicionales()
 
