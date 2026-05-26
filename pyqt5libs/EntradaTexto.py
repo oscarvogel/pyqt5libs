@@ -80,7 +80,7 @@ class EntradaTexto(QLineEdit):
             self.setText(self.text().zfill(self.relleno))
 
         if self.text():
-            self.setStyleSheet("background-color: Dodgerblue")
+            self.setStyleSheet("background-color: #eef6f2")
         else:
             self.setStyleSheet("background-color: white")
         if self.largo > 0:
