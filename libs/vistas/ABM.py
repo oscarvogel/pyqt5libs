@@ -8,7 +8,7 @@ from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QVBoxLayout, QTabWidget, QWidget, QGridLayout, QHBoxLayout, QLineEdit, QCheckBox, QComboBox, \
     QApplication, QMessageBox
 
-from modelos.ModeloBase import ejecutar_con_reintento_db, reconnect_if_needed
+from modelos.ModeloBase import ejecutar_count, ejecutar_list, reconnect_if_needed
 from pyqt5libs.libs.vistas.VistaBase import VistaBase
 from pyqt5libs.pyqt5libs import Ventanas
 from pyqt5libs.pyqt5libs.BarraProgreso import Avance
@@ -184,10 +184,10 @@ class ABM(VistaBase):
         if self.lineEditBusqueda.text():
             data = self.ArmaBusqueda(data)
 
-        total = ejecutar_con_reintento_db(lambda: len(data), 'contar datos ABM')
+        total = ejecutar_count(data, 'contar datos ABM')
         avance = 0
         data = data.limit(self.limite)
-        data = ejecutar_con_reintento_db(lambda: list(data), 'cargar datos ABM')
+        data = ejecutar_list(data, 'cargar datos ABM')
         for d in data:
             color = QColor(255, 255, 255)
             # QApplication.processEvents()
