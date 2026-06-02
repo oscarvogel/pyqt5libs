@@ -4,7 +4,7 @@ from PyQt5.QtCore import pyqtSignal
 from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QLineEdit, QHBoxLayout
 
-from modelos.ModeloBase import reconnect_if_needed
+from modelos.ModeloBase import ejecutar_list, reconnect_if_needed
 
 from . import Ventanas
 from .EntradaTexto import EntradaTexto
@@ -137,7 +137,7 @@ class Validaciones(EntradaTexto):
                     data = data.where(c)
             else:
                 data = data.where(self.condiciones)
-        data = data.dicts()
+        data = ejecutar_list(data.dicts(), 'validar codigo')
         if data:
             self.valido = True
             self.setStyleSheet("background-color: Dodgerblue")
