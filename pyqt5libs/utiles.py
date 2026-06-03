@@ -213,18 +213,29 @@ def GrabarIni(clave=None, key=None, valor=''):
 
 
 def ubicacion_sistema():
-    cUbicacion = LeerIni("iniciosistema") or os.path.dirname(argv[0])
-
-    return cUbicacion
+    cUbicacion = LeerIni("iniciosistema")
+    if cUbicacion:
+        return cUbicacion
+    if getattr(sys, "frozen", False):
+        return os.path.dirname(sys.executable)
+    return os.path.dirname(argv[0])
 
 
 def imagen(archivo):
     if not archivo:
         return ""
-    # Build a safe path to the imagenes folder inside the application root
-    archivoImg = os.path.join(ubicacion_sistema(), 'imagenes', archivo)
-    if os.path.exists(archivoImg):
-        return archivoImg
+    bases = [ubicacion_sistema()]
+    if getattr(sys, "frozen", False):
+        bases.extend([
+            os.path.dirname(sys.executable),
+            getattr(sys, "_MEIPASS", ""),
+        ])
+    for base in bases:
+        if not base:
+            continue
+        archivoImg = os.path.join(base, 'imagenes', archivo)
+        if os.path.exists(archivoImg):
+            return archivoImg
     # fallback: try the filename as provided (in case it's already an absolute path)
     if os.path.exists(archivo):
         return archivo
