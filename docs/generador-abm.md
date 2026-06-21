@@ -109,8 +109,21 @@ result = ventana.UpdateRecord(cliente, {
 
 Estos métodos validan antes de guardar y convierten tipos básicos como enteros, decimales, booleanos y strings vacíos.
 
+## AutoABM Producción: borrado automático
+
+La clase generada expone `RemoveRecord(record)` y `CanRemove(record)`.
+
+```python
+result = ventana.RemoveRecord(cliente)
+
+if result.ok:
+    print(result.deleted_count)
+```
+
+`CanRemove()` puede sobrescribirse en una clase hija para aplicar reglas de negocio.
+
 ## Próximas fases
 
-1. Borrado automático.
-2. Conexión directa entre controles visuales y valores del formulario.
-3. Ejemplo funcional con modelo Peewee real.
+1. Conexión directa entre controles visuales y valores del formulario.
+2. Ejemplo funcional con modelo Peewee real.
+3. Relaciones automáticas con combos.
