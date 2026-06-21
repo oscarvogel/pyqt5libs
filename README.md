@@ -33,4 +33,4 @@ ejemplo.funcion_util()
 
 ## Licencia
 
-Este proyecto está bajo la licencia MIT.
+Este proyecto está bajo la licencia LGPL v3.
