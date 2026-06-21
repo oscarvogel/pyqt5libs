@@ -23,74 +23,79 @@ from pyqt5libs.pyqt5libs.Validaciones import ValidaConTexto
 from pyqt5libs.pyqt5libs.utiles import inicializar_y_capturar_excepciones, EsVerdadero, imagen
 
 
-
 class ABM(VistaBase):
+    """Vista base para pantallas de gestión tipo listado + ficha.
 
-    #diccionario que guarda los controles que se agreguen al abm
+    Mantiene compatibilidad con los ABM existentes, pero incorpora mejoras de
+    usabilidad: títulos más claros, búsqueda con limpiar, resumen de registros,
+    estado visual de alta/modificación y conexiones de widgets con protección
+    contra doble conexión.
+    """
+
     controles = {}
-
-    #modelo sobre el que se hace el abm
     model = None
-
-    #indica si es un alta o una modificacion
     tipo = "A"
-
-    #campos a mostrar en la grilla
     camposAMostrar = []
-
-    #condicion para filtrar la tabla
     condicion = None
-
-    #limite de registros
     limite = 100
-
-    #orden de busqueda
     ordenBusqueda = None
-
-    #campo
     campoClave = None
-
-    #campo clave autoincremental
     autoincremental = True
-
-    #campo para el foco
     campoFoco = None
-
-    #columna para los botones del formulario de carga de datos
     colBoton = 0
-
-    #titulo para el abm
     titulo = None
-
-    #indica si permite agregar un nuevo registro
     permiteagregar = True
-
-    #el id de la tabla cuando se modifica
     idtabla = 0
-
-    #color de fondo para los renglones de la grilla
     dynamicBackColor = None
-
     data = ""
+    autoConectaWidgets = True
 
     def __init__(self, *args, **kwargs):
         VistaBase.__init__(self, *args, **kwargs)
         self.controles = {}
+        self._widgets_conectados = False
+        self._ultima_cantidad_registros = 0
         self.initUi()
+
+    def _nombre_pantalla(self):
+        if self.titulo:
+            return self.titulo
+        if self.model:
+            return self.model._meta.table_name.title()
+        return "Registros"
+
+    def _titulo_gestion(self):
+        return "Gestión de {}".format(self._nombre_pantalla())
+
+    def ActualizaEstado(self, texto=None):
+        if not hasattr(self, 'lblEstado'):
+            return
+        if texto:
+            self.lblEstado.setText(texto)
+            return
+        if self.tipo == 'M':
+            self.lblEstado.setText("Editando registro {}".format(self.idtabla or "seleccionado"))
+        else:
+            self.lblEstado.setText("Nuevo registro")
+
+    def ActualizaResumen(self, mostrados=0, total=0):
+        if not hasattr(self, 'lblResumen'):
+            return
+        if total > self.limite:
+            self.lblResumen.setText("Mostrando {} de {} registros".format(mostrados, total))
+        else:
+            self.lblResumen.setText("{} registro(s) encontrado(s)".format(mostrados))
 
     @inicializar_y_capturar_excepciones
     def initUi(self, *args, **kwargs):
         self.resize(906, 584)
-        nombre_tabla = self.model._meta.table_name.title() if self.model else ''
-        if self.titulo:
-            self.setWindowTitle("ABM de {}".format(self.titulo))
-        else:
-            self.setWindowTitle("ABM de {}".format(nombre_tabla))
+        self.setWindowTitle(self._titulo_gestion())
 
         self.verticalLayout = QVBoxLayout(self)
         self.verticalLayout.setContentsMargins(18, 18, 18, 14)
         self.verticalLayout.setSpacing(12)
-        self.lblTitulo = Etiqueta(tamanio=15, texto="ABM de {}".format(nombre_tabla))
+
+        self.lblTitulo = Etiqueta(tamanio=15, texto=self._titulo_gestion())
         self.lblTitulo.setObjectName("tituloPantalla")
         self.verticalLayout.addWidget(self.lblTitulo)
 
@@ -104,19 +109,37 @@ class ABM(VistaBase):
         self.avance.setVisible(False)
         self.verticalLayout.addWidget(self.avance)
 
-        self.lineEditBusqueda = EntradaTexto(self.tabLista, placeholderText="Busqueda")
+        self.lineEditBusqueda = EntradaTexto(
+            self.tabLista,
+            placeholderText="Buscar por nombre, código o dato visible..."
+        )
         self.lineEditBusqueda.setObjectName("lineEditBusqueda")
         self.gridLayout.addWidget(self.lineEditBusqueda, 0, 0, 1, 1)
+
+        self.btnLimpiarBusqueda = Boton(
+            self.tabLista,
+            texto="Limpiar",
+            imagen=imagen('close.png'),
+            tamanio=QSize(24, 24),
+            tooltip="Limpiar búsqueda"
+        )
+        self.btnLimpiarBusqueda.setObjectName("btnLimpiarBusqueda")
+        self.gridLayout.addWidget(self.btnLimpiarBusqueda, 0, 1, 1, 1)
 
         self.tableView = Grilla(self.tabLista)
         self.tableView.setObjectName("tableView")
         self.tableView.enabled = True
-
-        # extraigo los nombres de las columnas
-        self.tableView.cabeceras = [x.verbose_name if x.verbose_name else x.column_name.capitalize()
-                                    for x in self.camposAMostrar]
+        self.tableView.cabeceras = [
+            x.verbose_name if x.verbose_name else x.column_name.capitalize()
+            for x in self.camposAMostrar
+        ]
         self.tableView.ArmaCabeceras()
-        self.gridLayout.addWidget(self.tableView, 1, 0, 1, 1)
+        self.gridLayout.addWidget(self.tableView, 1, 0, 1, 2)
+
+        self.lblResumen = Etiqueta(texto="Sin registros cargados")
+        self.lblResumen.setObjectName("lblResumen")
+        self.gridLayout.addWidget(self.lblResumen, 2, 0, 1, 1)
+
         self.horizontalLayout = QHBoxLayout()
         self.horizontalLayout.setObjectName("horizontalLayout")
         self.horizontalLayout.setSpacing(8)
@@ -125,42 +148,42 @@ class ABM(VistaBase):
         self.BotonesAdicionales()
 
         self.btnAgregar = Boton(self.tabLista, texto="&Agregar",
-                                imagen=imagen("new.png"), tamanio=QSize(32,32),
-                                tooltip='Agrega nuevo registro', enabled=self.permiteagregar)
-
+                                imagen=imagen("new.png"), tamanio=QSize(32, 32),
+                                tooltip='Agregar nuevo registro', enabled=self.permiteagregar)
         self.btnAgregar.setObjectName("btnAgregar")
         self.horizontalLayout.addWidget(self.btnAgregar)
 
-        self.btnEditar = Boton(self.tabLista, imagen=imagen('edit.png'), tamanio=QSize(32,32),
-                               tooltip='Modifica registro', texto='Editar')
+        self.btnEditar = Boton(self.tabLista, imagen=imagen('edit.png'), tamanio=QSize(32, 32),
+                               tooltip='Modificar registro seleccionado', texto='Editar')
         self.btnEditar.setObjectName("btnEditar")
         self.horizontalLayout.addWidget(self.btnEditar)
 
-        self.btnBorrar = Boton(self.tabLista, imagen=imagen('delete.png'), tamanio=QSize(32,32),
-                               tooltip='Borrar registro', texto='Borrar')
+        self.btnBorrar = Boton(self.tabLista, imagen=imagen('delete.png'), tamanio=QSize(32, 32),
+                               tooltip='Borrar registro seleccionado', texto='Borrar')
         self.btnBorrar.setObjectName("btnBorrar")
         self.horizontalLayout.addWidget(self.btnBorrar)
 
-        self.btnExcel = Boton(self.tabLista, imagen=imagen("79354_excel_icon.png"), tamanio=QSize(32,32),
-                               tooltip='Exportar a Excel', texto='Excel')
+        self.btnExcel = Boton(self.tabLista, imagen=imagen("79354_excel_icon.png"), tamanio=QSize(32, 32),
+                              tooltip='Exportar listado a Excel', texto='Excel')
         self.horizontalLayout.addWidget(self.btnExcel)
 
-        self.btnCerrar = Boton(self.tabLista, imagen=imagen('close.png'), tamanio=QSize(32,32),
-                               tooltip='Cerrar ABM', texto='Cerrar')
+        self.btnCerrar = Boton(self.tabLista, imagen=imagen('close.png'), tamanio=QSize(32, 32),
+                               tooltip='Cerrar pantalla', texto='Cerrar')
         self.btnCerrar.setObjectName("btnCerrar")
         self.horizontalLayout.addWidget(self.btnCerrar)
-        self.gridLayout.addLayout(self.horizontalLayout, 2, 0, 1, 1)
+        self.gridLayout.addLayout(self.horizontalLayout, 3, 0, 1, 2)
 
-        self.tabWidget.addTab(self.tabLista, "Lista")
+        self.tabWidget.addTab(self.tabLista, "Listado")
         self.tabDetalle = QWidget()
-        self.tabWidget.addTab(self.tabDetalle, "Detalle")
+        self.tabWidget.addTab(self.tabDetalle, "Ficha")
         self.tabDetalle.setEnabled(False)
 
         self.verticalLayout.addWidget(self.tabWidget)
 
         self.ArmaDatos()
         self.ArmaTabla()
-        # self.ConectaWidgets()
+        if self.autoConectaWidgets:
+            self.ConectaWidgets()
 
     def BotonesAdicionales(self):
         pass
@@ -170,49 +193,52 @@ class ABM(VistaBase):
     def ArmaTabla(self, *args, **kwargs):
         self.tableView.setRowCount(0)
         self.avance.setVisible(True)
-        if self.data:
-           data =  self.data
-        else:
-            if not self.model: #si no esta establecido el modelo no hago nada
-                return
-
-            data = self.model.select().dicts()
-            if self.condicion:
-                for c in self.condicion:
-                    data = data.where(c)
-
-        if self.lineEditBusqueda.text():
-            data = self.ArmaBusqueda(data)
-
-        total = len(data)
-        avance = 0
-        data = data.limit(self.limite)
-        for d in data:
-            color = QColor(255, 255, 255)
-            # QApplication.processEvents()
-            avance += 1
-            self.avance.actualizar(avance / total * 100)
-            if self.camposAMostrar:
-                item = [d[x.name] for x in self.camposAMostrar]
+        try:
+            if self.data:
+                data = self.data
             else:
-                item = [d[x] for x in d]
-            for x in d:
-                if self.dynamicBackColor:
-                    if x in self.dynamicBackColor:
-                        if d[x] == self.dynamicBackColor[x]['valor']:
-                            color = self.dynamicBackColor[x]['color']
-                        else:
-                            color = QColor(255,255,255)
+                if not self.model:
+                    self.ActualizaResumen(0, 0)
+                    return
+                data = self.model.select().dicts()
+                if self.condicion:
+                    for c in self.condicion:
+                        data = data.where(c)
+
+            if self.lineEditBusqueda.text():
+                data = self.ArmaBusqueda(data)
+
+            total = len(data)
+            avance = 0
+            data = data.limit(self.limite)
+            for d in data:
+                color = QColor(255, 255, 255)
+                avance += 1
+                if total:
+                    self.avance.actualizar(avance / total * 100)
+                if self.camposAMostrar:
+                    item = [d[x.name] for x in self.camposAMostrar]
                 else:
-                    color = self.DevuelveColor(d)
-            self.tableView.AgregaItem(item, backgroundColor=color)
-        self.avance.setVisible(False)
+                    item = [d[x] for x in d]
+                for x in d:
+                    if self.dynamicBackColor:
+                        if x in self.dynamicBackColor:
+                            if d[x] == self.dynamicBackColor[x]['valor']:
+                                color = self.dynamicBackColor[x]['color']
+                            else:
+                                color = QColor(255, 255, 255)
+                    else:
+                        color = self.DevuelveColor(d)
+                self.tableView.AgregaItem(item, backgroundColor=color)
+            self._ultima_cantidad_registros = avance
+            self.ActualizaResumen(avance, total)
+        finally:
+            self.avance.setVisible(False)
 
     def ArmaBusqueda(self, data):
         if self.ordenBusqueda:
             texto = self.lineEditBusqueda.text()
             if isinstance(self.ordenBusqueda, list):
-                # Construimos una expresión OR combinando todos los campos
                 cond = None
                 for campo in self.ordenBusqueda:
                     expr = campo.contains(texto)
@@ -221,15 +247,19 @@ class ABM(VistaBase):
             else:
                 data = data.where(self.ordenBusqueda.contains(texto))
         else:
-            Ventanas.showAlert("Sistema", "Orden no establecido y no se puede realizar la busqueda")
+            Ventanas.showAlert("Sistema", "No hay campos configurados para realizar la búsqueda")
         return data
 
-    
     @reconnect_if_needed
     @inicializar_y_capturar_excepciones
     def ArmaDatos(self, *args, **kwargs):
         self.verticalLayoutDatos = QVBoxLayout(self.tabDetalle)
         self.verticalLayoutDatos.setObjectName("verticalLayoutDatos")
+
+        self.lblEstado = Etiqueta(texto="Seleccione un registro o agregue uno nuevo")
+        self.lblEstado.setObjectName("lblEstado")
+        self.verticalLayoutDatos.addWidget(self.lblEstado)
+
         self.ArmaCarga()
         self.colBoton = 0
 
@@ -237,14 +267,14 @@ class ABM(VistaBase):
         self.grdBotones.setObjectName("grdBotones")
         self.AgregaBotonesDatos()
 
-        self.btnAceptar = Boton(self.tabDetalle, texto='Guardar', imagen=imagen('save.png'), tamanio=QSize(32,32),
+        self.btnAceptar = Boton(self.tabDetalle, texto='Guardar', imagen=imagen('save.png'), tamanio=QSize(32, 32),
                                 tooltip="Guardar cambios")
         self.btnAceptar.setObjectName("btnAceptar")
         self.grdBotones.addWidget(self.btnAceptar, 0, self.colBoton, 1, 1)
 
         self.colBoton += 1
-        self.btnCancelar = Boton(self.tabDetalle, texto='Cerrar', imagen=imagen('close.png'), tamanio=QSize(32,32),
-                                 tooltip="Cerrar sin guardar")
+        self.btnCancelar = Boton(self.tabDetalle, texto='Cancelar', imagen=imagen('close.png'), tamanio=QSize(32, 32),
+                                 tooltip="Cancelar y volver al listado")
         self.btnCancelar.setObjectName("btnCancelar")
         self.grdBotones.addWidget(self.btnCancelar, 0, self.colBoton, 1, 1)
         self.verticalLayoutDatos.addLayout(self.grdBotones)
@@ -256,23 +286,34 @@ class ABM(VistaBase):
     def Busqueda(self):
         self.ArmaTabla()
 
+    def LimpiarBusqueda(self):
+        self.lineEditBusqueda.clear()
+        self.ArmaTabla()
+        self.lineEditBusqueda.setFocus()
+
     def ConectaWidgets(self):
+        if self._widgets_conectados:
+            return
         self.lineEditBusqueda.textChanged.connect(self.Busqueda)
+        self.btnLimpiarBusqueda.clicked.connect(self.LimpiarBusqueda)
         self.btnCerrar.clicked.connect(self.cerrarformulario)
         self.btnBorrar.clicked.connect(self.Borrar)
         self.btnEditar.clicked.connect(self.Modifica)
         self.btnAgregar.clicked.connect(self.Agrega)
+        self._widgets_conectados = True
 
     @reconnect_if_needed
     @inicializar_y_capturar_excepciones
     def Borrar(self, *args, **kwargs):
         if not self.tableView.currentRow() != -1:
+            Ventanas.showAlert("Sistema", "Seleccione un registro para borrar")
             return
 
         if not self.campoClave:
-            Ventanas.showAlert("Sistema", "No tenes establecido el campo clave y no podemos continuar")
+            Ventanas.showAlert("Sistema", "No se pudo identificar el registro seleccionado")
+            return
 
-        if Ventanas.showConfirmation("Sistema", "Deseas borrar el registro seleccionado?") == QMessageBox.Ok:
+        if Ventanas.showConfirmation("Sistema", "¿Desea borrar el registro seleccionado?") == QMessageBox.Ok:
             id = self.tableView.ObtenerItem(fila=self.tableView.currentRow(), col=self.campoClave.column_name.capitalize())
             data = self.model.get_by_id(id)
             data.delete_instance()
@@ -281,13 +322,14 @@ class ABM(VistaBase):
     @reconnect_if_needed
     @inicializar_y_capturar_excepciones
     def Modifica(self, *args, **kwargs):
-
         self.tipo = 'M'
         if not self.tableView.currentRow() != -1:
+            Ventanas.showAlert("Sistema", "Seleccione un registro para editar")
             return
 
         if not self.campoClave:
-            Ventanas.showAlert("Sistema", "No tenes establecido el campo clave y no podemos continuar")
+            Ventanas.showAlert("Sistema", "No se pudo identificar el registro seleccionado")
+            return
 
         id = self.tableView.ObtenerItem(fila=self.tableView.currentRow(),
                                         col=self.campoClave.verbose_name if self.campoClave.verbose_name else
@@ -303,6 +345,7 @@ class ABM(VistaBase):
             data = self.model.select().where(self.campoClave == id).dicts()
         self.tabDetalle.setEnabled(True)
         self.tabWidget.setCurrentIndex(1)
+        self.ActualizaEstado()
         self.CargaDatos(data)
         if self.campoFoco:
             self.campoFoco.setFocus()
@@ -312,8 +355,7 @@ class ABM(VistaBase):
         if not data:
             return
         for d in data:
-            print(d)
-            logging.debug("{}".format(d))
+            logging.debug("%s", d)
             for k in d:
                 if k in self.controles:
                     if k == self.campoClave.name:
@@ -321,18 +363,16 @@ class ABM(VistaBase):
                     if isinstance(self.controles[k], QLineEdit):
                         if isinstance(d[k], (int, decimal.Decimal, float)):
                             self.controles[k].setText(str(d[k]))
-                        elif isinstance(d[k], (datetime.date)):
+                        elif isinstance(d[k], datetime.date):
                             self.controles[k].setText(d[k].strftime('%d/%m/%Y'))
                         else:
                             self.controles[k].setText(d[k].strip() if d[k] else '')
                     elif isinstance(self.controles[k], (QCheckBox, CheckBox)):
-                        if EsVerdadero(d[k]) or d[k]:
-                            self.controles[k].setChecked(True)
-                        else:
-                            self.controles[k].setChecked(False)
+                        self.controles[k].setChecked(bool(EsVerdadero(d[k]) or d[k]))
                     elif isinstance(self.controles[k], QComboBox):
-                        if isinstance(d[k], (bytes,)):
-                            if EsVerdadero(self.cursor[k]):
+                        if isinstance(d[k], bytes):
+                            cursor = getattr(self, 'cursor', {})
+                            if EsVerdadero(cursor.get(k)):
                                 self.controles[k].setCurrentIndex(self.controles[k].findData('Si'))
                             else:
                                 self.controles[k].setCurrentIndex(self.controles[k].findData('No'))
@@ -340,7 +380,7 @@ class ABM(VistaBase):
                             self.controles[k].setCurrentIndex(self.controles[k].findData(d[k]))
                         else:
                             self.controles[k].setCurrentText(d[k] if d[k] else '')
-                    elif isinstance(self.controles[k], (Fecha)):
+                    elif isinstance(self.controles[k], Fecha):
                         if self.controles[k]:
                             self.controles[k].setText(d[k])
                     elif isinstance(self.controles[k], Spinner):
@@ -366,12 +406,12 @@ class ABM(VistaBase):
             if isinstance(nombre, str):
                 texto = nombre.capitalize()
             else:
-                if not 'control' in kwargs:
+                if 'control' not in kwargs:
                     if nombre.field_type in ['DATE']:
                         kwargs['control'] = FechaLine()
                 texto = nombre.verbose_name if nombre.verbose_name else nombre.name.capitalize()
 
-        if not isinstance(nombre, str): #si no es un campo texto intento convertir de un campo de pewee
+        if not isinstance(nombre, str):
             nombre = nombre.name
 
         labelNombre = Etiqueta(texto=texto)
@@ -390,7 +430,6 @@ class ABM(VistaBase):
             lineEditNombre.setInputMask(kwargs['inputmask'])
 
         lineEditNombre.setObjectName(nombre)
-        #print(type(lineEditNombre))
         if 'layout' in kwargs:
             boxlayout.addLayout(lineEditNombre)
         else:
@@ -410,16 +449,14 @@ class ABM(VistaBase):
     def btnCancelarClicked(self):
         self.tabWidget.setCurrentIndex(0)
         self.tabDetalle.setEnabled(False)
-        self.ArmaTabla()
+        self.ActualizaEstado("Seleccione un registro o agregue uno nuevo")
 
     @inicializar_y_capturar_excepciones
     def btnAceptarClicked(self, *args, **kwargs):
-        # data = self.model.get_by_id(self.controles[self.campoClave.column_name].text())
-        # data.nombre = self.controles['nombre'].text()
         self.tabWidget.setCurrentIndex(0)
         self.tabDetalle.setEnabled(False)
+        self.ActualizaEstado("Seleccione un registro o agregue uno nuevo")
         self.ArmaTabla()
-        # self.btnCancelarClicked()
 
     def ArmaCarga(self):
         pass
@@ -427,7 +464,7 @@ class ABM(VistaBase):
     def Agrega(self):
         self.tipo = 'A'
         for x in self.controles:
-            if self.autoincremental:
+            if self.autoincremental and self.campoClave:
                 if x in [self.campoClave.column_name,
                          self.campoClave.verbose_name,
                          self.campoClave.name]:
@@ -436,6 +473,7 @@ class ABM(VistaBase):
             self.controles[x].setStyleSheet("background-color: white")
         self.tabDetalle.setEnabled(True)
         self.tabWidget.setCurrentIndex(1)
+        self.ActualizaEstado()
         if self.campoFoco:
             self.campoFoco.setFocus()
         self.PostClickAgrega()
