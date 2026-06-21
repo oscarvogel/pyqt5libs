@@ -37,3 +37,16 @@ def test_abm_source_defines_responsive_form_layout_modes():
     assert "auto" in source
     assert "gridLayoutFormulario" in source
     assert "_agrega_layout_campo" in source
+
+
+def test_abm_source_defines_split_view_mode():
+    source = Path("libs/vistas/ABM.py").read_text(encoding="utf-8")
+
+    assert "view_mode" in source
+    assert "split_sizes" in source
+    assert "QSplitter" in source
+    assert "splitterABM" in source
+    assert "_usa_modo_split" in source
+    assert "_configura_contenedor_principal" in source
+    assert "_mostrar_listado" in source
+    assert "_mostrar_ficha" in source
