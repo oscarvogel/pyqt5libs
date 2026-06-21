@@ -8,6 +8,10 @@ Ejecutar desde la raíz del repo:
 import sys
 from pathlib import Path
 
+ROOT_DIR = Path(__file__).resolve().parents[2]
+if str(ROOT_DIR) not in sys.path:
+    sys.path.insert(0, str(ROOT_DIR))
+
 from peewee import BooleanField, CharField, Model, SqliteDatabase
 from PyQt5.QtWidgets import QApplication
 
@@ -88,11 +92,11 @@ def run_manual_persistence_check(ClientesABM):
 def main():
     initialize_database()
     ClientesABM = build_window_class()
+    app = QApplication(sys.argv)
 
     # Verificación mínima de producción antes de abrir la ventana.
     run_manual_persistence_check(ClientesABM)
 
-    app = QApplication(sys.argv)
     window = ClientesABM()
     window.show()
     sys.exit(app.exec())

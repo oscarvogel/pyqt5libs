@@ -19,6 +19,7 @@ FIELD_TYPE_MAP = {
     "DoubleField": "float",
     "DecimalField": "decimal",
     "CharField": "string",
+    "EmailField": "string",
     "TextField": "text",
     "BooleanField": "boolean",
     "DateField": "date",

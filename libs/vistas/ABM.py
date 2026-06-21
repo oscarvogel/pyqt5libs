@@ -8,7 +8,6 @@ from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QVBoxLayout, QTabWidget, QWidget, QGridLayout, QHBoxLayout, QLineEdit, QCheckBox, QComboBox, \
     QApplication, QMessageBox, QSplitter
 
-from modelos.ModeloBase import reconnect_if_needed
 from pyqt5libs.libs.vistas.VistaBase import VistaBase
 from pyqt5libs.pyqt5libs import Ventanas
 from pyqt5libs.pyqt5libs.BarraProgreso import Avance
@@ -21,6 +20,12 @@ from pyqt5libs.pyqt5libs.Grillas import Grilla
 from pyqt5libs.pyqt5libs.Spinner import Spinner
 from pyqt5libs.pyqt5libs.Validaciones import ValidaConTexto
 from pyqt5libs.pyqt5libs.utiles import inicializar_y_capturar_excepciones, EsVerdadero, imagen
+
+try:
+    from modelos.ModeloBase import reconnect_if_needed
+except ModuleNotFoundError:
+    def reconnect_if_needed(func):
+        return func
 
 
 class ABM(VistaBase):
