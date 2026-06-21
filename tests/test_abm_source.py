@@ -76,9 +76,25 @@ def test_fluent_style_module_exists():
     assert "btnAceptar" in source
 
 
-def test_autoabm_example_applies_fluent_style():
+def test_action_icons_module_exists():
+    source = Path("pyqt5libs/styles/action_icons.py").read_text(encoding="utf-8")
+
+    assert "apply_action_icon" in source
+    assert "QPainter" in source
+    assert "icon_new" in source
+    assert "icon_edit" in source
+    assert "icon_remove" in source
+    assert "icon_save" in source
+    assert "icon_export" in source
+
+
+def test_autoabm_example_applies_fluent_style_and_icons():
     source = Path("examples/autoabm_clientes/main.py").read_text(encoding="utf-8")
 
     assert "fluent_abm_stylesheet" in source
     assert "app.setStyleSheet" in source
     assert "setMinimumSize(1180, 720)" in source
+    assert "apply_action_icon" in source
+    assert "apply_example_icons" in source
+    assert "btnAgregar" in source
+    assert "btnAceptar" in source
