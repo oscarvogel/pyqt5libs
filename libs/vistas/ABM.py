@@ -28,8 +28,8 @@ class ABM(VistaBase):
 
     Mantiene compatibilidad con los ABM existentes, pero incorpora mejoras de
     usabilidad: títulos más claros, búsqueda con limpiar, resumen de registros,
-    estado visual de alta/modificación, conexiones protegidas y atajos de
-    teclado para acelerar la operación diaria.
+    estado visual de alta/modificación, conexiones protegidas, atajos de
+    teclado y distribución responsive opcional para formularios grandes.
     """
 
     controles = {}
@@ -50,11 +50,20 @@ class ABM(VistaBase):
     data = ""
     autoConectaWidgets = True
 
+    # Layout de ficha. Por defecto se mantiene compatible con el armado histórico.
+    # Valores soportados: single, two_columns, auto.
+    form_layout_mode = "single"
+    form_columns = 1
+    form_auto_columns_threshold = 8
+
     def __init__(self, *args, **kwargs):
         VistaBase.__init__(self, *args, **kwargs)
         self.controles = {}
         self._widgets_conectados = False
         self._ultima_cantidad_registros = 0
+        self._form_row = 0
+        self._form_column = 0
+        self._form_fields_count = 0
         self.initUi()
 
     def _nombre_pantalla(self):
@@ -66,6 +75,40 @@ class ABM(VistaBase):
 
     def _titulo_gestion(self):
         return "Gestión de {}".format(self._nombre_pantalla())
+
+    def _usa_layout_responsive(self):
+        return self.form_layout_mode in ("auto", "two_columns")
+
+    def _columnas_formulario(self):
+        if self.form_layout_mode == "two_columns":
+            return max(1, int(self.form_columns or 2))
+        if self.form_layout_mode == "auto":
+            if self._form_fields_count >= self.form_auto_columns_threshold:
+                return 2
+        return 1
+
+    def _agrega_layout_campo(self, boxlayout):
+        if not self._usa_layout_responsive():
+            self.verticalLayoutDatos.addLayout(boxlayout)
+            return
+
+        columnas = self._columnas_formulario()
+        if columnas <= 1:
+            self.verticalLayoutDatos.addLayout(boxlayout)
+            return
+
+        if not hasattr(self, 'gridLayoutFormulario'):
+            self.gridLayoutFormulario = QGridLayout()
+            self.gridLayoutFormulario.setObjectName("gridLayoutFormulario")
+            self.gridLayoutFormulario.setHorizontalSpacing(18)
+            self.gridLayoutFormulario.setVerticalSpacing(8)
+            self.verticalLayoutDatos.addLayout(self.gridLayoutFormulario)
+
+        self.gridLayoutFormulario.addLayout(boxlayout, self._form_row, self._form_column, 1, 1)
+        self._form_column += 1
+        if self._form_column >= columnas:
+            self._form_column = 0
+            self._form_row += 1
 
     def ActualizaEstado(self, texto=None):
         if not hasattr(self, 'lblEstado'):
@@ -483,7 +526,8 @@ class ABM(VistaBase):
             self.controles[nombre] = lineEditNombre
 
         if lAgrega:
-            self.verticalLayoutDatos.addLayout(boxlayout)
+            self._form_fields_count += 1
+            self._agrega_layout_campo(boxlayout)
         return boxlayout
 
     def btnCancelarClicked(self):
