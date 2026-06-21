@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 from pyqt5libs.generators.abm import create_abm_spec_from_model
-from pyqt5libs.generators.persistence import clean_values, convert_value, create_record, update_record
+from pyqt5libs.generators.persistence import clean_values, convert_value, create_record, remove_record, update_record
 from pyqt5libs.generators.validation import validation_rules_for_fields
 
 
@@ -64,9 +64,14 @@ class FakeRecord:
     def __init__(self, **values):
         self.__dict__.update(values)
         self.saved = False
+        self.removed = False
 
     def save(self):
         self.saved = True
+        return 1
+
+    def delete_instance(self):
+        self.removed = True
         return 1
 
 
@@ -140,3 +145,20 @@ def test_update_record_sets_values_and_saves():
     assert record.nombre == "Nuevo"
     assert record.edad == 53
     assert record.saved is True
+
+
+def test_remove_record_uses_delete_instance():
+    record = FakeRecord(nombre="Oscar")
+
+    result = remove_record(record)
+
+    assert result.ok
+    assert result.deleted_count == 1
+    assert record.removed is True
+
+
+def test_remove_record_handles_missing_record():
+    result = remove_record(None)
+
+    assert not result.ok
+    assert result.message == "No hay registro para borrar"
