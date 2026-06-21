@@ -50,8 +50,6 @@ spec = create_abm_spec_from_model(Cliente)
 
 ## Fase 6: clase ABM generada
 
-La sexta fase crea una clase dinámica compatible con el ABM histórico.
-
 ```python
 from pyqt5libs.generators.abm import create_abm_from_model
 
@@ -66,21 +64,37 @@ ventana = ClientesABM()
 ventana.show()
 ```
 
-La clase generada configura automáticamente:
+La clase generada configura automáticamente `model`, `titulo`, `camposAMostrar`, `ordenBusqueda`, `campoClave`, `view_mode`, `form_layout_mode`, `form_columns` y `ArmaCarga()`.
 
-- `model`
-- `titulo`
-- `camposAMostrar`
-- `ordenBusqueda`
-- `campoClave`
-- `view_mode`
-- `form_layout_mode`
-- `form_columns`
-- `ArmaCarga()`
+## AutoABM Producción: validaciones automáticas
+
+El AutoABM genera reglas de validación desde la metadata de campos.
+
+```python
+ClientesABM = create_abm_from_model(Cliente)
+ventana = ClientesABM()
+
+result = ventana.ValidateValues({
+    "nombre": "Oscar",
+    "email": "oscar@example.com",
+})
+
+if not result.ok:
+    print(result.first_error().message)
+```
+
+Reglas iniciales:
+
+- requerido
+- longitud máxima
+- entero
+- numérico
+- email si el campo parece email/correo
+- CUIT si el campo se llama cuit/cuil
 
 ## Próximas fases
 
-1. Mejorar creación real de controles por tipo.
-2. Cargar combos para claves foráneas.
-3. Validaciones automáticas antes de guardar.
+1. Conectar validación automáticamente antes de guardar.
+2. Crear y editar datos desde la pantalla generada.
+3. Borrado automático.
 4. Ejemplo funcional con modelo Peewee real.

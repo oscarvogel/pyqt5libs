@@ -30,6 +30,17 @@ class CharField:
     choices = None
 
 
+class EmailField:
+    name = "email"
+    column_name = "email"
+    verbose_name = "Email"
+    null = True
+    primary_key = False
+    default = None
+    max_length = 120
+    choices = None
+
+
 class BooleanField:
     name = "activo"
     column_name = "activo"
@@ -43,7 +54,7 @@ class BooleanField:
 
 class ModelMeta:
     table_name = "clientes"
-    sorted_fields = [AutoField(), CharField(), BooleanField()]
+    sorted_fields = [AutoField(), CharField(), EmailField(), BooleanField()]
 
 
 class Cliente:
@@ -58,10 +69,6 @@ class FakeBaseABM:
         self.entries.append((nombre, kwargs))
 
 
-class DummyControl:
-    pass
-
-
 def test_default_title_for_model_uses_table_name():
     assert default_title_for_model(Cliente) == "Clientes"
 
@@ -72,18 +79,18 @@ def test_create_abm_spec_from_model_builds_complete_spec():
     assert spec.title == "Clientes"
     assert spec.view_mode == "split"
     assert spec.form_columns == 2
-    assert [field.name for field in spec.fields] == ["id", "nombre", "activo"]
-    assert [widget.widget_type for widget in spec.widgets] == ["spin_box", "line_edit", "check_box"]
+    assert [field.name for field in spec.fields] == ["id", "nombre", "email", "activo"]
+    assert [widget.widget_type for widget in spec.widgets] == ["spin_box", "line_edit", "line_edit", "check_box"]
     assert spec.form.columns == 2
     assert spec.list.primary_key == "id"
-    assert spec.list.searchable_fields == ["nombre"]
+    assert spec.list.searchable_fields == ["nombre", "email"]
     assert spec.list.columns[0].visible is False
 
 
 def test_create_abm_spec_from_model_can_exclude_read_only_fields_from_form():
     spec = create_abm_spec_from_model(Cliente, include_read_only_fields=False)
 
-    assert [field.name for field in spec.form.fields] == ["nombre", "activo"]
+    assert [field.name for field in spec.form.fields] == ["nombre", "email", "activo"]
 
 
 def test_create_abm_spec_as_dict():
@@ -108,9 +115,22 @@ def test_create_abm_class_from_spec_configures_legacy_abm_attributes():
     assert cls.view_mode == "split"
     assert cls.form_layout_mode == "two_columns"
     assert cls.form_columns == 2
-    assert [field.name for field in cls.camposAMostrar] == ["id", "nombre", "activo"]
-    assert [field.name for field in cls.ordenBusqueda] == ["nombre"]
+    assert [field.name for field in cls.camposAMostrar] == ["id", "nombre", "email", "activo"]
+    assert [field.name for field in cls.ordenBusqueda] == ["nombre", "email"]
     assert cls.campoClave.name == "id"
+    assert [rule.name for rule in cls.validation_rules] == ["required", "max_length", "max_length", "email"]
+
+
+def test_generated_abm_validates_values():
+    cls = create_abm_class_from_model(Cliente, base_class=FakeBaseABM, class_name="ClientesABM")
+    instance = cls()
+
+    invalid_result = instance.ValidateValues({"nombre": "", "email": "mal"})
+    valid_result = instance.ValidateValues({"nombre": "Oscar", "email": "oscar@example.com"})
+
+    assert not invalid_result.ok
+    assert [error.field_name for error in invalid_result.errors] == ["nombre", "email"]
+    assert valid_result.ok
 
 
 def test_create_abm_class_from_model_returns_generated_class():

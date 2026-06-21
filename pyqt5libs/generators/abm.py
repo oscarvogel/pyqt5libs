@@ -10,6 +10,7 @@ from typing import Any, Optional
 from pyqt5libs.generators.forms import FormSpec, build_form_spec
 from pyqt5libs.generators.lists import ListSpec, build_list_spec
 from pyqt5libs.generators.peewee import inspect_model
+from pyqt5libs.generators.validation import validate_values, validation_rules_for_fields
 from pyqt5libs.generators.widgets import widget_specs_from_fields
 
 
@@ -167,6 +168,7 @@ def create_abm_class_from_spec(spec: ABMSpec, *, base_class=None, class_name: Op
     base_class = base_class or _default_abm_base_class()
     generated_name = class_name or "{}ABM".format(str(spec.title).replace(" ", ""))
     primary_key = _primary_key_raw_field(spec)
+    validation_rules = validation_rules_for_fields(spec.fields)
 
     def ArmaCarga(self):
         for form_field in spec.form.fields:
@@ -179,9 +181,13 @@ def create_abm_class_from_spec(spec: ABMSpec, *, base_class=None, class_name: Op
                 enabled=not form_field.read_only,
             )
 
+    def ValidateValues(self, values):
+        return validate_values(values, self.validation_rules)
+
     attrs = {
         "__doc__": "ABM generado automáticamente para {}.".format(spec.title),
         "generated_spec": spec,
+        "validation_rules": validation_rules,
         "model": spec.model,
         "titulo": spec.title,
         "view_mode": spec.view_mode,
@@ -192,6 +198,7 @@ def create_abm_class_from_spec(spec: ABMSpec, *, base_class=None, class_name: Op
         "campoClave": primary_key,
         "autoincremental": bool(primary_key),
         "ArmaCarga": ArmaCarga,
+        "ValidateValues": ValidateValues,
     }
 
     return type(generated_name, (base_class,), attrs)
