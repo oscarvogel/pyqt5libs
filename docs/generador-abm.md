@@ -122,8 +122,24 @@ if result.ok:
 
 `CanRemove()` puede sobrescribirse en una clase hija para aplicar reglas de negocio.
 
+## Ejemplo funcional completo
+
+Hay un ejemplo completo en:
+
+```text
+examples/autoabm_clientes/
+```
+
+Ejecutar desde la raíz del proyecto:
+
+```bash
+python examples/autoabm_clientes/main.py
+```
+
+El ejemplo usa Peewee, SQLite y PyQt5. Crea la base `clientes.db`, inserta datos iniciales y abre una ventana AutoABM generada desde el modelo `Cliente`.
+
 ## Próximas fases
 
 1. Conexión directa entre controles visuales y valores del formulario.
-2. Ejemplo funcional con modelo Peewee real.
-3. Relaciones automáticas con combos.
+2. Relaciones automáticas con combos.
+3. Búsqueda/filtros automáticos.
