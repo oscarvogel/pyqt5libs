@@ -68,12 +68,7 @@ La clase generada configura automáticamente `model`, `titulo`, `camposAMostrar`
 
 ## AutoABM Producción: validaciones automáticas
 
-El AutoABM genera reglas de validación desde la metadata de campos.
-
 ```python
-ClientesABM = create_abm_from_model(Cliente)
-ventana = ClientesABM()
-
 result = ventana.ValidateValues({
     "nombre": "Oscar",
     "email": "oscar@example.com",
@@ -92,9 +87,30 @@ Reglas iniciales:
 - email si el campo parece email/correo
 - CUIT si el campo se llama cuit/cuil
 
+## AutoABM Producción: creación y edición
+
+La clase generada expone métodos para crear y modificar registros.
+
+```python
+result = ventana.CreateRecord({
+    "nombre": "Oscar",
+    "email": "oscar@example.com",
+})
+
+if result.ok:
+    print(result.record)
+```
+
+```python
+result = ventana.UpdateRecord(cliente, {
+    "nombre": "Oscar actualizado",
+})
+```
+
+Estos métodos validan antes de guardar y convierten tipos básicos como enteros, decimales, booleanos y strings vacíos.
+
 ## Próximas fases
 
-1. Conectar validación automáticamente antes de guardar.
-2. Crear y editar datos desde la pantalla generada.
-3. Borrado automático.
-4. Ejemplo funcional con modelo Peewee real.
+1. Borrado automático.
+2. Conexión directa entre controles visuales y valores del formulario.
+3. Ejemplo funcional con modelo Peewee real.
