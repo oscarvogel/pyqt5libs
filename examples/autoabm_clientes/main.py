@@ -16,6 +16,7 @@ from peewee import BooleanField, CharField, Model, SqliteDatabase
 from PyQt5.QtWidgets import QApplication
 
 from pyqt5libs.generators.abm import create_abm_from_model
+from pyqt5libs.styles.fluent import fluent_abm_stylesheet
 
 BASE_DIR = Path(__file__).resolve().parent
 DB_PATH = BASE_DIR / "clientes.db"
@@ -93,11 +94,13 @@ def main():
     initialize_database()
     ClientesABM = build_window_class()
     app = QApplication(sys.argv)
+    app.setStyleSheet(fluent_abm_stylesheet())
 
     # Verificación mínima de producción antes de abrir la ventana.
     run_manual_persistence_check(ClientesABM)
 
     window = ClientesABM()
+    window.setMinimumSize(1180, 720)
     window.show()
     sys.exit(app.exec())
 
