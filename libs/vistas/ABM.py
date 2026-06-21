@@ -343,6 +343,8 @@ class ABM(VistaBase):
     def ArmaTabla(self, *args, **kwargs):
         self.tableView.setRowCount(0)
         self.avance.setVisible(True)
+        sorting_enabled = self.tableView.isSortingEnabled()
+        self.tableView.setSortingEnabled(False)
         try:
             if self.data:
                 data = self.data
@@ -380,10 +382,48 @@ class ABM(VistaBase):
                     else:
                         color = self.DevuelveColor(d)
                 self.tableView.AgregaItem(item, backgroundColor=color)
+                self._guarda_id_fila_tabla(d)
             self._ultima_cantidad_registros = avance
             self.ActualizaResumen(avance, total)
         finally:
+            self.tableView.setSortingEnabled(sorting_enabled)
             self.avance.setVisible(False)
+
+    def _guarda_id_fila_tabla(self, data):
+        if not self.campoClave:
+            return
+        record_id = data.get(self.campoClave.name)
+        if record_id is None:
+            record_id = data.get(self.campoClave.column_name)
+        if record_id is None:
+            return
+        fila = self.tableView.rowCount() - 1
+        for col in range(self.tableView.columnCount()):
+            item = self.tableView.item(fila, col)
+            if item is not None:
+                item.setData(Qt.UserRole, record_id)
+
+    def _id_registro_seleccionado(self):
+        fila = self.tableView.currentRow()
+        if fila == -1:
+            return None
+        item = self.tableView.item(fila, 0)
+        if item is not None:
+            record_id = item.data(Qt.UserRole)
+            if record_id is not None:
+                return record_id
+        if not self.campoClave:
+            return None
+        posibles_columnas = [
+            self.campoClave.verbose_name,
+            self.campoClave.column_name.capitalize(),
+            self.campoClave.column_name,
+            self.campoClave.name,
+        ]
+        for columna in posibles_columnas:
+            if columna and columna in self.tableView.cabeceras:
+                return self.tableView.ObtenerItem(fila=fila, col=columna)
+        return None
 
     def ArmaBusqueda(self, data):
         if self.ordenBusqueda:
@@ -529,7 +569,10 @@ class ABM(VistaBase):
             return
 
         if Ventanas.showConfirmation("Sistema", "¿Desea borrar el registro seleccionado?") == QMessageBox.Ok:
-            id = self.tableView.ObtenerItem(fila=self.tableView.currentRow(), col=self.campoClave.column_name.capitalize())
+            id = self._id_registro_seleccionado()
+            if id is None:
+                Ventanas.showAlert("Sistema", "No se pudo identificar el registro seleccionado")
+                return
             data = self.model.get_by_id(id)
             data.delete_instance()
             self.ArmaTabla()
@@ -546,10 +589,12 @@ class ABM(VistaBase):
             Ventanas.showAlert("Sistema", "No se pudo identificar el registro seleccionado")
             return
 
-        id = self.tableView.ObtenerItem(fila=self.tableView.currentRow(),
-                                        col=self.campoClave.verbose_name if self.campoClave.verbose_name else
-                                        self.campoClave.column_name.capitalize())
-        id = id.replace('.', '')
+        id = self._id_registro_seleccionado()
+        if id is None:
+            Ventanas.showAlert("Sistema", "No se pudo identificar el registro seleccionado")
+            return
+        if isinstance(id, str):
+            id = id.replace('.', '')
         self.idtabla = id
 
         if self.campoClave.field_type in ['VARCHAR']:

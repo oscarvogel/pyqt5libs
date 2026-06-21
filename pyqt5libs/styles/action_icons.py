@@ -17,6 +17,7 @@ def _icon_pixmap(color=_DEFAULT_COLOR, size=20):
     pixmap.fill(Qt.transparent)
     painter = QPainter(pixmap)
     painter.setRenderHint(QPainter.Antialiasing)
+    painter.scale(size / 20, size / 20)
     pen = QPen(QColor(color), 1.8)
     pen.setCapStyle(Qt.RoundCap)
     pen.setJoinStyle(Qt.RoundJoin)
@@ -30,15 +31,15 @@ def _finish(pixmap, painter):
     return QIcon(pixmap)
 
 
-def icon_new(color=_PRIMARY_COLOR):
-    pixmap, painter = _icon_pixmap(color)
+def icon_new(color=_PRIMARY_COLOR, size=20):
+    pixmap, painter = _icon_pixmap(color, size)
     painter.drawLine(10, 4, 10, 16)
     painter.drawLine(4, 10, 16, 10)
     return _finish(pixmap, painter)
 
 
-def icon_edit(color=_DEFAULT_COLOR):
-    pixmap, painter = _icon_pixmap(color)
+def icon_edit(color=_DEFAULT_COLOR, size=20):
+    pixmap, painter = _icon_pixmap(color, size)
     painter.drawLine(6, 14, 14, 6)
     painter.drawLine(12, 4, 16, 8)
     painter.drawLine(5, 15, 4, 17)
@@ -46,8 +47,8 @@ def icon_edit(color=_DEFAULT_COLOR):
     return _finish(pixmap, painter)
 
 
-def icon_remove(color=_DANGER_COLOR):
-    pixmap, painter = _icon_pixmap(color)
+def icon_remove(color=_DANGER_COLOR, size=20):
+    pixmap, painter = _icon_pixmap(color, size)
     painter.drawLine(6, 7, 14, 7)
     painter.drawLine(8, 7, 8, 16)
     painter.drawLine(12, 7, 12, 16)
@@ -57,8 +58,8 @@ def icon_remove(color=_DANGER_COLOR):
     return _finish(pixmap, painter)
 
 
-def icon_export(color=_DEFAULT_COLOR):
-    pixmap, painter = _icon_pixmap(color)
+def icon_export(color=_DEFAULT_COLOR, size=20):
+    pixmap, painter = _icon_pixmap(color, size)
     painter.drawRect(5, 5, 10, 11)
     painter.drawLine(8, 9, 12, 9)
     painter.drawLine(8, 12, 12, 12)
@@ -68,15 +69,15 @@ def icon_export(color=_DEFAULT_COLOR):
     return _finish(pixmap, painter)
 
 
-def icon_close(color=_DEFAULT_COLOR):
-    pixmap, painter = _icon_pixmap(color)
+def icon_close(color=_DEFAULT_COLOR, size=20):
+    pixmap, painter = _icon_pixmap(color, size)
     painter.drawLine(6, 6, 14, 14)
     painter.drawLine(14, 6, 6, 14)
     return _finish(pixmap, painter)
 
 
-def icon_save(color=_PRIMARY_COLOR):
-    pixmap, painter = _icon_pixmap(color)
+def icon_save(color=_PRIMARY_COLOR, size=20):
+    pixmap, painter = _icon_pixmap(color, size)
     painter.drawRoundedRect(QRectF(5, 4, 10, 12), 1.5, 1.5)
     painter.drawLine(7, 4, 13, 4)
     painter.drawLine(7, 13, 13, 13)
@@ -84,12 +85,12 @@ def icon_save(color=_PRIMARY_COLOR):
     return _finish(pixmap, painter)
 
 
-def icon_cancel(color=_DEFAULT_COLOR):
-    return icon_close(color)
+def icon_cancel(color=_DEFAULT_COLOR, size=20):
+    return icon_close(color, size)
 
 
-def icon_refresh(color=_DEFAULT_COLOR):
-    pixmap, painter = _icon_pixmap(color)
+def icon_refresh(color=_DEFAULT_COLOR, size=20):
+    pixmap, painter = _icon_pixmap(color, size)
     painter.drawArc(QRectF(5, 5, 10, 10), 30 * 16, 280 * 16)
     painter.drawLine(14, 5, 15, 9)
     painter.drawLine(14, 5, 11, 6)
@@ -111,8 +112,10 @@ def apply_action_icon(button, action_name):
     factory = icons.get(action_name)
     if not factory:
         return button
-    button.setIcon(factory())
-    button.setIconSize(button.iconSize())
+    icon_size = button.iconSize()
+    size = max(icon_size.width(), icon_size.height(), 20)
+    button.setIcon(factory(size=size))
+    button.setIconSize(icon_size)
     return button
 
 
