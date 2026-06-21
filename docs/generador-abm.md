@@ -40,50 +40,23 @@ fields = inspect_model(Cliente)
 specs = widget_specs_from_fields(fields)
 ```
 
-Cada widget se representa como `WidgetSpec`:
+Cada widget se representa como `WidgetSpec`.
+
+## Fase 3: especificación de formulario
+
+La tercera fase arma una estructura neutral de formulario desde `WidgetSpec`.
 
 ```python
-WidgetSpec(
-    field_name="nombre",
-    widget_type="line_edit",
-    label="Nombre",
-    required=True,
-    read_only=False,
-)
+from pyqt5libs.generators.forms import build_form_spec
+
+form = build_form_spec(specs, columns=2)
 ```
 
-## Tipos básicos detectados
-
-- `integer`
-- `float`
-- `decimal`
-- `string`
-- `text`
-- `boolean`
-- `date`
-- `datetime`
-- `time`
-- `foreign_key`
-- `unknown`
-
-## Mapeo inicial a widgets
-
-- `string` -> `line_edit`
-- `text` -> `text_edit`
-- `integer` -> `spin_box`
-- `float` -> `double_spin_box`
-- `decimal` -> `double_spin_box`
-- `boolean` -> `check_box`
-- `date` -> `date_edit`
-- `datetime` -> `datetime_edit`
-- `time` -> `time_edit`
-- `foreign_key` -> `combo_box`
-- `unknown` -> `line_edit`
+Esto permite conocer el orden, fila, columna, tipo de widget y opciones de cada campo antes de crear widgets PyQt reales.
 
 ## Próximas fases
 
-1. Instanciar widgets PyQt desde `WidgetSpec`.
-2. Generación automática de formulario.
-3. Generación automática de listado.
-4. Validaciones automáticas.
-5. ABM completo desde modelo.
+1. Instanciar widgets PyQt desde `FormSpec`.
+2. Generación automática de listado.
+3. Validaciones automáticas.
+4. ABM completo desde modelo.
