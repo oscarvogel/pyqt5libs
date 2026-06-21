@@ -1,7 +1,7 @@
 """Persistencia automática para AutoABM.
 
-Funciones pequeñas y testeables para crear y actualizar registros usando la
-metadata generada por `ABMSpec`.
+Funciones pequeñas y testeables para crear, actualizar y borrar registros usando
+la metadata generada por `ABMSpec`.
 """
 
 from dataclasses import dataclass
@@ -19,6 +19,17 @@ class SaveResult:
     record: Any = None
     validation: Optional[FormValidationResult] = None
     error: Optional[BaseException] = None
+
+
+@dataclass(frozen=True)
+class DeleteResult:
+    """Resultado de borrar un registro."""
+
+    ok: bool
+    record: Any = None
+    deleted_count: int = 0
+    error: Optional[BaseException] = None
+    message: str = ""
 
 
 def _field_map(spec):
@@ -90,10 +101,32 @@ def update_record(spec, record, values: Dict[str, Any], validation_rules=None) -
         return SaveResult(ok=False, record=record, validation=validation, error=exc)
 
 
+def delete_record(record) -> DeleteResult:
+    """Borra un registro existente.
+
+    Usa `delete_instance()` si existe; si no, intenta `delete()`.
+    """
+    if record is None:
+        return DeleteResult(ok=False, message="No hay registro para borrar")
+
+    try:
+        if hasattr(record, "delete_instance"):
+            deleted_count = record.delete_instance()
+        elif hasattr(record, "delete"):
+            deleted_count = record.delete()
+        else:
+            return DeleteResult(ok=False, record=record, message="El registro no permite borrado automático")
+        return DeleteResult(ok=True, record=record, deleted_count=deleted_count or 0)
+    except Exception as exc:
+        return DeleteResult(ok=False, record=record, error=exc)
+
+
 __all__ = [
     "SaveResult",
+    "DeleteResult",
     "convert_value",
     "clean_values",
     "create_record",
     "update_record",
+    "delete_record",
 ]
