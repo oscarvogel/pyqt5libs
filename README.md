@@ -1,20 +1,42 @@
 # pyqt5libs
 
-Biblioteca de utilidades y extensiones para proyectos desarrollados con PyQt5.
+Biblioteca de utilidades y componentes reutilizables para aplicaciones de escritorio desarrolladas con PyQt5.
 
-## Características
+## Estado del proyecto
 
-- Conjunto de librerías para facilitar el desarrollo con PyQt5.
-- Componentes reutilizables y utilidades para interfaces gráficas.
-- Ejemplos y documentación incluidos.
+El proyecto está en etapa de ordenamiento y modernización. Ya puede instalarse localmente como paquete Python para desarrollo, pero todavía no debe considerarse una API pública estable completa.
 
-## Instalación
+La estructura histórica del repositorio se mantiene por compatibilidad. La estructura objetivo está documentada en `docs/estructura-paquete.md`.
 
-Para usar el paquete durante el desarrollo:
+## Objetivo
+
+Centralizar utilidades repetidas de aplicaciones PyQt5 administrativas:
+
+- vistas base;
+- pantallas de gestión;
+- grillas y tablas;
+- formularios y validaciones;
+- combos;
+- diálogos y mensajes;
+- estilos QSS;
+- configuración;
+- exportación de datos.
+
+## Instalación para desarrollo
+
+Desde la raíz del repositorio:
 
 ```bash
 pip install -e .
 ```
+
+Verificación rápida:
+
+```bash
+python -c "import pyqt5libs; print(pyqt5libs.__version__)"
+```
+
+## Instalación desde PyPI
 
 Cuando el paquete esté publicado, podrá instalarse con:
 
@@ -22,20 +44,34 @@ Cuando el paquete esté publicado, podrá instalarse con:
 pip install pyqt5libs
 ```
 
-## Uso básico
+## Uso básico actual
+
+Por ahora la API pública mínima expone la versión del paquete:
 
 ```python
 import pyqt5libs
+
+print(pyqt5libs.__version__)
 ```
+
+Los módulos históricos existentes serán ordenados progresivamente en módulos públicos documentados.
 
 ## Requisitos
 
 - Python 3.8 o superior
 - PyQt5 5.15 o superior
 
+## Roadmap inicial
+
+- Ordenar estructura pública del paquete.
+- Agregar tests y CI.
+- Mejorar la vista de gestión existente.
+- Agregar helpers de diálogos, validaciones, combos y tablas.
+- Documentar ejemplos reales por módulo.
+
 ## Contribuir
 
-¡Las contribuciones son bienvenidas! Por favor, abre un issue o pull request.
+Las contribuciones son bienvenidas mediante issues o pull requests.
 
 ## Licencia
 
