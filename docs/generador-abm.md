@@ -122,6 +122,19 @@ if result.ok:
 
 `CanRemove()` puede sobrescribirse en una clase hija para aplicar reglas de negocio.
 
+## AutoABM UX: formulario responsive real
+
+El formulario del panel derecho usa un contenedor con scroll, panel interno y controles expansibles.
+
+Incluye:
+
+- `QScrollArea` para formularios largos;
+- `formPanelABM` como contenedor del detalle;
+- campos con label superior en modo responsive;
+- ancho mínimo configurable con `form_field_min_width`;
+- botones Guardar/Cancelar con ancho expansible;
+- márgenes definidos por `form_panel_margins`.
+
 ## Ejemplo funcional completo
 
 Hay un ejemplo completo en:
@@ -140,6 +153,6 @@ El ejemplo usa Peewee, SQLite y PyQt5. Crea la base `clientes.db`, inserta datos
 
 ## Próximas fases
 
-1. Conexión directa entre controles visuales y valores del formulario.
-2. Relaciones automáticas con combos.
-3. Búsqueda/filtros automáticos.
+1. Vista master/detail moderna.
+2. Toolbar moderna.
+3. Tabla moderna.

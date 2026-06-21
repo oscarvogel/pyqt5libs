@@ -6,7 +6,7 @@ import logging
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QVBoxLayout, QTabWidget, QWidget, QGridLayout, QHBoxLayout, QLineEdit, QCheckBox, QComboBox, \
-    QApplication, QMessageBox, QSplitter
+    QApplication, QMessageBox, QSplitter, QSizePolicy, QScrollArea, QFrame
 
 from pyqt5libs.libs.vistas.VistaBase import VistaBase
 from pyqt5libs.pyqt5libs import Ventanas
@@ -58,13 +58,16 @@ class ABM(VistaBase):
     # Contenedor principal. `tabs` conserva el comportamiento histórico.
     # `split` muestra listado y ficha al mismo tiempo.
     view_mode = "tabs"
-    split_sizes = (520, 380)
+    split_sizes = (520, 420)
 
     # Layout de ficha. Por defecto se mantiene compatible con el armado histórico.
     # Valores soportados: single, two_columns, auto.
     form_layout_mode = "single"
     form_columns = 1
     form_auto_columns_threshold = 8
+    form_field_min_width = 220
+    form_field_spacing = 16
+    form_panel_margins = (22, 18, 22, 18)
 
     def __init__(self, *args, **kwargs):
         VistaBase.__init__(self, *args, **kwargs)
@@ -97,7 +100,7 @@ class ABM(VistaBase):
             return max(1, int(self.form_columns or 2))
         if self.form_layout_mode == "auto":
             if self._form_fields_count >= self.form_auto_columns_threshold:
-                return 2
+                return max(2, int(self.form_columns or 2))
         return 1
 
     def _agrega_layout_campo(self, boxlayout):
@@ -113,8 +116,11 @@ class ABM(VistaBase):
         if not hasattr(self, 'gridLayoutFormulario'):
             self.gridLayoutFormulario = QGridLayout()
             self.gridLayoutFormulario.setObjectName("gridLayoutFormulario")
-            self.gridLayoutFormulario.setHorizontalSpacing(18)
-            self.gridLayoutFormulario.setVerticalSpacing(8)
+            self.gridLayoutFormulario.setContentsMargins(0, 6, 0, 6)
+            self.gridLayoutFormulario.setHorizontalSpacing(self.form_field_spacing)
+            self.gridLayoutFormulario.setVerticalSpacing(14)
+            for column in range(columnas):
+                self.gridLayoutFormulario.setColumnStretch(column, 1)
             self.verticalLayoutDatos.addLayout(self.gridLayoutFormulario)
 
         self.gridLayoutFormulario.addLayout(boxlayout, self._form_row, self._form_column, 1, 1)
@@ -122,6 +128,17 @@ class ABM(VistaBase):
         if self._form_column >= columnas:
             self._form_column = 0
             self._form_row += 1
+
+    def _configura_control_formulario(self, control):
+        if not hasattr(control, 'setSizePolicy'):
+            return
+        control.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        if hasattr(control, 'setMinimumWidth'):
+            control.setMinimumWidth(int(self.form_field_min_width))
+
+    def _configura_boton_formulario(self, boton):
+        boton.setMinimumHeight(36)
+        boton.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
     def _configura_contenedor_principal(self):
         if self._usa_modo_split():
@@ -343,11 +360,29 @@ class ABM(VistaBase):
     @reconnect_if_needed
     @inicializar_y_capturar_excepciones
     def ArmaDatos(self, *args, **kwargs):
-        self.verticalLayoutDatos = QVBoxLayout(self.tabDetalle)
+        self.layoutDetalle = QVBoxLayout(self.tabDetalle)
+        self.layoutDetalle.setContentsMargins(0, 0, 0, 0)
+        self.layoutDetalle.setSpacing(0)
+
+        self.scrollDetalle = QScrollArea(self.tabDetalle)
+        self.scrollDetalle.setObjectName("scrollDetalleABM")
+        self.scrollDetalle.setWidgetResizable(True)
+        self.scrollDetalle.setFrameShape(QFrame.NoFrame)
+        self.layoutDetalle.addWidget(self.scrollDetalle)
+
+        self.formPanel = QFrame()
+        self.formPanel.setObjectName("formPanelABM")
+        self.formPanel.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        self.scrollDetalle.setWidget(self.formPanel)
+
+        self.verticalLayoutDatos = QVBoxLayout(self.formPanel)
         self.verticalLayoutDatos.setObjectName("verticalLayoutDatos")
+        self.verticalLayoutDatos.setContentsMargins(*self.form_panel_margins)
+        self.verticalLayoutDatos.setSpacing(14)
 
         self.lblEstado = Etiqueta(texto="Seleccione un registro o agregue uno nuevo")
         self.lblEstado.setObjectName("lblEstado")
+        self.lblEstado.setWordWrap(True)
         self.verticalLayoutDatos.addWidget(self.lblEstado)
 
         self.ArmaCarga()
@@ -355,18 +390,24 @@ class ABM(VistaBase):
 
         self.grdBotones = QGridLayout()
         self.grdBotones.setObjectName("grdBotones")
+        self.grdBotones.setContentsMargins(0, 10, 0, 0)
+        self.grdBotones.setHorizontalSpacing(10)
         self.AgregaBotonesDatos()
 
         self.btnAceptar = Boton(self.tabDetalle, texto='Guardar', imagen=imagen('save.png'), tamanio=QSize(32, 32),
                                 tooltip="Guardar cambios (F10)")
         self.btnAceptar.setObjectName("btnAceptar")
+        self._configura_boton_formulario(self.btnAceptar)
         self.grdBotones.addWidget(self.btnAceptar, 0, self.colBoton, 1, 1)
+        self.grdBotones.setColumnStretch(self.colBoton, 1)
 
         self.colBoton += 1
         self.btnCancelar = Boton(self.tabDetalle, texto='Cancelar', imagen=imagen('close.png'), tamanio=QSize(32, 32),
                                  tooltip="Cancelar y volver al listado (Esc)")
         self.btnCancelar.setObjectName("btnCancelar")
+        self._configura_boton_formulario(self.btnCancelar)
         self.grdBotones.addWidget(self.btnCancelar, 0, self.colBoton, 1, 1)
+        self.grdBotones.setColumnStretch(self.colBoton, 1)
         self.verticalLayoutDatos.addLayout(self.grdBotones)
         self.btnCancelar.clicked.connect(self.btnCancelarClicked)
         self.btnAceptar.clicked.connect(self.btnAceptarClicked)
@@ -525,7 +566,7 @@ class ABM(VistaBase):
         if not nombre:
             return
         if not boxlayout:
-            boxlayout = QHBoxLayout()
+            boxlayout = QVBoxLayout() if self._usa_layout_responsive() else QHBoxLayout()
             lAgrega = True
         else:
             lAgrega = False
@@ -544,6 +585,10 @@ class ABM(VistaBase):
 
         labelNombre = Etiqueta(texto=texto)
         labelNombre.setObjectName("labelNombre")
+        if self._usa_layout_responsive():
+            labelNombre.setAlignment(Qt.AlignLeft | Qt.AlignBottom)
+            boxlayout.setContentsMargins(0, 0, 0, 0)
+            boxlayout.setSpacing(5)
         boxlayout.addWidget(labelNombre)
 
         if 'control' in kwargs:
@@ -558,6 +603,8 @@ class ABM(VistaBase):
             lineEditNombre.setInputMask(kwargs['inputmask'])
 
         lineEditNombre.setObjectName(nombre)
+        if self._usa_layout_responsive():
+            self._configura_control_formulario(lineEditNombre)
         if 'layout' in kwargs:
             boxlayout.addLayout(lineEditNombre)
         else:

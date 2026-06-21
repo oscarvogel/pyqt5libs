@@ -39,6 +39,20 @@ def test_abm_source_defines_responsive_form_layout_modes():
     assert "_agrega_layout_campo" in source
 
 
+def test_abm_source_defines_real_responsive_form_container():
+    source = Path("libs/vistas/ABM.py").read_text(encoding="utf-8")
+
+    assert "QScrollArea" in source
+    assert "QSizePolicy" in source
+    assert "scrollDetalleABM" in source
+    assert "formPanelABM" in source
+    assert "form_field_min_width" in source
+    assert "_configura_control_formulario" in source
+    assert "_configura_boton_formulario" in source
+    assert "setMinimumWidth" in source
+    assert "setWidgetResizable" in source
+
+
 def test_abm_source_defines_split_view_mode():
     source = Path("libs/vistas/ABM.py").read_text(encoding="utf-8")
 
