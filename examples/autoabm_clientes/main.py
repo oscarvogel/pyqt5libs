@@ -16,6 +16,7 @@ from peewee import BooleanField, CharField, Model, SqliteDatabase
 from PyQt5.QtWidgets import QApplication
 
 from pyqt5libs.generators.abm import create_abm_from_model
+from pyqt5libs.styles.action_icons import apply_action_icon
 from pyqt5libs.styles.fluent import fluent_abm_stylesheet
 
 BASE_DIR = Path(__file__).resolve().parent
@@ -56,6 +57,24 @@ def build_window_class():
         visible_primary_key=False,
         include_read_only_fields=False,
     )
+
+
+def apply_example_icons(window):
+    """Aplica iconos modernos a los botones estándar del ejemplo."""
+    action_by_object_name = {
+        "btnAgregar": "new",
+        "btnEditar": "edit",
+        "btnBorrar": "remove",
+        "btnExcel": "export",
+        "btnCerrar": "close",
+        "btnAceptar": "save",
+        "btnCancelar": "cancel",
+        "btnLimpiarBusqueda": "close",
+    }
+    for object_name, action_name in action_by_object_name.items():
+        button = window.findChild(type(window.btnAgregar), object_name)
+        if button is not None:
+            apply_action_icon(button, action_name)
 
 
 def run_manual_persistence_check(ClientesABM):
@@ -101,6 +120,7 @@ def main():
 
     window = ClientesABM()
     window.setMinimumSize(1180, 720)
+    apply_example_icons(window)
     window.show()
     sys.exit(app.exec())
 
