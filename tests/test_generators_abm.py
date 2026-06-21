@@ -59,6 +59,22 @@ class ModelMeta:
 
 class Cliente:
     _meta = ModelMeta()
+    created_values = None
+
+    @classmethod
+    def create(cls, **values):
+        cls.created_values = values
+        return FakeRecord(**values)
+
+
+class FakeRecord:
+    def __init__(self, **values):
+        self.__dict__.update(values)
+        self.saved = False
+
+    def save(self):
+        self.saved = True
+        return 1
 
 
 class FakeBaseABM:
@@ -131,6 +147,30 @@ def test_generated_abm_validates_values():
     assert not invalid_result.ok
     assert [error.field_name for error in invalid_result.errors] == ["nombre", "email"]
     assert valid_result.ok
+
+
+def test_generated_abm_creates_record():
+    cls = create_abm_class_from_model(Cliente, base_class=FakeBaseABM, class_name="ClientesABM")
+    instance = cls()
+
+    result = instance.CreateRecord({"nombre": "Oscar", "email": "oscar@example.com", "activo": "si"})
+
+    assert result.ok
+    assert result.record.nombre == "Oscar"
+    assert Cliente.created_values["activo"] is True
+
+
+def test_generated_abm_updates_record():
+    cls = create_abm_class_from_model(Cliente, base_class=FakeBaseABM, class_name="ClientesABM")
+    instance = cls()
+    record = FakeRecord(nombre="Viejo", email="viejo@example.com")
+
+    result = instance.UpdateRecord(record, {"nombre": "Nuevo", "email": "nuevo@example.com"})
+
+    assert result.ok
+    assert record.nombre == "Nuevo"
+    assert record.email == "nuevo@example.com"
+    assert record.saved is True
 
 
 def test_create_abm_class_from_model_returns_generated_class():
