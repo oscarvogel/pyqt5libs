@@ -3,7 +3,7 @@ import datetime
 import decimal
 import logging
 
-from PyQt5.QtCore import QSize
+from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QVBoxLayout, QTabWidget, QWidget, QGridLayout, QHBoxLayout, QLineEdit, QCheckBox, QComboBox, \
     QApplication, QMessageBox
@@ -28,8 +28,8 @@ class ABM(VistaBase):
 
     Mantiene compatibilidad con los ABM existentes, pero incorpora mejoras de
     usabilidad: títulos más claros, búsqueda con limpiar, resumen de registros,
-    estado visual de alta/modificación y conexiones de widgets con protección
-    contra doble conexión.
+    estado visual de alta/modificación, conexiones protegidas y atajos de
+    teclado para acelerar la operación diaria.
     """
 
     controles = {}
@@ -149,17 +149,17 @@ class ABM(VistaBase):
 
         self.btnAgregar = Boton(self.tabLista, texto="&Agregar",
                                 imagen=imagen("new.png"), tamanio=QSize(32, 32),
-                                tooltip='Agregar nuevo registro', enabled=self.permiteagregar)
+                                tooltip='Agregar nuevo registro (F2)', enabled=self.permiteagregar)
         self.btnAgregar.setObjectName("btnAgregar")
         self.horizontalLayout.addWidget(self.btnAgregar)
 
         self.btnEditar = Boton(self.tabLista, imagen=imagen('edit.png'), tamanio=QSize(32, 32),
-                               tooltip='Modificar registro seleccionado', texto='Editar')
+                               tooltip='Modificar registro seleccionado (F4 o doble clic)', texto='Editar')
         self.btnEditar.setObjectName("btnEditar")
         self.horizontalLayout.addWidget(self.btnEditar)
 
         self.btnBorrar = Boton(self.tabLista, imagen=imagen('delete.png'), tamanio=QSize(32, 32),
-                               tooltip='Borrar registro seleccionado', texto='Borrar')
+                               tooltip='Borrar registro seleccionado (Delete)', texto='Borrar')
         self.btnBorrar.setObjectName("btnBorrar")
         self.horizontalLayout.addWidget(self.btnBorrar)
 
@@ -268,13 +268,13 @@ class ABM(VistaBase):
         self.AgregaBotonesDatos()
 
         self.btnAceptar = Boton(self.tabDetalle, texto='Guardar', imagen=imagen('save.png'), tamanio=QSize(32, 32),
-                                tooltip="Guardar cambios")
+                                tooltip="Guardar cambios (F10)")
         self.btnAceptar.setObjectName("btnAceptar")
         self.grdBotones.addWidget(self.btnAceptar, 0, self.colBoton, 1, 1)
 
         self.colBoton += 1
         self.btnCancelar = Boton(self.tabDetalle, texto='Cancelar', imagen=imagen('close.png'), tamanio=QSize(32, 32),
-                                 tooltip="Cancelar y volver al listado")
+                                 tooltip="Cancelar y volver al listado (Esc)")
         self.btnCancelar.setObjectName("btnCancelar")
         self.grdBotones.addWidget(self.btnCancelar, 0, self.colBoton, 1, 1)
         self.verticalLayoutDatos.addLayout(self.grdBotones)
@@ -300,7 +300,47 @@ class ABM(VistaBase):
         self.btnBorrar.clicked.connect(self.Borrar)
         self.btnEditar.clicked.connect(self.Modifica)
         self.btnAgregar.clicked.connect(self.Agrega)
+        self._conecta_doble_click_grilla()
         self._widgets_conectados = True
+
+    def _conecta_doble_click_grilla(self):
+        try:
+            self.tableView.doubleClicked.connect(self.Modifica)
+        except AttributeError:
+            if hasattr(self.tableView, 'cellDoubleClicked'):
+                self.tableView.cellDoubleClicked.connect(lambda *_: self.Modifica())
+
+    def keyPressEvent(self, event):
+        key = event.key()
+        if key == Qt.Key_F2:
+            self.Agrega()
+            return
+        if key == Qt.Key_F3:
+            self.lineEditBusqueda.setFocus()
+            self.lineEditBusqueda.selectAll()
+            return
+        if key == Qt.Key_F4:
+            self.Modifica()
+            return
+        if key == Qt.Key_Delete:
+            if self.tabWidget.currentWidget() == self.tabLista:
+                self.Borrar()
+                return
+        if key in (Qt.Key_Return, Qt.Key_Enter):
+            if self.tabWidget.currentWidget() == self.tabLista:
+                self.Modifica()
+                return
+        if key == Qt.Key_F10:
+            if self.tabWidget.currentWidget() == self.tabDetalle and self.tabDetalle.isEnabled():
+                self.btnAceptarClicked()
+                return
+        if key == Qt.Key_Escape:
+            if self.tabWidget.currentWidget() == self.tabDetalle and self.tabDetalle.isEnabled():
+                self.btnCancelarClicked()
+            else:
+                self.cerrarformulario()
+            return
+        super().keyPressEvent(event)
 
     @reconnect_if_needed
     @inicializar_y_capturar_excepciones
