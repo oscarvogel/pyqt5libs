@@ -6,11 +6,18 @@ from os.path import join
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QDialog, QDesktopWidget, QHBoxLayout
 
-from modelos.ParametrosSistema import ParamSist
 from .EntradaTexto import EntradaTexto
 from .Etiquetas import Etiqueta
 from .Fechas import FechaLine
 from .utiles import icono_sistema, ubicacion_sistema
+
+try:
+    from modelos.ParametrosSistema import ParamSist
+except ModuleNotFoundError:
+    class ParamSist:
+        @staticmethod
+        def ObtenerParametro(_nombre, default=None):
+            return default
 
 
 class Formulario(QDialog):
@@ -142,6 +149,8 @@ class Formulario(QDialog):
         candidatos = [
             join(ubicacion_sistema(), 'temas', tema_configurado),
             join('temas', tema_configurado),
+            join('libs', 'temas', tema_configurado),
+            join(os.path.dirname(__file__), '..', 'libs', 'temas', tema_configurado),
         ]
 
         if hasattr(sys, "_MEIPASS"):
@@ -153,13 +162,17 @@ class Formulario(QDialog):
             candidatos_fallback = [
                 join(ubicacion_sistema(), 'temas', 'forestal_moderno.css'),
                 join('temas', 'forestal_moderno.css'),
+                join('libs', 'temas', 'forestal_moderno.css'),
+                join(os.path.dirname(__file__), '..', 'libs', 'temas', 'forestal_moderno.css'),
+                join('libs', 'temas', 'ubuntu.css'),
+                join(os.path.dirname(__file__), '..', 'libs', 'temas', 'ubuntu.css'),
             ]
             if hasattr(sys, "_MEIPASS"):
                 candidatos_fallback.append(join(sys._MEIPASS, 'temas', 'forestal_moderno.css'))
             tema = next((candidato for candidato in candidatos_fallback if os.path.isfile(candidato)), "")
 
         if not tema:
-            tema = join('temas', 'ubuntu.css')
+            return
 
         with open(tema, encoding="utf-8") as style_file:
             style = style_file.read()
