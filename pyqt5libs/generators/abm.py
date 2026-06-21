@@ -10,7 +10,7 @@ from typing import Any, Optional
 from pyqt5libs.generators.forms import FormSpec, build_form_spec
 from pyqt5libs.generators.lists import ListSpec, build_list_spec
 from pyqt5libs.generators.peewee import inspect_model
-from pyqt5libs.generators.persistence import create_record, update_record
+from pyqt5libs.generators.persistence import create_record, remove_record, update_record
 from pyqt5libs.generators.validation import validate_values, validation_rules_for_fields
 from pyqt5libs.generators.widgets import widget_specs_from_fields
 
@@ -191,6 +191,16 @@ def create_abm_class_from_spec(spec: ABMSpec, *, base_class=None, class_name: Op
     def UpdateRecord(self, record, values):
         return update_record(self.generated_spec, record, values, self.validation_rules)
 
+    def CanRemove(self, record):
+        return record is not None
+
+    def RemoveRecord(self, record):
+        if not self.CanRemove(record):
+            from pyqt5libs.generators.persistence import DeleteResult
+
+            return DeleteResult(ok=False, record=record, message="El registro no puede borrarse")
+        return remove_record(record)
+
     attrs = {
         "__doc__": "ABM generado automáticamente para {}.".format(spec.title),
         "generated_spec": spec,
@@ -208,6 +218,8 @@ def create_abm_class_from_spec(spec: ABMSpec, *, base_class=None, class_name: Op
         "ValidateValues": ValidateValues,
         "CreateRecord": CreateRecord,
         "UpdateRecord": UpdateRecord,
+        "CanRemove": CanRemove,
+        "RemoveRecord": RemoveRecord,
     }
 
     return type(generated_name, (base_class,), attrs)

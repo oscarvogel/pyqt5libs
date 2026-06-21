@@ -71,9 +71,14 @@ class FakeRecord:
     def __init__(self, **values):
         self.__dict__.update(values)
         self.saved = False
+        self.removed = False
 
     def save(self):
         self.saved = True
+        return 1
+
+    def delete_instance(self):
+        self.removed = True
         return 1
 
 
@@ -171,6 +176,28 @@ def test_generated_abm_updates_record():
     assert record.nombre == "Nuevo"
     assert record.email == "nuevo@example.com"
     assert record.saved is True
+
+
+def test_generated_abm_removes_record():
+    cls = create_abm_class_from_model(Cliente, base_class=FakeBaseABM, class_name="ClientesABM")
+    instance = cls()
+    record = FakeRecord(nombre="Oscar")
+
+    result = instance.RemoveRecord(record)
+
+    assert result.ok
+    assert result.deleted_count == 1
+    assert record.removed is True
+
+
+def test_generated_abm_can_block_remove():
+    cls = create_abm_class_from_model(Cliente, base_class=FakeBaseABM, class_name="ClientesABM")
+    instance = cls()
+
+    result = instance.RemoveRecord(None)
+
+    assert not result.ok
+    assert result.message == "El registro no puede borrarse"
 
 
 def test_create_abm_class_from_model_returns_generated_class():
