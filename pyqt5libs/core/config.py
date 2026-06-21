@@ -7,13 +7,15 @@ aplicaciones de escritorio.
 
 from configparser import ConfigParser
 from pathlib import Path
-from typing import Any, Mapping, Optional
+from typing import Any, Dict, Mapping, Optional, Union
+
+PathLike = Union[str, Path]
 
 
 class IniConfig:
     """Wrapper liviano para archivos INI."""
 
-    def __init__(self, path: str | Path, *, encoding: str = "utf-8"):
+    def __init__(self, path: PathLike, *, encoding: str = "utf-8"):
         self.path = Path(path)
         self.encoding = encoding
         self.parser = ConfigParser()
@@ -73,15 +75,15 @@ class IniConfig:
             self.set(section, option, value)
         return self
 
-    def as_dict(self) -> dict[str, dict[str, str]]:
+    def as_dict(self) -> Dict[str, Dict[str, str]]:
         return {section: dict(self.parser.items(section)) for section in self.parser.sections()}
 
 
-def load_ini(path: str | Path, *, encoding: str = "utf-8") -> IniConfig:
+def load_ini(path: PathLike, *, encoding: str = "utf-8") -> IniConfig:
     return IniConfig(path, encoding=encoding).read()
 
 
-def save_ini(path: str | Path, data: Mapping[str, Mapping[str, Any]], *, encoding: str = "utf-8") -> IniConfig:
+def save_ini(path: PathLike, data: Mapping[str, Mapping[str, Any]], *, encoding: str = "utf-8") -> IniConfig:
     config = IniConfig(path, encoding=encoding)
     for section, values in data.items():
         config.update_section(section, values)
