@@ -121,6 +121,11 @@ def delete_record(record) -> DeleteResult:
         return DeleteResult(ok=False, record=record, error=exc)
 
 
+def remove_record(record) -> DeleteResult:
+    """Alias público más neutral para borrar un registro."""
+    return delete_record(record)
+
+
 __all__ = [
     "SaveResult",
     "DeleteResult",
@@ -129,4 +134,5 @@ __all__ = [
     "create_record",
     "update_record",
     "delete_record",
+    "remove_record",
 ]
