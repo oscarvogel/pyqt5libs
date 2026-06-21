@@ -217,6 +217,4 @@ def fluent_abm_stylesheet():
     }
     """
 
-
 __all__ = ["fluent_abm_stylesheet"]
-
