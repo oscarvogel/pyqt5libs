@@ -64,3 +64,21 @@ def test_abm_source_defines_split_view_mode():
     assert "_configura_contenedor_principal" in source
     assert "_mostrar_listado" in source
     assert "_mostrar_ficha" in source
+
+
+def test_fluent_style_module_exists():
+    source = Path("pyqt5libs/styles/fluent.py").read_text(encoding="utf-8")
+
+    assert "fluent_abm_stylesheet" in source
+    assert "Segoe UI" in source
+    assert "#0f6cbd" in source
+    assert "formPanelABM" in source
+    assert "btnAceptar" in source
+
+
+def test_autoabm_example_applies_fluent_style():
+    source = Path("examples/autoabm_clientes/main.py").read_text(encoding="utf-8")
+
+    assert "fluent_abm_stylesheet" in source
+    assert "app.setStyleSheet" in source
+    assert "setMinimumSize(1180, 720)" in source

@@ -140,10 +140,34 @@ class ABM(VistaBase):
         boton.setMinimumHeight(36)
         boton.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
+    def _aplica_estilo_boton_fluent(self, boton, variante="secondary"):
+        estilos = {
+            "primary": (
+                "background-color:#0f6cbd;color:white;border:1px solid #0f6cbd;"
+                "border-radius:8px;padding:7px 14px;min-height:26px;font-weight:bold;"
+            ),
+            "danger": (
+                "background-color:#fff7f7;color:#b91c1c;border:1px solid #fecaca;"
+                "border-radius:8px;padding:7px 14px;min-height:26px;font-weight:bold;"
+            ),
+            "disabled_primary": (
+                "background-color:#d8e4f2;color:#6b7b90;border:1px solid #d8e4f2;"
+                "border-radius:8px;padding:7px 14px;min-height:26px;font-weight:bold;"
+            ),
+            "secondary": (
+                "background-color:white;color:#111827;border:1px solid #cbd5e1;"
+                "border-radius:8px;padding:7px 14px;min-height:26px;font-weight:bold;"
+            ),
+        }
+        boton.setAutoDefault(False)
+        boton.setDefault(False)
+        boton.setStyleSheet(estilos.get(variante, estilos["secondary"]))
+
     def _configura_contenedor_principal(self):
         if self._usa_modo_split():
             self.splitter = QSplitter(Qt.Horizontal)
             self.splitter.setObjectName("splitterABM")
+            self.splitter.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
             self.splitter.addWidget(self.tabLista)
             self.splitter.addWidget(self.tabDetalle)
             self.splitter.setSizes(list(self.split_sizes))
@@ -158,6 +182,8 @@ class ABM(VistaBase):
     def _mostrar_listado(self):
         if self._usa_modo_split():
             self.tabDetalle.setEnabled(False)
+            if hasattr(self, 'btnAceptar'):
+                self._aplica_estilo_boton_fluent(self.btnAceptar, "disabled_primary")
             self.tableView.setFocus()
         else:
             self.tabWidget.setCurrentIndex(0)
@@ -165,6 +191,8 @@ class ABM(VistaBase):
 
     def _mostrar_ficha(self):
         self.tabDetalle.setEnabled(True)
+        if hasattr(self, 'btnAceptar'):
+            self._aplica_estilo_boton_fluent(self.btnAceptar, "primary")
         if self._usa_modo_split():
             self.tabDetalle.setFocus()
         else:
@@ -210,6 +238,7 @@ class ABM(VistaBase):
 
         self.lblTitulo = Etiqueta(tamanio=15, texto=self._titulo_gestion())
         self.lblTitulo.setObjectName("tituloPantalla")
+        self.lblTitulo.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         self.verticalLayout.addWidget(self.lblTitulo)
 
         self.avance = Avance()
@@ -217,75 +246,89 @@ class ABM(VistaBase):
         self.verticalLayout.addWidget(self.avance)
 
         self.tabLista = QWidget()
+        self.tabLista.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.gridLayout = QGridLayout(self.tabLista)
-        self.gridLayout.setContentsMargins(14, 14, 14, 14)
-        self.gridLayout.setSpacing(10)
+        self.gridLayout.setContentsMargins(18, 18, 18, 16)
+        self.gridLayout.setHorizontalSpacing(10)
+        self.gridLayout.setVerticalSpacing(12)
+        self.gridLayout.setColumnStretch(0, 1)
+        self.gridLayout.setRowStretch(2, 1)
+
+        self.horizontalLayout = QHBoxLayout()
+        self.horizontalLayout.setObjectName("toolbarABM")
+        self.horizontalLayout.setSpacing(8)
+
+        self.BotonesAdicionales()
+
+        self.btnAgregar = Boton(self.tabLista, texto="&Agregar",
+                                imagen=imagen("new.png"), tamanio=QSize(20, 20),
+                                tooltip='Agregar nuevo registro (F2)', enabled=self.permiteagregar)
+        self.btnAgregar.setObjectName("btnAgregar")
+        self._aplica_estilo_boton_fluent(self.btnAgregar, "primary")
+        self.horizontalLayout.addWidget(self.btnAgregar)
+
+        self.btnEditar = Boton(self.tabLista, imagen=imagen('edit.png'), tamanio=QSize(20, 20),
+                               tooltip='Modificar registro seleccionado (F4 o doble clic)', texto='Editar')
+        self.btnEditar.setObjectName("btnEditar")
+        self._aplica_estilo_boton_fluent(self.btnEditar)
+        self.horizontalLayout.addWidget(self.btnEditar)
+
+        self.btnBorrar = Boton(self.tabLista, imagen=imagen('delete.png'), tamanio=QSize(20, 20),
+                               tooltip='Borrar registro seleccionado (Delete)', texto='Borrar')
+        self.btnBorrar.setObjectName("btnBorrar")
+        self._aplica_estilo_boton_fluent(self.btnBorrar, "danger")
+        self.horizontalLayout.addWidget(self.btnBorrar)
+
+        self.btnExcel = Boton(self.tabLista, imagen=imagen("79354_excel_icon.png"), tamanio=QSize(20, 20),
+                              tooltip='Exportar listado a Excel', texto='Excel')
+        self.btnExcel.setObjectName("btnExcel")
+        self._aplica_estilo_boton_fluent(self.btnExcel)
+        self.horizontalLayout.addWidget(self.btnExcel)
+
+        self.horizontalLayout.addStretch()
+
+        self.btnCerrar = Boton(self.tabLista, imagen=imagen('close.png'), tamanio=QSize(20, 20),
+                               tooltip='Cerrar pantalla', texto='Cerrar')
+        self.btnCerrar.setObjectName("btnCerrar")
+        self._aplica_estilo_boton_fluent(self.btnCerrar)
+        self.horizontalLayout.addWidget(self.btnCerrar)
+        self.gridLayout.addLayout(self.horizontalLayout, 0, 0, 1, 2)
 
         self.lineEditBusqueda = EntradaTexto(
             self.tabLista,
             placeholderText="Buscar por nombre, código o dato visible..."
         )
         self.lineEditBusqueda.setObjectName("lineEditBusqueda")
-        self.gridLayout.addWidget(self.lineEditBusqueda, 0, 0, 1, 1)
+        self.gridLayout.addWidget(self.lineEditBusqueda, 1, 0, 1, 1)
 
         self.btnLimpiarBusqueda = Boton(
             self.tabLista,
             texto="Limpiar",
             imagen=imagen('close.png'),
-            tamanio=QSize(24, 24),
+            tamanio=QSize(18, 18),
             tooltip="Limpiar búsqueda"
         )
         self.btnLimpiarBusqueda.setObjectName("btnLimpiarBusqueda")
-        self.gridLayout.addWidget(self.btnLimpiarBusqueda, 0, 1, 1, 1)
+        self._aplica_estilo_boton_fluent(self.btnLimpiarBusqueda)
+        self.gridLayout.addWidget(self.btnLimpiarBusqueda, 1, 1, 1, 1)
 
         self.tableView = Grilla(self.tabLista)
         self.tableView.setObjectName("tableView")
+        self.tableView.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.tableView.enabled = True
         self.tableView.cabeceras = [
             x.verbose_name if x.verbose_name else x.column_name.capitalize()
             for x in self.camposAMostrar
         ]
         self.tableView.ArmaCabeceras()
-        self.gridLayout.addWidget(self.tableView, 1, 0, 1, 2)
+        self.gridLayout.addWidget(self.tableView, 2, 0, 1, 2)
 
         self.lblResumen = Etiqueta(texto="Sin registros cargados")
         self.lblResumen.setObjectName("lblResumen")
-        self.gridLayout.addWidget(self.lblResumen, 2, 0, 1, 1)
-
-        self.horizontalLayout = QHBoxLayout()
-        self.horizontalLayout.setObjectName("horizontalLayout")
-        self.horizontalLayout.setSpacing(8)
-        self.horizontalLayout.addStretch()
-
-        self.BotonesAdicionales()
-
-        self.btnAgregar = Boton(self.tabLista, texto="&Agregar",
-                                imagen=imagen("new.png"), tamanio=QSize(32, 32),
-                                tooltip='Agregar nuevo registro (F2)', enabled=self.permiteagregar)
-        self.btnAgregar.setObjectName("btnAgregar")
-        self.horizontalLayout.addWidget(self.btnAgregar)
-
-        self.btnEditar = Boton(self.tabLista, imagen=imagen('edit.png'), tamanio=QSize(32, 32),
-                               tooltip='Modificar registro seleccionado (F4 o doble clic)', texto='Editar')
-        self.btnEditar.setObjectName("btnEditar")
-        self.horizontalLayout.addWidget(self.btnEditar)
-
-        self.btnBorrar = Boton(self.tabLista, imagen=imagen('delete.png'), tamanio=QSize(32, 32),
-                               tooltip='Borrar registro seleccionado (Delete)', texto='Borrar')
-        self.btnBorrar.setObjectName("btnBorrar")
-        self.horizontalLayout.addWidget(self.btnBorrar)
-
-        self.btnExcel = Boton(self.tabLista, imagen=imagen("79354_excel_icon.png"), tamanio=QSize(32, 32),
-                              tooltip='Exportar listado a Excel', texto='Excel')
-        self.horizontalLayout.addWidget(self.btnExcel)
-
-        self.btnCerrar = Boton(self.tabLista, imagen=imagen('close.png'), tamanio=QSize(32, 32),
-                               tooltip='Cerrar pantalla', texto='Cerrar')
-        self.btnCerrar.setObjectName("btnCerrar")
-        self.horizontalLayout.addWidget(self.btnCerrar)
-        self.gridLayout.addLayout(self.horizontalLayout, 3, 0, 1, 2)
+        self.gridLayout.addWidget(self.lblResumen, 3, 0, 1, 2)
 
         self.tabDetalle = QWidget()
+        self.tabDetalle.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Expanding)
         self.ArmaDatos()
         self._configura_contenedor_principal()
         self.ArmaTabla()
@@ -398,6 +441,7 @@ class ABM(VistaBase):
                                 tooltip="Guardar cambios (F10)")
         self.btnAceptar.setObjectName("btnAceptar")
         self._configura_boton_formulario(self.btnAceptar)
+        self._aplica_estilo_boton_fluent(self.btnAceptar, "disabled_primary")
         self.grdBotones.addWidget(self.btnAceptar, 0, self.colBoton, 1, 1)
         self.grdBotones.setColumnStretch(self.colBoton, 1)
 
@@ -406,6 +450,7 @@ class ABM(VistaBase):
                                  tooltip="Cancelar y volver al listado (Esc)")
         self.btnCancelar.setObjectName("btnCancelar")
         self._configura_boton_formulario(self.btnCancelar)
+        self._aplica_estilo_boton_fluent(self.btnCancelar)
         self.grdBotones.addWidget(self.btnCancelar, 0, self.colBoton, 1, 1)
         self.grdBotones.setColumnStretch(self.colBoton, 1)
         self.verticalLayoutDatos.addLayout(self.grdBotones)
