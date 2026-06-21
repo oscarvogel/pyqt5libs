@@ -9,10 +9,9 @@ El generador se construye por fases para no romper el ABM histórico.
 La primera fase agrega introspección de modelos Peewee para obtener metadata neutral de campos.
 
 ```python
-from pyqt5libs.generators.peewee import inspect_model, inspect_model_as_dict
+from pyqt5libs.generators.peewee import inspect_model
 
 fields = inspect_model(Cliente)
-data = inspect_model_as_dict(Cliente)
 ```
 
 Cada campo se representa como `FieldInfo`.
@@ -49,11 +48,26 @@ from pyqt5libs.generators.lists import build_list_spec
 list_spec = build_list_spec(fields, visible_primary_key=False)
 ```
 
-Esto define columnas visibles, etiquetas, clave primaria y campos buscables antes de crear una grilla real.
+## Fase 5: especificación ABM completa
+
+La quinta fase une todo en `ABMSpec`.
+
+```python
+from pyqt5libs.generators.abm import create_abm_from_model
+
+spec = create_abm_from_model(
+    Cliente,
+    form_columns=2,
+    view_mode="split",
+    visible_primary_key=False,
+)
+```
+
+Por ahora `create_abm_from_model()` devuelve una especificación neutral. En la próxima fase se podrá convertir esa especificación en una pantalla PyQt real.
 
 ## Próximas fases
 
 1. Instanciar widgets PyQt desde `FormSpec`.
 2. Instanciar grilla/listado desde `ListSpec`.
-3. Validaciones automáticas.
-4. ABM completo desde modelo.
+3. Conectar `ABMSpec` con `libs/vistas/ABM.py`.
+4. Validaciones automáticas.
