@@ -6,7 +6,7 @@ import logging
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QVBoxLayout, QTabWidget, QWidget, QGridLayout, QHBoxLayout, QLineEdit, QCheckBox, QComboBox, \
-    QApplication, QMessageBox
+    QApplication, QMessageBox, QSplitter
 
 from modelos.ModeloBase import reconnect_if_needed
 from pyqt5libs.libs.vistas.VistaBase import VistaBase
@@ -29,7 +29,7 @@ class ABM(VistaBase):
     Mantiene compatibilidad con los ABM existentes, pero incorpora mejoras de
     usabilidad: títulos más claros, búsqueda con limpiar, resumen de registros,
     estado visual de alta/modificación, conexiones protegidas, atajos de
-    teclado y distribución responsive opcional para formularios grandes.
+    teclado, distribución responsive opcional y modo split listado/ficha.
     """
 
     controles = {}
@@ -49,6 +49,11 @@ class ABM(VistaBase):
     dynamicBackColor = None
     data = ""
     autoConectaWidgets = True
+
+    # Contenedor principal. `tabs` conserva el comportamiento histórico.
+    # `split` muestra listado y ficha al mismo tiempo.
+    view_mode = "tabs"
+    split_sizes = (520, 380)
 
     # Layout de ficha. Por defecto se mantiene compatible con el armado histórico.
     # Valores soportados: single, two_columns, auto.
@@ -75,6 +80,9 @@ class ABM(VistaBase):
 
     def _titulo_gestion(self):
         return "Gestión de {}".format(self._nombre_pantalla())
+
+    def _usa_modo_split(self):
+        return self.view_mode == "split"
 
     def _usa_layout_responsive(self):
         return self.form_layout_mode in ("auto", "two_columns")
@@ -110,6 +118,46 @@ class ABM(VistaBase):
             self._form_column = 0
             self._form_row += 1
 
+    def _configura_contenedor_principal(self):
+        if self._usa_modo_split():
+            self.splitter = QSplitter(Qt.Horizontal)
+            self.splitter.setObjectName("splitterABM")
+            self.splitter.addWidget(self.tabLista)
+            self.splitter.addWidget(self.tabDetalle)
+            self.splitter.setSizes(list(self.split_sizes))
+            self.verticalLayout.addWidget(self.splitter)
+        else:
+            self.tabWidget = QTabWidget()
+            self.tabWidget.addTab(self.tabLista, "Listado")
+            self.tabWidget.addTab(self.tabDetalle, "Ficha")
+            self.verticalLayout.addWidget(self.tabWidget)
+        self.tabDetalle.setEnabled(False)
+
+    def _mostrar_listado(self):
+        if self._usa_modo_split():
+            self.tabDetalle.setEnabled(False)
+            self.tableView.setFocus()
+        else:
+            self.tabWidget.setCurrentIndex(0)
+            self.tabDetalle.setEnabled(False)
+
+    def _mostrar_ficha(self):
+        self.tabDetalle.setEnabled(True)
+        if self._usa_modo_split():
+            self.tabDetalle.setFocus()
+        else:
+            self.tabWidget.setCurrentIndex(1)
+
+    def _esta_en_listado(self):
+        if self._usa_modo_split():
+            return True
+        return self.tabWidget.currentWidget() == self.tabLista
+
+    def _esta_en_ficha(self):
+        if self._usa_modo_split():
+            return self.tabDetalle.isEnabled()
+        return self.tabWidget.currentWidget() == self.tabDetalle and self.tabDetalle.isEnabled()
+
     def ActualizaEstado(self, texto=None):
         if not hasattr(self, 'lblEstado'):
             return
@@ -142,15 +190,14 @@ class ABM(VistaBase):
         self.lblTitulo.setObjectName("tituloPantalla")
         self.verticalLayout.addWidget(self.lblTitulo)
 
-        self.tabWidget = QTabWidget()
+        self.avance = Avance()
+        self.avance.setVisible(False)
+        self.verticalLayout.addWidget(self.avance)
+
         self.tabLista = QWidget()
         self.gridLayout = QGridLayout(self.tabLista)
         self.gridLayout.setContentsMargins(14, 14, 14, 14)
         self.gridLayout.setSpacing(10)
-
-        self.avance = Avance()
-        self.avance.setVisible(False)
-        self.verticalLayout.addWidget(self.avance)
 
         self.lineEditBusqueda = EntradaTexto(
             self.tabLista,
@@ -216,14 +263,9 @@ class ABM(VistaBase):
         self.horizontalLayout.addWidget(self.btnCerrar)
         self.gridLayout.addLayout(self.horizontalLayout, 3, 0, 1, 2)
 
-        self.tabWidget.addTab(self.tabLista, "Listado")
         self.tabDetalle = QWidget()
-        self.tabWidget.addTab(self.tabDetalle, "Ficha")
-        self.tabDetalle.setEnabled(False)
-
-        self.verticalLayout.addWidget(self.tabWidget)
-
         self.ArmaDatos()
+        self._configura_contenedor_principal()
         self.ArmaTabla()
         if self.autoConectaWidgets:
             self.ConectaWidgets()
@@ -321,7 +363,6 @@ class ABM(VistaBase):
         self.btnCancelar.setObjectName("btnCancelar")
         self.grdBotones.addWidget(self.btnCancelar, 0, self.colBoton, 1, 1)
         self.verticalLayoutDatos.addLayout(self.grdBotones)
-        self.verticalLayout.addWidget(self.tabWidget)
         self.btnCancelar.clicked.connect(self.btnCancelarClicked)
         self.btnAceptar.clicked.connect(self.btnAceptarClicked)
         self.verticalLayoutDatos.addStretch(1)
@@ -366,19 +407,19 @@ class ABM(VistaBase):
             self.Modifica()
             return
         if key == Qt.Key_Delete:
-            if self.tabWidget.currentWidget() == self.tabLista:
+            if self._esta_en_listado():
                 self.Borrar()
                 return
         if key in (Qt.Key_Return, Qt.Key_Enter):
-            if self.tabWidget.currentWidget() == self.tabLista:
+            if self._esta_en_listado():
                 self.Modifica()
                 return
         if key == Qt.Key_F10:
-            if self.tabWidget.currentWidget() == self.tabDetalle and self.tabDetalle.isEnabled():
+            if self._esta_en_ficha():
                 self.btnAceptarClicked()
                 return
         if key == Qt.Key_Escape:
-            if self.tabWidget.currentWidget() == self.tabDetalle and self.tabDetalle.isEnabled():
+            if self._esta_en_ficha():
                 self.btnCancelarClicked()
             else:
                 self.cerrarformulario()
@@ -426,8 +467,7 @@ class ABM(VistaBase):
             data = self.model.select().where(self.campoClave == int(id)).dicts()
         else:
             data = self.model.select().where(self.campoClave == id).dicts()
-        self.tabDetalle.setEnabled(True)
-        self.tabWidget.setCurrentIndex(1)
+        self._mostrar_ficha()
         self.ActualizaEstado()
         self.CargaDatos(data)
         if self.campoFoco:
@@ -531,14 +571,12 @@ class ABM(VistaBase):
         return boxlayout
 
     def btnCancelarClicked(self):
-        self.tabWidget.setCurrentIndex(0)
-        self.tabDetalle.setEnabled(False)
+        self._mostrar_listado()
         self.ActualizaEstado("Seleccione un registro o agregue uno nuevo")
 
     @inicializar_y_capturar_excepciones
     def btnAceptarClicked(self, *args, **kwargs):
-        self.tabWidget.setCurrentIndex(0)
-        self.tabDetalle.setEnabled(False)
+        self._mostrar_listado()
         self.ActualizaEstado("Seleccione un registro o agregue uno nuevo")
         self.ArmaTabla()
 
@@ -555,8 +593,7 @@ class ABM(VistaBase):
                     self.controles[x].setEnabled(False)
             self.controles[x].setText('')
             self.controles[x].setStyleSheet("background-color: white")
-        self.tabDetalle.setEnabled(True)
-        self.tabWidget.setCurrentIndex(1)
+        self._mostrar_ficha()
         self.ActualizaEstado()
         if self.campoFoco:
             self.campoFoco.setFocus()
