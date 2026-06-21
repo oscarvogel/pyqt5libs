@@ -10,6 +10,7 @@ from typing import Any, Optional
 from pyqt5libs.generators.forms import FormSpec, build_form_spec
 from pyqt5libs.generators.lists import ListSpec, build_list_spec
 from pyqt5libs.generators.peewee import inspect_model
+from pyqt5libs.generators.persistence import create_record, update_record
 from pyqt5libs.generators.validation import validate_values, validation_rules_for_fields
 from pyqt5libs.generators.widgets import widget_specs_from_fields
 
@@ -184,6 +185,12 @@ def create_abm_class_from_spec(spec: ABMSpec, *, base_class=None, class_name: Op
     def ValidateValues(self, values):
         return validate_values(values, self.validation_rules)
 
+    def CreateRecord(self, values):
+        return create_record(self.generated_spec, values, self.validation_rules)
+
+    def UpdateRecord(self, record, values):
+        return update_record(self.generated_spec, record, values, self.validation_rules)
+
     attrs = {
         "__doc__": "ABM generado automáticamente para {}.".format(spec.title),
         "generated_spec": spec,
@@ -199,6 +206,8 @@ def create_abm_class_from_spec(spec: ABMSpec, *, base_class=None, class_name: Op
         "autoincremental": bool(primary_key),
         "ArmaCarga": ArmaCarga,
         "ValidateValues": ValidateValues,
+        "CreateRecord": CreateRecord,
+        "UpdateRecord": UpdateRecord,
     }
 
     return type(generated_name, (base_class,), attrs)
