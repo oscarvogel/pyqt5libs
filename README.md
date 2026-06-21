@@ -10,6 +10,14 @@ Biblioteca de utilidades y extensiones para proyectos desarrollados con PyQt5.
 
 ## Instalación
 
+Para usar el paquete durante el desarrollo:
+
+```bash
+pip install -e .
+```
+
+Cuando el paquete esté publicado, podrá instalarse con:
+
 ```bash
 pip install pyqt5libs
 ```
@@ -17,15 +25,13 @@ pip install pyqt5libs
 ## Uso básico
 
 ```python
-from pyqt5libs import ejemplo
-
-ejemplo.funcion_util()
+import pyqt5libs
 ```
 
 ## Requisitos
 
-- Python 3.6 o superior
-- PyQt5
+- Python 3.8 o superior
+- PyQt5 5.15 o superior
 
 ## Contribuir
 
@@ -33,4 +39,4 @@ ejemplo.funcion_util()
 
 ## Licencia
 
-Este proyecto está bajo la licencia MIT.
+Este proyecto está bajo la licencia LGPL v3.
