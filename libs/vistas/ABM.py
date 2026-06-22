@@ -6,7 +6,7 @@ import logging
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QVBoxLayout, QTabWidget, QWidget, QGridLayout, QHBoxLayout, QLineEdit, QCheckBox, QComboBox, \
-    QApplication, QMessageBox, QSplitter, QSizePolicy, QScrollArea, QFrame
+    QApplication, QMessageBox, QSplitter, QSizePolicy, QScrollArea, QFrame, QToolButton, QMenu, QAction, QAbstractButton
 
 from pyqt5libs.libs.vistas.VistaBase import VistaBase
 from pyqt5libs.pyqt5libs import Ventanas
@@ -54,6 +54,7 @@ class ABM(VistaBase):
     dynamicBackColor = None
     data = ""
     autoConectaWidgets = True
+    agrupar_botones_adicionales = "auto"
 
     # Contenedor principal. `tabs` conserva el comportamiento histórico.
     # `split` muestra listado y ficha al mismo tiempo.
@@ -159,8 +160,10 @@ class ABM(VistaBase):
                 "border-radius:8px;padding:7px 14px;min-height:26px;font-weight:bold;"
             ),
         }
-        boton.setAutoDefault(False)
-        boton.setDefault(False)
+        if hasattr(boton, "setAutoDefault"):
+            boton.setAutoDefault(False)
+        if hasattr(boton, "setDefault"):
+            boton.setDefault(False)
         boton.setStyleSheet(estilos.get(variante, estilos["secondary"]))
 
     def _configura_contenedor_principal(self):
@@ -207,6 +210,68 @@ class ABM(VistaBase):
         if self._usa_modo_split():
             return self.tabDetalle.isEnabled()
         return self.tabWidget.currentWidget() == self.tabDetalle and self.tabDetalle.isEnabled()
+
+    def _widgets_layout(self, layout):
+        widgets = []
+        for index in range(layout.count()):
+            item = layout.itemAt(index)
+            widget = item.widget() if item else None
+            if widget is not None:
+                widgets.append(widget)
+        return widgets
+
+    def _botones_agrupables(self, widgets):
+        botones = []
+        for widget in widgets:
+            if isinstance(widget, QAbstractButton) and hasattr(widget, "click"):
+                botones.append(widget)
+        return botones
+
+    def _debe_agrupar_botones_adicionales(self, botones):
+        modo = getattr(self, "agrupar_botones_adicionales", "auto")
+        if modo == "never":
+            return False
+        if modo == "always":
+            return len(botones) >= 1
+        return len(botones) > 1
+
+    def _accion_desde_boton_adicional(self, boton):
+        accion = QAction(boton.icon(), boton.text(), self)
+        accion.setToolTip(boton.toolTip())
+        accion.setEnabled(boton.isEnabled())
+        accion.triggered.connect(lambda checked=False, boton=boton: boton.click())
+        return accion
+
+    def _agrupa_botones_adicionales(self, botones):
+        if not self._debe_agrupar_botones_adicionales(botones):
+            return
+
+        indice_insercion = 0
+        for index in range(self.horizontalLayout.count()):
+            item = self.horizontalLayout.itemAt(index)
+            widget = item.widget() if item else None
+            if widget in botones:
+                indice_insercion = index
+                break
+
+        self.btnMasAcciones = QToolButton(self.tabLista)
+        self.btnMasAcciones.setObjectName("btnMasAcciones")
+        self.btnMasAcciones.setText("Más acciones")
+        self.btnMasAcciones.setPopupMode(QToolButton.InstantPopup)
+        self.btnMasAcciones.setToolTip("Acciones adicionales")
+        self.btnMasAcciones.setCursor(Qt.PointingHandCursor)
+        self.btnMasAcciones.setMinimumHeight(34)
+        self.btnMasAcciones.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
+        self._aplica_estilo_boton_fluent(self.btnMasAcciones)
+
+        self.menuMasAcciones = QMenu(self.btnMasAcciones)
+        self.menuMasAcciones.setObjectName("menuMasAcciones")
+        for boton in botones:
+            self.menuMasAcciones.addAction(self._accion_desde_boton_adicional(boton))
+            self.horizontalLayout.removeWidget(boton)
+            boton.hide()
+        self.btnMasAcciones.setMenu(self.menuMasAcciones)
+        self.horizontalLayout.insertWidget(indice_insercion, self.btnMasAcciones)
 
     def ActualizaEstado(self, texto=None):
         if not hasattr(self, 'lblEstado'):
@@ -258,7 +323,14 @@ class ABM(VistaBase):
         self.horizontalLayout.setObjectName("toolbarABM")
         self.horizontalLayout.setSpacing(8)
 
+        widgets_antes_adicionales = self._widgets_layout(self.horizontalLayout)
         self.BotonesAdicionales()
+        widgets_despues_adicionales = self._widgets_layout(self.horizontalLayout)
+        widgets_adicionales = [
+            widget for widget in widgets_despues_adicionales
+            if widget not in widgets_antes_adicionales
+        ]
+        self._agrupa_botones_adicionales(self._botones_agrupables(widgets_adicionales))
 
         self.btnAgregar = Boton(self.tabLista, texto="&Agregar",
                                 imagen=imagen("new.png"), tamanio=QSize(20, 20),
