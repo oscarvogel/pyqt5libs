@@ -141,6 +141,27 @@ class ABM(VistaBase):
         boton.setMinimumHeight(36)
         boton.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
 
+    def _configura_boton_toolbar(self, boton, ancho_minimo=104):
+        boton.setMinimumHeight(36)
+        boton.setMinimumWidth(ancho_minimo)
+        boton.setIconSize(QSize(20, 20))
+        boton.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
+        boton.setCursor(Qt.PointingHandCursor)
+        if hasattr(boton, "setAutoDefault"):
+            boton.setAutoDefault(False)
+        if hasattr(boton, "setDefault"):
+            boton.setDefault(False)
+
+    def _agrega_separador_toolbar(self, object_name):
+        separator = QFrame(self.tabLista)
+        separator.setObjectName(object_name)
+        separator.setFrameShape(QFrame.VLine)
+        separator.setFrameShadow(QFrame.Sunken)
+        separator.setFixedHeight(28)
+        separator.setSizePolicy(QSizePolicy.Fixed, QSizePolicy.Fixed)
+        self.horizontalLayout.addWidget(separator)
+        return separator
+
     def _aplica_estilo_boton_fluent(self, boton, variante="secondary"):
         estilos = {
             "primary": (
@@ -260,8 +281,7 @@ class ABM(VistaBase):
         self.btnMasAcciones.setPopupMode(QToolButton.InstantPopup)
         self.btnMasAcciones.setToolTip("Acciones adicionales")
         self.btnMasAcciones.setCursor(Qt.PointingHandCursor)
-        self.btnMasAcciones.setMinimumHeight(34)
-        self.btnMasAcciones.setSizePolicy(QSizePolicy.Minimum, QSizePolicy.Fixed)
+        self._configura_boton_toolbar(self.btnMasAcciones)
         self._aplica_estilo_boton_fluent(self.btnMasAcciones)
 
         self.menuMasAcciones = QMenu(self.btnMasAcciones)
@@ -321,7 +341,8 @@ class ABM(VistaBase):
 
         self.horizontalLayout = QHBoxLayout()
         self.horizontalLayout.setObjectName("toolbarABM")
-        self.horizontalLayout.setSpacing(8)
+        self.horizontalLayout.setContentsMargins(0, 0, 0, 0)
+        self.horizontalLayout.setSpacing(10)
 
         widgets_antes_adicionales = self._widgets_layout(self.horizontalLayout)
         self.BotonesAdicionales()
@@ -336,32 +357,40 @@ class ABM(VistaBase):
                                 imagen=imagen("new.png"), tamanio=QSize(20, 20),
                                 tooltip='Agregar nuevo registro (F2)', enabled=self.permiteagregar)
         self.btnAgregar.setObjectName("btnAgregar")
+        self._configura_boton_toolbar(self.btnAgregar)
         self._aplica_estilo_boton_fluent(self.btnAgregar, "primary")
         self.horizontalLayout.addWidget(self.btnAgregar)
 
         self.btnEditar = Boton(self.tabLista, imagen=imagen('edit.png'), tamanio=QSize(20, 20),
                                tooltip='Modificar registro seleccionado (F4 o doble clic)', texto='Editar')
         self.btnEditar.setObjectName("btnEditar")
+        self._configura_boton_toolbar(self.btnEditar)
         self._aplica_estilo_boton_fluent(self.btnEditar)
         self.horizontalLayout.addWidget(self.btnEditar)
 
         self.btnBorrar = Boton(self.tabLista, imagen=imagen('delete.png'), tamanio=QSize(20, 20),
                                tooltip='Borrar registro seleccionado (Delete)', texto='Borrar')
         self.btnBorrar.setObjectName("btnBorrar")
+        self._configura_boton_toolbar(self.btnBorrar)
         self._aplica_estilo_boton_fluent(self.btnBorrar, "danger")
         self.horizontalLayout.addWidget(self.btnBorrar)
+
+        self._agrega_separador_toolbar("separatorToolbarABMExport")
 
         self.btnExcel = Boton(self.tabLista, imagen=imagen("79354_excel_icon.png"), tamanio=QSize(20, 20),
                               tooltip='Exportar listado a Excel', texto='Excel')
         self.btnExcel.setObjectName("btnExcel")
+        self._configura_boton_toolbar(self.btnExcel)
         self._aplica_estilo_boton_fluent(self.btnExcel)
         self.horizontalLayout.addWidget(self.btnExcel)
 
         self.horizontalLayout.addStretch()
+        self._agrega_separador_toolbar("separatorToolbarABMCierre")
 
         self.btnCerrar = Boton(self.tabLista, imagen=imagen('close.png'), tamanio=QSize(20, 20),
                                tooltip='Cerrar pantalla', texto='Cerrar')
         self.btnCerrar.setObjectName("btnCerrar")
+        self._configura_boton_toolbar(self.btnCerrar)
         self._aplica_estilo_boton_fluent(self.btnCerrar)
         self.horizontalLayout.addWidget(self.btnCerrar)
         self.gridLayout.addLayout(self.horizontalLayout, 0, 0, 1, 2)

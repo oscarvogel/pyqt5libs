@@ -1,4 +1,5 @@
-from PyQt5.QtWidgets import QApplication, QToolButton
+from PyQt5.QtCore import QSize
+from PyQt5.QtWidgets import QApplication, QFrame, QSizePolicy, QToolButton
 
 from pyqt5libs.libs.vistas.ABM import ABM
 from pyqt5libs.pyqt5libs.Botones import Boton
@@ -95,3 +96,36 @@ def test_never_keeps_additional_buttons_ungrouped():
     assert window.findChild(QToolButton, "btnMasAcciones") is None
     assert window.extra_buttons[0].isHidden() is False
     assert window.extra_buttons[1].isHidden() is False
+
+
+def test_toolbar_uses_consistent_button_sizing_and_visual_groups():
+    _app()
+    window = _keep_window(_BaseAdditionalButtonsABM(additional_count=2))
+
+    assert window.horizontalLayout.spacing() == 10
+    assert window.horizontalLayout.contentsMargins().left() == 0
+
+    expected_buttons = [
+        window.btnAgregar,
+        window.btnEditar,
+        window.btnBorrar,
+        window.btnExcel,
+        window.btnCerrar,
+        window.btnMasAcciones,
+    ]
+    toolbar_height = expected_buttons[0].minimumHeight()
+    assert toolbar_height >= 36
+    for button in expected_buttons:
+        assert button.minimumHeight() == toolbar_height
+        assert button.minimumWidth() >= 104
+        assert button.iconSize() == QSize(20, 20)
+        assert button.sizePolicy().horizontalPolicy() == QSizePolicy.Minimum
+        assert button.sizePolicy().verticalPolicy() == QSizePolicy.Fixed
+
+    separator_export = window.findChild(QFrame, "separatorToolbarABMExport")
+    separator_close = window.findChild(QFrame, "separatorToolbarABMCierre")
+
+    assert separator_export is not None
+    assert separator_export.frameShape() == QFrame.VLine
+    assert separator_close is not None
+    assert separator_close.frameShape() == QFrame.VLine
