@@ -1,5 +1,5 @@
-from PyQt5.QtCore import QSize
-from PyQt5.QtWidgets import QApplication, QFrame, QSizePolicy, QToolButton
+from PyQt5.QtCore import Qt, QSize
+from PyQt5.QtWidgets import QApplication, QAbstractItemView, QFrame, QHeaderView, QSizePolicy, QToolButton
 
 from pyqt5libs.libs.vistas.ABM import ABM
 from pyqt5libs.pyqt5libs.Botones import Boton
@@ -42,6 +42,21 @@ class _BaseAdditionalButtonsABM(ABM):
                 button.setEnabled(False)
             self.extra_buttons.append(button)
             self.horizontalLayout.addWidget(button)
+
+
+class _Field:
+    def __init__(self, name, verbose_name=""):
+        self.name = name
+        self.column_name = name
+        self.verbose_name = verbose_name
+
+
+class _TablePresentationABM(_BaseAdditionalButtonsABM):
+    camposAMostrar = [
+        _Field("codigo", "Código"),
+        _Field("nombre", "Nombre"),
+        _Field("estado", "Estado"),
+    ]
 
 
 def test_auto_groups_multiple_additional_buttons():
@@ -129,3 +144,21 @@ def test_toolbar_uses_consistent_button_sizing_and_visual_groups():
     assert separator_export.frameShape() == QFrame.VLine
     assert separator_close is not None
     assert separator_close.frameShape() == QFrame.VLine
+
+
+def test_abm_table_uses_modern_readable_presentation():
+    _app()
+    window = _keep_window(_TablePresentationABM())
+    table = window.tableView
+    header = table.horizontalHeader()
+
+    assert table.selectionBehavior() == QAbstractItemView.SelectRows
+    assert table.selectionMode() == QAbstractItemView.SingleSelection
+    assert table.alternatingRowColors() is True
+    assert table.showGrid() is False
+    assert table.wordWrap() is False
+    assert table.verticalHeader().defaultSectionSize() >= 34
+    assert header.defaultAlignment() & Qt.AlignLeft
+    assert header.minimumSectionSize() >= 90
+    assert header.sectionResizeMode(0) == QHeaderView.Interactive
+    assert header.stretchLastSection() is True

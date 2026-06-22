@@ -6,7 +6,8 @@ import logging
 from PyQt5.QtCore import Qt, QSize
 from PyQt5.QtGui import QColor
 from PyQt5.QtWidgets import QVBoxLayout, QTabWidget, QWidget, QGridLayout, QHBoxLayout, QLineEdit, QCheckBox, QComboBox, \
-    QApplication, QMessageBox, QSplitter, QSizePolicy, QScrollArea, QFrame, QToolButton, QMenu, QAction, QAbstractButton
+    QApplication, QMessageBox, QSplitter, QSizePolicy, QScrollArea, QFrame, QToolButton, QMenu, QAction, QAbstractButton, \
+    QAbstractItemView, QHeaderView
 
 from pyqt5libs.libs.vistas.VistaBase import VistaBase
 from pyqt5libs.pyqt5libs import Ventanas
@@ -151,6 +152,55 @@ class ABM(VistaBase):
             boton.setAutoDefault(False)
         if hasattr(boton, "setDefault"):
             boton.setDefault(False)
+
+    def _configura_tabla_listado(self):
+        self.tableView.setAlternatingRowColors(True)
+        self.tableView.setSelectionBehavior(QAbstractItemView.SelectRows)
+        self.tableView.setSelectionMode(QAbstractItemView.SingleSelection)
+        self.tableView.setShowGrid(False)
+        self.tableView.setWordWrap(False)
+        self.tableView.setCornerButtonEnabled(False)
+        self.tableView.setStyleSheet(
+            """
+            QTableWidget#tableView {
+                background: #ffffff;
+                alternate-background-color: #f8fbff;
+                selection-background-color: #dbeafe;
+                selection-color: #111827;
+                border: 1px solid #d8e0ea;
+                border-radius: 8px;
+                gridline-color: #eef2f7;
+            }
+            QTableWidget#tableView::item {
+                border: none;
+                padding: 6px 8px;
+            }
+            QTableWidget#tableView::item:selected {
+                background: #dbeafe;
+                color: #111827;
+            }
+            QHeaderView::section {
+                background: #f8fafc;
+                color: #374151;
+                border: none;
+                border-bottom: 1px solid #e5e7eb;
+                padding: 8px 10px;
+                font-weight: bold;
+            }
+            """
+        )
+
+        vertical_header = self.tableView.verticalHeader()
+        vertical_header.setVisible(False)
+        vertical_header.setMinimumSectionSize(32)
+        vertical_header.setDefaultSectionSize(34)
+
+        horizontal_header = self.tableView.horizontalHeader()
+        horizontal_header.setHighlightSections(False)
+        horizontal_header.setDefaultAlignment(Qt.AlignLeft | Qt.AlignVCenter)
+        horizontal_header.setMinimumSectionSize(90)
+        horizontal_header.setSectionResizeMode(QHeaderView.Interactive)
+        horizontal_header.setStretchLastSection(True)
 
     def _agrega_separador_toolbar(self, object_name):
         separator = QFrame(self.tabLista)
@@ -422,6 +472,7 @@ class ABM(VistaBase):
             for x in self.camposAMostrar
         ]
         self.tableView.ArmaCabeceras()
+        self._configura_tabla_listado()
         self.gridLayout.addWidget(self.tableView, 2, 0, 1, 2)
 
         self.lblResumen = Etiqueta(texto="Sin registros cargados")
