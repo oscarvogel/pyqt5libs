@@ -566,18 +566,45 @@ def envia_correo(from_address='', to_address='', message='', subject='',
             # Intentar importar ParamSist aquí para evitar dependencias circulares
             try:
                 from modelos.ParametrosSistema import ParamSist
-                
-                # Obtener configuración de ParamSist
-                smtp_server = ParamSist.ObtenerParametro('SMTP_SERVER')
-                smtp_port = ParamSist.ObtenerParametro('SMTP_PORT', '587')
-                smtp_username = ParamSist.ObtenerParametro('EMAIL_ADDRESS')
-                
-                # Prioridad: 1. Argumento password_email, 2. ParamSist EMAIL_PASSWORD, 3. ParamSist PASSWORD_EMAIL
-                smtp_password = password_email
-                if not smtp_password:
-                    smtp_password = ParamSist.ObtenerParametro('EMAIL_PASSWORD')
-                if not smtp_password:
-                    smtp_password = ParamSist.ObtenerParametro('PASSWORD_EMAIL')
+                from playhouse.pool import MaxConnectionsExceeded
+
+                max_retries = 3
+                for retry in range(max_retries):
+                    try:
+                        smtp_server = ParamSist.ObtenerParametro('SMTP_SERVER')
+                        smtp_port = ParamSist.ObtenerParametro('SMTP_PORT', '587')
+                        smtp_username = ParamSist.ObtenerParametro('EMAIL_ADDRESS')
+
+                        smtp_password = password_email
+                        if not smtp_password:
+                            smtp_password = ParamSist.ObtenerParametro('EMAIL_PASSWORD')
+                        if not smtp_password:
+                            smtp_password = ParamSist.ObtenerParametro('PASSWORD_EMAIL')
+                        break
+                    except MaxConnectionsExceeded:
+                        if retry < max_retries - 1:
+                            delay = 2 * (retry + 1)
+                            logging.warning(
+                                "Pool de conexiones agotado, reintentando en %ss (intento %s/%s)",
+                                delay, retry + 1, max_retries,
+                            )
+                            time.sleep(delay)
+                        else:
+                            logging.critical(
+                                "No se pudo obtener configuracion SMTP tras %s intentos "
+                                "(pool agotado). Abortando envio de correo.",
+                                max_retries,
+                            )
+                            Ventanas.showAlert(
+                                "Correo",
+                                "No se pudo enviar el correo electrónico porque el servidor "
+                                "de base de datos está temporalmente saturado.\n"
+                                "Intente nuevamente en unos minutos.",
+                            )
+                            return
+                else:
+                    # El bucle se agotó sin break (solo si max_retries == 0, no debería ocurrir)
+                    return
                     
             except ImportError:
                 # Si no se puede importar (ej. uso fuera del proyecto), usar variables de entorno o valores por defecto
