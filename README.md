@@ -75,4 +75,4 @@ Las contribuciones son bienvenidas mediante issues o pull requests.
 
 ## Licencia
 
-Este proyecto está bajo la licencia LGPL v3.
+Este proyecto está bajo la licencia LGPL v3, según el archivo `LICENSE` incluido en el repositorio.
