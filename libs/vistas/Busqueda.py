@@ -16,6 +16,12 @@ from pyqt5libs.pyqt5libs.EntradaTexto import EntradaTexto
 from pyqt5libs.pyqt5libs.Formulario import Formulario
 from pyqt5libs.pyqt5libs.utiles import LeerIni, FormatoFecha, imagen
 
+try:
+    from modelos.ModeloBase import reconnect_if_needed
+except ModuleNotFoundError:
+    def reconnect_if_needed(func):
+        return func
+
 
 class UiBusqueda(Formulario):
     modelo = None  # modelo sobre la que se realiza la busqueda
@@ -97,6 +103,7 @@ class UiBusqueda(Formulario):
         logging.info("Row {} and Column {} was clicked value {} item {}"
                      .format(row, column, self.tableView.currentItem().text(), item))
 
+    @reconnect_if_needed
     def CargaDatos(self):
 
         textoBusqueda = self.lineEdit.text()
@@ -105,7 +112,21 @@ class UiBusqueda(Formulario):
             if not self.modelo:
                 Ventanas.showAlert(LeerIni('nombre_sistema'), "No se ha establecido el modelo para la busqueda")
                 return
-            rows = self.modelo.select().dicts()
+            # Forzar ``ORDER BY id`` antes del ``limit`` para que MySQL use
+            # el indice PRIMARY en vez de hacer un FULL SCAN + LIMIT sobre
+            # la tabla completa. Sin esto, en tablas grandes (varios miles
+            # de empleados) la query tarda mas de 60s y la app queda
+            # colgada esperando el read_timeout, especialmente en
+            # conexiones lentas a la BD remota (caso: notebooks del
+            # taller conectandose a srv1723.hstgr.io).
+            try:
+                primary_key = self.modelo._meta.primary_key
+            except AttributeError:
+                primary_key = None
+            query = self.modelo.select()
+            if primary_key is not None:
+                query = query.order_by(primary_key)
+            rows = query.dicts()
         else:
             rows = self.data
 
