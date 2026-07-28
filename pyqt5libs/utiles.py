@@ -583,7 +583,7 @@ def envia_correo(from_address='', to_address='', message='', subject='',
                 # Si no se puede importar (ej. uso fuera del proyecto), usar variables de entorno o valores por defecto
                 logging.warning("No se pudo importar ParamSist, usando variables de entorno")
                 smtp_server = os.getenv('SMTP_HOST')
-                smtp_port = os.getenv('SMPT_PORT', '587')
+                smtp_port = os.getenv('SMTP_PORT', '587')
                 smtp_username = os.getenv('SMTP_USER')
                 smtp_password = password_email or os.getenv('SMTP_PASS')
 
@@ -591,7 +591,7 @@ def envia_correo(from_address='', to_address='', message='', subject='',
             if not smtp_server:
                 smtp_server = os.getenv('SMTP_HOST')
             if not smtp_port:
-                smtp_port = os.getenv('SMPT_PORT', '587')
+                smtp_port = os.getenv('SMTP_PORT', '587')
             if not smtp_username:
                 smtp_username = os.getenv('SMTP_USER')
             if not smtp_password:
