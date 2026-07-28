@@ -10,6 +10,16 @@ except ModuleNotFoundError:
     def reconnect_if_needed(func):
         return func
 
+try:
+    from modelos.ModeloBase import ejecutar_list
+except (ModuleNotFoundError, ImportError):
+    def ejecutar_list(query, descripcion=''):
+        # Fallback: si no hay helper, materializamos la query aca mismo.
+        # No es tan seguro como la version con reconexion que vive en
+        # modelos.ModeloBase, pero evita tirar la app si el proyecto que
+        # usa pyqt5libs no provee su propia implementacion.
+        return list(query)
+
 from . import Ventanas
 from .EntradaTexto import EntradaTexto
 from .Etiquetas import Etiqueta, EtiquetaRoja
@@ -141,7 +151,7 @@ class Validaciones(EntradaTexto):
                     data = data.where(c)
             else:
                 data = data.where(self.condiciones)
-        data = data.dicts()
+        data = ejecutar_list(data.dicts(), 'validar codigo')
         if data:
             self.valido = True
             self.setStyleSheet("background-color: Dodgerblue")
