@@ -93,8 +93,8 @@ class Validaciones(EntradaTexto):
             self.valida()
         QLineEdit.keyPressEvent(self, event)
     
-    @reconnect_if_needed
     @inicializar_y_capturar_excepciones
+    @reconnect_if_needed
     def busqueda(self, event, *args, **kwargs):
         if self.clasebusqueda:
             ventana = self.clasebusqueda()
@@ -120,8 +120,8 @@ class Validaciones(EntradaTexto):
             self.valida()
         QLineEdit.focusOutEvent(self, QFocusEvent)
 
-    @reconnect_if_needed
     @inicializar_y_capturar_excepciones
+    @reconnect_if_needed
     def valida(self, *args, **kwargs):
         if not self.text():
             return
