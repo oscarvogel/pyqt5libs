@@ -30,6 +30,7 @@ dependencies = [
   "openpyxl>=3.1",
   "python-dateutil>=2.8",
   "XlsxWriter>=3.0",
+  "python-dotenv>=1.0",
 ]
 
 [project.urls]
@@ -39,3 +40,6 @@ Issues = "https://github.com/oscarvogel/pyqt5libs/issues"
 
 [tool.setuptools]
 packages = ["pyqt5libs"]
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
