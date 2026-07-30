@@ -17,10 +17,11 @@ from pyqt5libs.pyqt5libs.Formulario import Formulario
 from pyqt5libs.pyqt5libs.utiles import LeerIni, FormatoFecha, imagen
 
 try:
-    from modelos.ModeloBase import reconnect_if_needed
-except ModuleNotFoundError:
+    from modelos.ModeloBase import reconnect_if_needed, db
+except (ModuleNotFoundError, ImportError):
     def reconnect_if_needed(func):
         return func
+    db = None
 
 
 class UiBusqueda(Formulario):
@@ -104,77 +105,78 @@ class UiBusqueda(Formulario):
                      .format(row, column, self.tableView.currentItem().text(), item))
 
     @reconnect_if_needed
-    def CargaDatos(self):
+    def CargaDatos(self, *args, **kwargs):
 
-        textoBusqueda = self.lineEdit.text()
+        with db.connection_context():
+            textoBusqueda = self.lineEdit.text()
 
-        if not self.data:
-            if not self.modelo:
-                Ventanas.showAlert(LeerIni('nombre_sistema'), "No se ha establecido el modelo para la busqueda")
-                return
-            # Forzar ``ORDER BY id`` antes del ``limit`` para que MySQL use
-            # el indice PRIMARY en vez de hacer un FULL SCAN + LIMIT sobre
-            # la tabla completa. Sin esto, en tablas grandes (varios miles
-            # de empleados) la query tarda mas de 60s y la app queda
-            # colgada esperando el read_timeout, especialmente en
-            # conexiones lentas a la BD remota (caso: notebooks del
-            # taller conectandose a srv1723.hstgr.io).
-            try:
-                primary_key = self.modelo._meta.primary_key
-            except AttributeError:
-                primary_key = None
-            query = self.modelo.select()
-            if primary_key is not None:
-                query = query.order_by(primary_key)
-            rows = query.dicts()
-        else:
-            rows = self.data
-
-        if self.condiciones:
-            if isinstance(self.condiciones, list):
-                for c in self.condiciones:
-                    rows = rows.where(c)
+            if not self.data:
+                if not self.modelo:
+                    Ventanas.showAlert(LeerIni('nombre_sistema'), "No se ha establecido el modelo para la busqueda")
+                    return
+                # Forzar ``ORDER BY id`` antes del ``limit`` para que MySQL use
+                # el indice PRIMARY en vez de hacer un FULL SCAN + LIMIT sobre
+                # la tabla completa. Sin esto, en tablas grandes (varios miles
+                # de empleados) la query tarda mas de 60s y la app queda
+                # colgada esperando el read_timeout, especialmente en
+                # conexiones lentas a la BD remota (caso: notebooks del
+                # taller conectandose a srv1723.hstgr.io).
+                try:
+                    primary_key = self.modelo._meta.primary_key
+                except AttributeError:
+                    primary_key = None
+                query = self.modelo.select()
+                if primary_key is not None:
+                    query = query.order_by(primary_key)
+                rows = query.dicts()
             else:
-                rows = rows.where(self.condiciones)
+                rows = self.data
 
-        if textoBusqueda:
-            rows = self.ArmaBusqueda(rows)
-
-        rows = rows.limit(self.limite)
-        self.tableView.setColumnCount(len(self.campos))
-        self.tableView.setRowCount(len(rows))
-
-        logging.info("SQL de condiciones de busqueda {}".format(self.condiciones))
-        # self.tableView.horizontalHeader().setResizeMode(QHeaderView.ResizeToContents)
-
-        for col in range(0, len(self.campos)):
-            if self.campos[col] == self.campoRetorno.column_name:
-                self.colRetorno = col
-            if isinstance(self.campoBusqueda, list):
-                if self.campos[col] == self.campoBusqueda[0]:
-                    self.colBusqueda = col
-            else:
-                if self.campos[col] == self.campoBusqueda.column_name:
-                    self.colBusqueda = col
-
-            self.tableView.setHorizontalHeaderItem(col, QTableWidgetItem(self.campos[col].capitalize()))
-
-        fila = 0
-        for row in rows:
-            for col in range(0, len(self.campos)):
-                if isinstance(row[self.campos[col]], (int, decimal.Decimal,)):
-                    item = QTableWidgetItem(str(row[self.campos[col]]))
-                elif isinstance(row[self.campos[col]], (datetime.date)):
-                    item = QTableWidgetItem(FormatoFecha(row[self.campos[col]], formato='dma'))
+            if self.condiciones:
+                if isinstance(self.condiciones, list):
+                    for c in self.condiciones:
+                        rows = rows.where(c)
                 else:
-                    item = QTableWidgetItem(QTableWidgetItem(row[self.campos[col]]))
+                    rows = rows.where(self.condiciones)
 
-                item.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
-                self.tableView.setItem(fila, col, item)
+            if textoBusqueda:
+                rows = self.ArmaBusqueda(rows)
 
-            fila += 1
-        self.tableView.resizeRowsToContents()
-        self.tableView.resizeColumnsToContents()
+            rows = rows.limit(self.limite)
+            self.tableView.setColumnCount(len(self.campos))
+            self.tableView.setRowCount(len(rows))
+
+            logging.info("SQL de condiciones de busqueda {}".format(self.condiciones))
+            # self.tableView.horizontalHeader().setResizeMode(QHeaderView.ResizeToContents)
+
+            for col in range(0, len(self.campos)):
+                if self.campos[col] == self.campoRetorno.column_name:
+                    self.colRetorno = col
+                if isinstance(self.campoBusqueda, list):
+                    if self.campos[col] == self.campoBusqueda[0]:
+                        self.colBusqueda = col
+                else:
+                    if self.campos[col] == self.campoBusqueda.column_name:
+                        self.colBusqueda = col
+
+                self.tableView.setHorizontalHeaderItem(col, QTableWidgetItem(self.campos[col].capitalize()))
+
+            fila = 0
+            for row in rows:
+                for col in range(0, len(self.campos)):
+                    if isinstance(row[self.campos[col]], (int, decimal.Decimal,)):
+                        item = QTableWidgetItem(str(row[self.campos[col]]))
+                    elif isinstance(row[self.campos[col]], (datetime.date)):
+                        item = QTableWidgetItem(FormatoFecha(row[self.campos[col]], formato='dma'))
+                    else:
+                        item = QTableWidgetItem(QTableWidgetItem(row[self.campos[col]]))
+
+                    item.setFlags(QtCore.Qt.ItemIsSelectable | QtCore.Qt.ItemIsEnabled)
+                    self.tableView.setItem(fila, col, item)
+
+                fila += 1
+            self.tableView.resizeRowsToContents()
+            self.tableView.resizeColumnsToContents()
 
     def keyPressEvent(self, event):
         if event.key() == QtCore.Qt.Key_Down:
