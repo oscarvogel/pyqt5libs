@@ -1,23 +1,11 @@
 # -*- coding: utf-8 -*-
-import os
-import sys
-from os.path import join
-
 from PyQt5.QtCore import Qt
 from PyQt5.QtWidgets import QApplication, QDialog, QDesktopWidget, QHBoxLayout
 
 from .EntradaTexto import EntradaTexto
 from .Etiquetas import Etiqueta
 from .Fechas import FechaLine
-from .utiles import icono_sistema, ubicacion_sistema
-
-try:
-    from modelos.ParametrosSistema import ParamSist
-except ModuleNotFoundError:
-    class ParamSist:
-        @staticmethod
-        def ObtenerParametro(_nombre, default=None):
-            return default
+from .utiles import icono_sistema
 
 
 class Formulario(QDialog):
@@ -37,9 +25,12 @@ class Formulario(QDialog):
         flags = Qt.WindowMinMaxButtonsHint | Qt.WindowCloseButtonHint
         self.setWindowFlags(flags)
         self.setMinimumSize(420, 160)
-        app = QApplication.instance()
-        if app is None or not app.property("rnd_tema_global"):
-            self.EstablecerTema()
+        # Los formularios ya no aplican un CSS propio. El estilo debe venir del
+        # QApplication (por ejemplo, el QSS global de RND) o, si no existe un
+        # tema global, del estilo nativo de Qt. Mantener esta llamada como no-op
+        # conserva compatibilidad con subclases/codigo historico que puedan
+        # invocar EstablecerTema() explicitamente.
+        self.EstablecerTema()
         # self.EstablecerOrden()
 
     def Cerrar(self):
@@ -141,44 +132,14 @@ class Formulario(QDialog):
         QKeyEvent.ignore()
 
     def EstablecerTema(self):
-        tema_configurado = ParamSist.ObtenerParametro("TEMA", "forestal_moderno.css")
-        if not tema_configurado or tema_configurado == "TEMA":
-            tema_configurado = "forestal_moderno.css"
+        """Compatibilidad: no aplica temas CSS por formulario.
 
-        if not tema_configurado.lower().endswith('.css'):
-            tema_configurado += '.css'
-        
-        candidatos = [
-            join(ubicacion_sistema(), 'temas', tema_configurado),
-            join('temas', tema_configurado),
-            join('libs', 'temas', tema_configurado),
-            join(os.path.dirname(__file__), '..', 'libs', 'temas', tema_configurado),
-        ]
-
-        if hasattr(sys, "_MEIPASS"):
-            candidatos.append(join(sys._MEIPASS, 'temas', tema_configurado))
-
-        tema = next((candidato for candidato in candidatos if os.path.isfile(candidato)), "")
-
-        if not tema:
-            candidatos_fallback = [
-                join(ubicacion_sistema(), 'temas', 'forestal_moderno.css'),
-                join('temas', 'forestal_moderno.css'),
-                join('libs', 'temas', 'forestal_moderno.css'),
-                join(os.path.dirname(__file__), '..', 'libs', 'temas', 'forestal_moderno.css'),
-                join('libs', 'temas', 'ubuntu.css'),
-                join(os.path.dirname(__file__), '..', 'libs', 'temas', 'ubuntu.css'),
-            ]
-            if hasattr(sys, "_MEIPASS"):
-                candidatos_fallback.append(join(sys._MEIPASS, 'temas', 'forestal_moderno.css'))
-            tema = next((candidato for candidato in candidatos_fallback if os.path.isfile(candidato)), "")
-
-        if not tema:
-            return
-
-        with open(tema, encoding="utf-8") as style_file:
-            style = style_file.read()
-        self.setStyleSheet(style)
+        El tema visual debe definirse una sola vez a nivel de QApplication.
+        Esto evita que configuraciones legacy como TEMA/darkblue/qdark
+        sobrescriban el QSS global y, si no hay QSS, deja que Qt utilice su
+        estilo nativo.
+        """
+        return None
 
     def EstablecerOrden(self):
         pass
