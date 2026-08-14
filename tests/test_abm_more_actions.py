@@ -1,5 +1,5 @@
 from PyQt5.QtCore import Qt, QSize
-from PyQt5.QtWidgets import QApplication, QAbstractItemView, QFrame, QHeaderView, QSizePolicy, QToolButton
+from PyQt5.QtWidgets import QApplication, QAbstractItemView, QFrame, QHeaderView, QLabel, QSizePolicy, QToolButton
 
 from pyqt5libs.libs.vistas.ABM import ABM
 from pyqt5libs.pyqt5libs.Botones import Boton
@@ -57,6 +57,12 @@ class _TablePresentationABM(_BaseAdditionalButtonsABM):
         _Field("nombre", "Nombre"),
         _Field("estado", "Estado"),
     ]
+
+
+class _FormPresentationABM(_TablePresentationABM):
+    def ArmaCarga(self):
+        self.ArmaEntrada(_Field("codigo", "Código"))
+        self.ArmaEntrada(_Field("nombre", "Nombre"))
 
 
 def test_auto_groups_multiple_additional_buttons():
@@ -162,3 +168,65 @@ def test_abm_table_uses_modern_readable_presentation():
     assert header.minimumSectionSize() >= 90
     assert header.sectionResizeMode(0) == QHeaderView.Interactive
     assert header.stretchLastSection() is True
+
+
+def test_abm_form_has_visual_container_title_and_feedback_area():
+    _app()
+    window = _keep_window(_FormPresentationABM())
+
+    form_panel = window.findChild(QFrame, "formPanelABM")
+    form_header = window.findChild(QFrame, "formHeaderABM")
+    title = window.findChild(QLabel, "lblTituloFormulario")
+    status = window.findChild(QLabel, "lblEstado")
+    error = window.findChild(QLabel, "lblErrorFormulario")
+
+    assert form_panel is not None
+    assert form_panel.frameShape() == QFrame.StyledPanel
+    assert "border" in form_panel.styleSheet()
+    assert window.verticalLayoutDatos.contentsMargins().left() >= 22
+    assert window.verticalLayoutDatos.spacing() >= 14
+    assert form_header is not None
+    assert title is not None
+    assert title.text() == "Ficha de Registros"
+    assert status is not None
+    assert status.wordWrap() is True
+    assert error is not None
+    assert error.isHidden() is True
+    assert error.wordWrap() is True
+    assert error.text() == ""
+
+
+def test_abm_form_feedback_helpers_show_and_clear_validation_error():
+    _app()
+    window = _keep_window(_FormPresentationABM())
+    error = window.findChild(QLabel, "lblErrorFormulario")
+
+    window._mostrar_error_formulario("Complete los campos obligatorios")
+
+    assert error.isHidden() is False
+    assert error.text() == "Complete los campos obligatorios"
+    assert "QLabel#lblErrorFormulario" in window.formPanel.styleSheet()
+
+    window._limpiar_error_formulario()
+
+    assert error.isHidden() is True
+    assert error.text() == ""
+
+
+def test_abm_form_marks_create_edit_and_idle_states_visually():
+    _app()
+    window = _keep_window(_FormPresentationABM())
+
+    window.Agrega()
+    assert window.formPanel.property("modoFormulario") == "alta"
+    assert window.lblEstado.text() == "Nuevo registro"
+
+    window.tipo = "M"
+    window.idtabla = 42
+    window.ActualizaEstado()
+    assert window.formPanel.property("modoFormulario") == "edicion"
+    assert window.lblEstado.text() == "Editando registro 42"
+
+    window.btnCancelarClicked()
+    assert window.formPanel.property("modoFormulario") == "consulta"
+    assert window.lblEstado.text() == "Seleccione un registro o agregue uno nuevo"

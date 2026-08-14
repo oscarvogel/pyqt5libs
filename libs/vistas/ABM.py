@@ -70,6 +70,7 @@ class ABM(VistaBase):
     form_field_min_width = 220
     form_field_spacing = 16
     form_panel_margins = (22, 18, 22, 18)
+    form_panel_spacing = 14
 
     def __init__(self, *args, **kwargs):
         VistaBase.__init__(self, *args, **kwargs)
@@ -137,6 +138,108 @@ class ABM(VistaBase):
         control.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
         if hasattr(control, 'setMinimumWidth'):
             control.setMinimumWidth(int(self.form_field_min_width))
+
+    def _repinta_widget(self, widget):
+        widget.style().unpolish(widget)
+        widget.style().polish(widget)
+        widget.update()
+
+    def _estilo_panel_formulario(self):
+        return """
+            QFrame#formPanelABM {
+                background: #ffffff;
+                border: 1px solid #d8e0ea;
+                border-radius: 8px;
+            }
+            QFrame#formPanelABM[modoFormulario="consulta"] {
+                border-left: 4px solid #94a3b8;
+            }
+            QFrame#formPanelABM[modoFormulario="alta"] {
+                border-left: 4px solid #0f6cbd;
+            }
+            QFrame#formPanelABM[modoFormulario="edicion"] {
+                border-left: 4px solid #d97706;
+            }
+            QFrame#formHeaderABM {
+                background: #f8fafc;
+                border: 1px solid #e5e7eb;
+                border-radius: 8px;
+            }
+            QLabel#lblTituloFormulario {
+                color: #111827;
+                font-size: 14px;
+                font-weight: bold;
+            }
+            QLabel#lblEstado {
+                color: #475569;
+            }
+            QLabel#lblErrorFormulario {
+                background: #fff7ed;
+                color: #9a3412;
+                border: 1px solid #fed7aa;
+                border-radius: 7px;
+                padding: 8px 10px;
+                font-weight: bold;
+            }
+            QLabel#labelNombre {
+                color: #374151;
+                font-weight: bold;
+            }
+            QLineEdit, QComboBox, QSpinBox, QDateEdit {
+                min-height: 28px;
+            }
+        """
+
+    def _configura_panel_formulario(self):
+        self.formPanel.setFrameShape(QFrame.StyledPanel)
+        self.formPanel.setFrameShadow(QFrame.Plain)
+        self.formPanel.setProperty("modoFormulario", "consulta")
+        self.formPanel.setStyleSheet(self._estilo_panel_formulario())
+
+    def _arma_encabezado_formulario(self):
+        self.formHeader = QFrame(self.formPanel)
+        self.formHeader.setObjectName("formHeaderABM")
+        self.formHeader.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+
+        layout_header = QVBoxLayout(self.formHeader)
+        layout_header.setContentsMargins(14, 12, 14, 12)
+        layout_header.setSpacing(4)
+
+        self.lblTituloFormulario = Etiqueta(texto="Ficha de {}".format(self._nombre_pantalla()))
+        self.lblTituloFormulario.setObjectName("lblTituloFormulario")
+        self.lblTituloFormulario.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Fixed)
+        layout_header.addWidget(self.lblTituloFormulario)
+
+        self.lblEstado = Etiqueta(texto="Seleccione un registro o agregue uno nuevo")
+        self.lblEstado.setObjectName("lblEstado")
+        self.lblEstado.setWordWrap(True)
+        layout_header.addWidget(self.lblEstado)
+
+        self.verticalLayoutDatos.addWidget(self.formHeader)
+
+    def _mostrar_error_formulario(self, mensaje):
+        if not hasattr(self, 'lblErrorFormulario'):
+            return
+        self.lblErrorFormulario.setText(mensaje or "")
+        self.lblErrorFormulario.setHidden(not bool(mensaje))
+
+    def _limpiar_error_formulario(self):
+        self._mostrar_error_formulario("")
+
+    def _actualiza_modo_formulario(self, modo):
+        if not hasattr(self, 'formPanel'):
+            return
+        self.formPanel.setProperty("modoFormulario", modo)
+        self._repinta_widget(self.formPanel)
+
+    def _marca_formulario_consulta(self):
+        self._actualiza_modo_formulario("consulta")
+
+    def _marca_formulario_alta(self):
+        self._actualiza_modo_formulario("alta")
+
+    def _marca_formulario_edicion(self):
+        self._actualiza_modo_formulario("edicion")
 
     def _configura_boton_formulario(self, boton):
         boton.setMinimumHeight(36)
@@ -347,11 +450,14 @@ class ABM(VistaBase):
         if not hasattr(self, 'lblEstado'):
             return
         if texto:
+            self._marca_formulario_consulta()
             self.lblEstado.setText(texto)
             return
         if self.tipo == 'M':
+            self._marca_formulario_edicion()
             self.lblEstado.setText("Editando registro {}".format(self.idtabla or "seleccionado"))
         else:
+            self._marca_formulario_alta()
             self.lblEstado.setText("Nuevo registro")
 
     def ActualizaResumen(self, mostrados=0, total=0):
@@ -608,17 +714,21 @@ class ABM(VistaBase):
         self.formPanel = QFrame()
         self.formPanel.setObjectName("formPanelABM")
         self.formPanel.setSizePolicy(QSizePolicy.Expanding, QSizePolicy.Preferred)
+        self._configura_panel_formulario()
         self.scrollDetalle.setWidget(self.formPanel)
 
         self.verticalLayoutDatos = QVBoxLayout(self.formPanel)
         self.verticalLayoutDatos.setObjectName("verticalLayoutDatos")
         self.verticalLayoutDatos.setContentsMargins(*self.form_panel_margins)
-        self.verticalLayoutDatos.setSpacing(14)
+        self.verticalLayoutDatos.setSpacing(self.form_panel_spacing)
 
-        self.lblEstado = Etiqueta(texto="Seleccione un registro o agregue uno nuevo")
-        self.lblEstado.setObjectName("lblEstado")
-        self.lblEstado.setWordWrap(True)
-        self.verticalLayoutDatos.addWidget(self.lblEstado)
+        self._arma_encabezado_formulario()
+
+        self.lblErrorFormulario = Etiqueta(texto="")
+        self.lblErrorFormulario.setObjectName("lblErrorFormulario")
+        self.lblErrorFormulario.setWordWrap(True)
+        self.lblErrorFormulario.setHidden(True)
+        self.verticalLayoutDatos.addWidget(self.lblErrorFormulario)
 
         self.ArmaCarga()
         self.colBoton = 0
@@ -733,6 +843,7 @@ class ABM(VistaBase):
     @inicializar_y_capturar_excepciones
     def Modifica(self, *args, **kwargs):
         self.tipo = 'M'
+        self._limpiar_error_formulario()
         if not self.tableView.currentRow() != -1:
             Ventanas.showAlert("Sistema", "Seleccione un registro para editar")
             return
@@ -866,11 +977,13 @@ class ABM(VistaBase):
 
     def btnCancelarClicked(self):
         self._mostrar_listado()
+        self._limpiar_error_formulario()
         self.ActualizaEstado("Seleccione un registro o agregue uno nuevo")
 
     @inicializar_y_capturar_excepciones
     def btnAceptarClicked(self, *args, **kwargs):
         self._mostrar_listado()
+        self._limpiar_error_formulario()
         self.ActualizaEstado("Seleccione un registro o agregue uno nuevo")
         self.ArmaTabla()
 
@@ -879,6 +992,7 @@ class ABM(VistaBase):
 
     def Agrega(self):
         self.tipo = 'A'
+        self._limpiar_error_formulario()
         for x in self.controles:
             if self.autoincremental and self.campoClave:
                 if x in [self.campoClave.column_name,
