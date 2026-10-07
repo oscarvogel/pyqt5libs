@@ -90,17 +90,37 @@ class Validaciones(EntradaTexto):
     @inicializar_y_capturar_excepciones
     def keyPressEvent(self, event, *args, **kwargs):
         self.lastKey = event.key()
+
         if event.key() == QtCore.Qt.Key_F2:
             self.busqueda(event)
-        elif event.key() == QtCore.Qt.Key_Enter or \
-                        event.key() == QtCore.Qt.Key_Return or\
-                        event.key() == QtCore.Qt.Key_Tab:
-            
-            if self.realiza_busqueda and not self.value():
+            return
+
+        if event.key() in (QtCore.Qt.Key_Enter, QtCore.Qt.Key_Return):
+            # UX general para campos de código: Enter sobre un campo vacío
+            # abre la búsqueda si el control tiene modelo y campo de retorno.
+            # Si el usuario cancela, conserva el foco; si selecciona, valida y
+            # recién entonces avanza al próximo widget.
+            if not self.value() and self.modelo is not None and self.campoRetorno is not None:
                 self.busqueda(event)
+                if not self.value():
+                    self.setFocus()
+                    return
+            self.valida()
             if self.proximoWidget:
                 self.proximoWidget.setFocus()
+            return
+
+        if event.key() == QtCore.Qt.Key_Tab:
+            if self.realiza_busqueda and not self.value():
+                self.busqueda(event)
+                if not self.value():
+                    self.setFocus()
+                    return
             self.valida()
+            if self.proximoWidget:
+                self.proximoWidget.setFocus()
+            return
+
         QLineEdit.keyPressEvent(self, event)
     
     @inicializar_y_capturar_excepciones
