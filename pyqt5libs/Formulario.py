@@ -40,7 +40,12 @@ class Formulario(QDialog):
     def exec_(self):
         if self.centraform:
             self.Center()
-        QDialog.exec_(self)
+        # Hay que devolver el resultado de QDialog.exec_(): el codigo del
+        # dialogo (Accepted / Rejected) es lo que permite al llamador decidir
+        # si guardar. Sin este return la funcion terminaba en None y todo
+        # `if dialogo.exec_() != dialogo.Accepted: return` salia siempre antes
+        # de guardar, sin error ni aviso. La API que ya usaba Qt es result().
+        return QDialog.exec_(self)
 
     def Center(self):
         qr = self.frameGeometry()
