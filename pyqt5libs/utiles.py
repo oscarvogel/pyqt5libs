@@ -65,7 +65,7 @@ from cryptography.fernet import Fernet
 from . import Constantes, Ventanas
 import threading
 
-__author__ = "Jose Oscar Vogel <oscar@ferreteriaavenida.com.ar>"
+__author__ = "Jose Oscar Vogel <vogelconsultoria.com.ar>"
 __copyright__ = "Copyright (C) 2019 Steffen Hnos SRL"
 __license__ = "GPL 3.0"
 __version__ = "0.1"
