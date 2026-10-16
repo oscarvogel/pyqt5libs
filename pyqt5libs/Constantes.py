@@ -1,5 +1,12 @@
-EMPRESA = "Servin LGSM"
+EMPRESA = "Vogel Consultoria"
+# Organizacion historica de QSettings. Se usa solo para migrar una vez las
+# preferencias guardadas con el branding anterior.
+EMPRESA_LEGACY = "Servin LGSM"
 SISTEMA = "Sistema"
+
+# Branding vigente y configurable (ver utiles.sitio_web_vogel()).
+DOMINIO_VOGEL = "vogelconsultoria.com.ar"
+SITIO_WEB = "https://vogelconsultoria.com.ar"
 
 ACTIVO = True
 INACTIVO = False
