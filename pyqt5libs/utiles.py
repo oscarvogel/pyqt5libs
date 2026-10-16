@@ -282,10 +282,38 @@ def HoraMysql(hora=None):
     return retorno
 
 
-def GrabaConf(clave=None, valor=None, sistema=None):
+def _migrar_conf_legacy(settings, sistema):
+    """Copia una sola vez las preferencias guardadas con la organizacion
+    historica de QSettings (Constantes.EMPRESA_LEGACY), para no perder la
+    configuracion del usuario al cambiar Constantes.EMPRESA.
+    """
+    legacy_org = getattr(Constantes, "EMPRESA_LEGACY", "")
+    if not legacy_org or legacy_org == Constantes.EMPRESA:
+        return
+    try:
+        if settings.allKeys():
+            return
+        legacy = QSettings(legacy_org, sistema)
+        claves = legacy.allKeys()
+        if not claves:
+            return
+        for clave in claves:
+            settings.setValue(clave, legacy.value(clave))
+        settings.sync()
+    except Exception:
+        pass
+
+
+def _conf_settings(sistema=None):
     if not sistema:
         sistema = Constantes.SISTEMA
     settings = QSettings(Constantes.EMPRESA, sistema)
+    _migrar_conf_legacy(settings, sistema)
+    return settings
+
+
+def GrabaConf(clave=None, valor=None, sistema=None):
+    settings = _conf_settings(sistema)
     if clave:
         if isinstance(clave, (int, float, decimal.Decimal)):
             clave = str(clave)
@@ -293,9 +321,7 @@ def GrabaConf(clave=None, valor=None, sistema=None):
 
 
 def LeerConf(clave=None, sistema=None):
-    if not sistema:
-        sistema = Constantes.SISTEMA
-    settings = QSettings(Constantes.EMPRESA, sistema)
+    settings = _conf_settings(sistema)
     if clave:
         cValorRetorno = settings.value(clave)
     else:
@@ -305,14 +331,28 @@ def LeerConf(clave=None, sistema=None):
 
 
 def BorrarConf(clave=None, sistema=None):
-    if not sistema:
-        sistema = Constantes.SISTEMA
-
-    settings = QSettings(Constantes.EMPRESA, sistema)
+    settings = _conf_settings(sistema)
     if clave:
         settings.remove(clave)
     else:
         settings.clear()
+
+
+def sitio_web_vogel():
+    """URL vigente de la marca.
+
+    Configurable por el INI activo (``sitio_web``) o por la variable de
+    entorno ``FGPY_SITIO_WEB``; si no hay valor usa el branding actual.
+    """
+    try:
+        valor = (LeerIni('sitio_web') or '').strip()
+    except Exception:
+        valor = ''
+    if not valor:
+        valor = (os.getenv('FGPY_SITIO_WEB') or '').strip()
+    if not valor:
+        valor = getattr(Constantes, 'SITIO_WEB', 'https://vogelconsultoria.com.ar')
+    return valor
 
 
 # necesario porque en mysql tengo definido el campo boolean como bit
@@ -362,8 +402,8 @@ def inicializar_y_capturar_excepciones(func):
                 try:
                     remitente = 'info@vogelconsultoria.com.ar'
                     destinatario = 'info@vogelconsultoria.com.ar'
-                    mensaje = "{} {} Enviado desde mi Software de Gestion desarrollado por http://www.servinlgsm.com.ar".format(
-                        self.Traceback, self.Excepcion
+                    mensaje = "{} {} Enviado desde mi Software de Gestion desarrollado por {}".format(
+                        self.Traceback, self.Excepcion, sitio_web_vogel()
                     )
                     motivo = f"Se envia informe de errores de {LeerIni(clave='nombre_sistema')} . Usuario {LeerConf('usuario')}"
                     envia_correo(from_address=remitente, to_address=destinatario,
