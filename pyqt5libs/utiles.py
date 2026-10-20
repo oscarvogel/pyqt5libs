@@ -100,7 +100,11 @@ def AbrirArchivo(cArchivo=None):
 def _normalizar_perfil(perfil):
     if not perfil:
         return ''
-    valor = str(perfil).strip().upper()
+    valor = str(perfil).strip()
+    # Una ruta de archivo se respeta tal cual: uppercasing romperia el path.
+    if valor.lower().endswith('.ini'):
+        return valor
+    valor = valor.upper()
     alias = {
         'DESARROLLO': 'FGPY',
         'DEVELOPMENT': 'FGPY',
@@ -115,7 +119,57 @@ def _normalizar_perfil(perfil):
     return alias.get(valor, valor)
 
 
-def _archivo_por_perfil(perfil):
+# Perfiles de configuracion reconocidos por la app.
+PERFILES_CONOCIDOS = ('FGPY', 'FGLOCAL', 'FGPRODUCCION')
+
+# Perfiles invalidos ya reportados. resolver_configuracion_activa() se
+# llama en cada LeerIni(), asi que avisar en cada llamada llenaba el log.
+_PERFILES_AVISADOS = set()
+
+# Configuracion asociada a cada perfil. El orden importa: se toma el primer
+# archivo que exista en disco.
+#
+# Debe coincidir con CONFIGS_POR_PERFIL de
+# scripts/procesar_mantenimiento_preventivo.py y con los launchers:
+#   iniciar-fg-py.bat  -> -p FGPY        -a ini\sistema-fg-py.ini
+#   iniciar-fg.bat     -> -p FGPRODUCCION -a ini\sistema-fg.ini
+#   iniciar-oscar.bat  -> -p FGLOCAL     -a ini\sistema-oscar.ini
+ARCHIVOS_POR_PERFIL = {
+    'FGPY': ('ini\\sistema-fg-py.ini', 'sistema.ini'),
+    'FGLOCAL': ('ini\\sistema-oscar.ini', 'conil.ini'),
+    'FGPRODUCCION': ('ini\\sistema-fg.ini', 'ini\\sistema-fg-py.ini'),
+}
+
+
+def _perfil_valido(perfil):
+    """Perfil usable, o '' si el valor no es un perfil conocido.
+
+    La app parsea ``-p/--perfil`` y pytest tambien usa ``-p`` (por ejemplo
+    ``-p no:cacheprovider`` o ``-p no:warnings``). Sin este filtro, el flag
+    de pytest terminaba como perfil de la app, el perfil quedaba como
+    "NO:CACHEPROVIDER" y la configuracion caia al ``sistema.ini`` local
+    (localhost), con el error "Access denied for user 'root'@'localhost'".
+    """
+    if not perfil:
+        return ''
+    valor = str(perfil).strip()
+    if not valor:
+        return ''
+    if valor.lower().endswith('.ini'):
+        return valor
+    normalizado = _normalizar_perfil(valor)
+    if normalizado in PERFILES_CONOCIDOS:
+        return normalizado
+    if valor not in _PERFILES_AVISADOS:
+        _PERFILES_AVISADOS.add(valor)
+        logging.warning(
+            "Perfil de configuracion ignorado: %r no es un perfil conocido (%s)",
+            perfil, ', '.join(PERFILES_CONOCIDOS),
+        )
+    return ''
+
+
+def _archivo_por_perfil(perfil, carpeta=None):
     perfil_normalizado = _normalizar_perfil(perfil)
     if not perfil_normalizado:
         return ''
@@ -123,12 +177,15 @@ def _archivo_por_perfil(perfil):
     if perfil_normalizado.endswith('.ini'):
         return perfil_normalizado
 
-    archivos = {
-        'FGPY': 'sistema.ini',
-        'FGLOCAL': 'conil.ini',
-        'FGPRODUCCION': 'ini\\sistema-fg-py.ini',
-    }
-    return archivos.get(perfil_normalizado, '')
+    candidatos = ARCHIVOS_POR_PERFIL.get(perfil_normalizado, ())
+    if not candidatos:
+        return ''
+
+    if carpeta:
+        for candidato in candidatos:
+            if os.path.exists(join(carpeta, candidato)):
+                return candidato
+    return candidatos[0]
 
 
 def resolver_configuracion_activa():
@@ -140,14 +197,14 @@ def resolver_configuracion_activa():
 
     carpeta = argumento.inicio or os.getcwd()
     archivo = argumento.archivo
-    perfil = argumento.perfil
+    perfil = _perfil_valido(argumento.perfil)
     origen = 'cli-archivo'
 
     if not archivo:
-        perfil = perfil or os.environ.get('FGPY_CONFIG')
+        perfil = perfil or _perfil_valido(os.environ.get('FGPY_CONFIG'))
         if perfil:
             origen = 'perfil'
-            archivo = _archivo_por_perfil(perfil)
+            archivo = _archivo_por_perfil(perfil, carpeta)
 
     if not archivo:
         archivo = 'sistema.ini'
