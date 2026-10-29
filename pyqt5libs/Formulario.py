@@ -1,48 +1,12 @@
 # -*- coding: utf-8 -*-
 from PyQt5.QtCore import Qt
-from PyQt5.QtGui import QCursor, QGuiApplication
-from PyQt5.QtWidgets import QApplication, QDialog, QHBoxLayout
+from PyQt5.QtWidgets import QDialog, QHBoxLayout
 
 from .EntradaTexto import EntradaTexto
 from .Etiquetas import Etiqueta
 from .Fechas import FechaLine
+from .ubicacion_pantalla import pantalla_referencia
 from .utiles import icono_sistema
-
-
-def _pantalla_de(objeto):
-    actual = objeto
-    while actual is not None:
-        handle = actual.windowHandle()
-        if handle is not None and handle.screen() is not None:
-            return handle.screen()
-        actual = actual.parentWidget()
-    return None
-
-
-def pantalla_referencia(widget=None):
-    """Devuelve la pantalla donde debe abrirse una ventana nueva.
-
-    Prioriza la pantalla de la ventana padre o de la ventana activa. Si no hay
-    una referencia valida usa la pantalla bajo el cursor y, como ultimo
-    recurso, la pantalla principal.
-    """
-    actual = widget
-    while actual is not None:
-        pantalla = _pantalla_de(actual)
-        if pantalla is not None:
-            return pantalla
-        actual = actual.parentWidget()
-
-    app = QApplication.instance()
-    if app is not None:
-        pantalla = _pantalla_de(app.activeWindow())
-        if pantalla is not None:
-            return pantalla
-
-    pantalla = QGuiApplication.screenAt(QCursor.pos())
-    if pantalla is not None:
-        return pantalla
-    return QGuiApplication.primaryScreen()
 
 
 class Formulario(QDialog):
