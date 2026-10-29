@@ -1,11 +1,48 @@
 # -*- coding: utf-8 -*-
 from PyQt5.QtCore import Qt
-from PyQt5.QtWidgets import QApplication, QDialog, QDesktopWidget, QHBoxLayout
+from PyQt5.QtGui import QCursor, QGuiApplication
+from PyQt5.QtWidgets import QApplication, QDialog, QHBoxLayout
 
 from .EntradaTexto import EntradaTexto
 from .Etiquetas import Etiqueta
 from .Fechas import FechaLine
 from .utiles import icono_sistema
+
+
+def _pantalla_de(objeto):
+    actual = objeto
+    while actual is not None:
+        handle = actual.windowHandle()
+        if handle is not None and handle.screen() is not None:
+            return handle.screen()
+        actual = actual.parentWidget()
+    return None
+
+
+def pantalla_referencia(widget=None):
+    """Devuelve la pantalla donde debe abrirse una ventana nueva.
+
+    Prioriza la pantalla de la ventana padre o de la ventana activa. Si no hay
+    una referencia valida usa la pantalla bajo el cursor y, como ultimo
+    recurso, la pantalla principal.
+    """
+    actual = widget
+    while actual is not None:
+        pantalla = _pantalla_de(actual)
+        if pantalla is not None:
+            return pantalla
+        actual = actual.parentWidget()
+
+    app = QApplication.instance()
+    if app is not None:
+        pantalla = _pantalla_de(app.activeWindow())
+        if pantalla is not None:
+            return pantalla
+
+    pantalla = QGuiApplication.screenAt(QCursor.pos())
+    if pantalla is not None:
+        return pantalla
+    return QGuiApplication.primaryScreen()
 
 
 class Formulario(QDialog):
@@ -48,16 +85,27 @@ class Formulario(QDialog):
         return QDialog.exec_(self)
 
     def Center(self):
+        if self.isMaximized() or self.isFullScreen():
+            return
+        pantalla = pantalla_referencia(self)
+        if pantalla is None:
+            return
         qr = self.frameGeometry()
 
-        # center point of screen
-        cp = QDesktopWidget().availableGeometry().center()
+        # center point of the reference screen
+        cp = pantalla.availableGeometry().center()
 
         # move rectangle's center point to screen's center point
         qr.moveCenter(cp)
 
         # top left of rectangle becomes top left of window centering it
         self.move(qr.topLeft())
+
+    def showMaximized(self):
+        pantalla = pantalla_referencia(self)
+        if pantalla is not None:
+            self.setGeometry(pantalla.availableGeometry())
+        super().showMaximized()
 
     def resizeEvent(self, QResizeEvent):
         QDialog.resizeEvent(self, QResizeEvent)
