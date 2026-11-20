@@ -5,6 +5,11 @@ from PyQt5.QtGui import QFont
 from PyQt5.QtWidgets import QLineEdit, QHBoxLayout
 
 try:
+    from PyQt5 import sip
+except ImportError:  # PyQt5 < 5.11
+    import sip
+
+try:
     from modelos.ModeloBase import reconnect_if_needed
 except ModuleNotFoundError:
     def reconnect_if_needed(func):
@@ -25,6 +30,18 @@ from .EntradaTexto import EntradaTexto
 from .Etiquetas import Etiqueta, EtiquetaRoja
 from .utiles import inicializar_y_capturar_excepciones
 from ..libs.vistas.Busqueda import UiBusqueda
+
+
+def widget_eliminado(widget):
+    """True si el objeto C++ del widget ya fue destruido.
+
+    Pasa cuando la ventana que contiene el campo se cierra mientras un dialogo
+    modal (la busqueda F2/Enter) tiene el loop de eventos anidado: al volver de
+    ``exec_()`` el QLineEdit ya no existe y cualquier ``setText`` lanza
+    ``RuntimeError: wrapped C/C++ object ... has been deleted``
+    (ERR-20261120163418-B700277E).
+    """
+    return sip.isdeleted(widget)
 
 
 class Validaciones(EntradaTexto):
@@ -102,6 +119,8 @@ class Validaciones(EntradaTexto):
             # recién entonces avanza al próximo widget.
             if not self.value() and self.modelo is not None and self.campoRetorno is not None:
                 self.busqueda(event)
+                if widget_eliminado(self):
+                    return
                 if not self.value():
                     self.setFocus()
                     return
@@ -113,6 +132,8 @@ class Validaciones(EntradaTexto):
         if event.key() == QtCore.Qt.Key_Tab:
             if self.realiza_busqueda and not self.value():
                 self.busqueda(event)
+                if widget_eliminado(self):
+                    return
                 if not self.value():
                     self.setFocus()
                     return
@@ -139,6 +160,10 @@ class Validaciones(EntradaTexto):
         ventana.condiciones = self.condiciones
         ventana.CargaDatos()
         ventana.exec_()
+        if widget_eliminado(self):
+            # Se cerro la ventana del formulario mientras el modal estaba
+            # abierto: el campo ya no existe en C++, no hay nada que completar.
+            return
         if ventana.lRetval:
             self.setText(ventana.ValorRetorno)
             self.valido = True
